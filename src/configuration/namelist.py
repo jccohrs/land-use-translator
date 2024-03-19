@@ -278,35 +278,97 @@ def prepare_files():
     if irrig:
         cdo.sellonlatbox(reg, input=f"-selyear,{syear}/{eyear} -selvar,{vars_irrig} {sdir}/{mfile}.nc", output=f"{sdir}/{region}/irri_vars_{syear}_{eyear}_{region}.nc")
     
-    if scenario in ["historic", "historic_low", "historic_high"]:
+        if scenario in ["historic", "historic_low", "historic_high"]:
+            if remap_com == "invertlat":
+                cdo.invertlat(input=f"-chname,{IRR[0]},irrig_frac -selvar,{IRR[0]} {sdir}/{region}/irri_vars_{syear}_{eyear}_{region}.nc", output=f"{sdir}/{region}/{grid}/irrigation_{syear}_{eyear}_{grid}.nc")
+            elif remap_com == "remapbil":
+                cdo.remapbil(f"grid_{grid}", input=f"-chname,{IRR[0]},irrig_frac -selvar,{IRR[0]} {sdir}/{region}/irri_vars_{syear}_{eyear}_{region}.nc", output=f"{sdir}/{region}/{grid}/irrigation_{syear}_{eyear}_{grid}.nc")
+            elif remap_com == "remapcon2":
+                cdo.remapcon2(f"grid_{grid}", input=f"-chname,{IRR[0]},irrig_frac -selvar,{IRR[0]} {sdir}/{region}/irri_vars_{syear}_{eyear}_{region}.nc", output=f"{sdir}/{region}/{grid}/irrigation_{syear}_{eyear}_{grid}.nc")
+            cdo.copy(options="-setmisstoc,-999", input=f'{sdir}/{region}/{grid}/irrigation_{syear}_{eyear}_{grid}.nc', output=f"{sdir}/{region}/{grid}/irrigation_{syear}_{eyear}_$grid.srv")
+        else:
+            # cdo setmisstoc,-999 -$remap_com -varssum -selvar,$vars_crops $sdir/$region/states_${syear}_${eyear}_$grid.nc $sdir/$region/sum_crop_frac.nc
+            if remap_com in ["remapbil", "remapcon2"]:
+                cdo.setmisstoc(input=f"-999 -{remap_com}, grid_{grid} -varssum -selvar,{vars_crops} {sdir}/{region}/states_{syear}_{eyear}_{grid}.nc", output=f"{sdir}/{region}/sum_crop_frac.nc")
+            else:
+                cdo.setmisstoc(input=f"-999 -{remap_com} -varssum -selvar,{vars_crops} {sdir}/{region}/states_{syear}_{eyear}_{grid}.nc", output=f"{sdir}/{region}/sum_crop_frac.nc")
+
+            # Change variables names
+
+            for n in range(5):
+                if remap_com in ["remapbil", "remapcon2"]:
+                    cdo.mul(input=f"-{remap_com}, grid_{grid} -selvar,{IRR[n]} {sdir}/{region}/irri_vars_{syear}_{eyear}_{region}.nc -{remap_com}, grid_{grid} -selvar,{ICR[n]} {sdir}/{region}/states_{syear}_{eyear}_{grid}.nc", output=f"{sdir}/{region}/dummy.nc")
+                else:
+                    cdo.mul(input=f"-{remap_com} -selvar,{IRR[n]} {sdir}/{region}/irri_vars_{syear}_{eyear}_{region}.nc -{remap_com} -selvar,{ICR[n]} {sdir}/{region}/states_{syear}_{eyear}_{grid}.nc", output=f"{sdir}/{region}/dummy.nc")
+                if n == 0:
+                    cdo.chname(input=f"{IRR[0]},irrig_frac -selvar,{IRR[0]} {sdir}/{region}/dummy.nc", output=f"{sdir}/{region}/sum_irri_frac_{syear}_{eyear}_{grid}.nc")
+                else:
+                    cdo.add(input=f"-chname,{IRR[n]},irrig_frac -selvar,{IRR[n]} {sdir}/{region}/dummy.nc {sdir}/{region}/sum_irri_frac_{syear}_{eyear}_{grid}.nc")   
+                    shutil.move(f"{sdir}/{region}/dummy2.nc", f"{sdir}/{region}/sum_irri_frac_{syear}_{eyear}_{grid}.nc")
+                os.remove(f"{sdir}/{region}/dummy.nc")
+            cdo.div(input=f"{sdir}/{region}/sum_irri_frac_{syear}_{eyear}_{grid}.nc {sdir}/{region}/sum_crop_frac.nc", output=f"{sdir}/{region}/{grid}/irrigation_{syear}_{eyear}_{grid}.nc")
+            cdo.copy(input=f"-setmisstoc,-999 {sdir}/{region}/{grid}/irrigation_{syear}_{eyear}_{grid}.nc", output=f"{sdir}/{region}/{grid}/irrigation_{syear}_{eyear}_{grid}.srv")
+    if trans:
+        odir = grid
+        # combine land-use changes using reclassifcation\
+        ifile=f"{tfile}_{syear}_{eyear}_{region}.nc"
+        logfile=f"{tfile}_{syear}_{eyear}_{region}.log"
+
+        # New classification
+
+        fromto_array = [
+            {"varn": for2urb, "for_1": FOR, "for_2": URB, "outvar_condition": None},
+            {"varn": urb2for, "for_1": URB, "for_2": FOR, "outvar_condition": "primf"},
+            {"varn": for2nfv, "for_1": FOR, "for_2": NFV, "outvar_condition": "primn"},
+            {"varn": for2cro, "for_1": FOR, "for_2": CRO, "outvar_condition": None},
+            {"varn": nfv2for, "for_1": NFV, "for_2": FOR, "outvar_condition": "primf"},
+            {"varn": cro2for, "for_1": CRO, "for_2": FOR, "outvar_condition": "primf"},
+            {"varn": cro2urb, "for_1": CRO, "for_2": URB, "outvar_condition": None},
+            {"varn": urb2cro, "for_1": URB, "for_2": CRO, "outvar_condition": None},
+            {"varn": cro2nfv, "for_1": CRO, "for_2": NFV, "outvar_condition": "primn"},
+            {"varn": nfv2cro, "for_1": NFV, "for_2": CRO, "outvar_condition": None},
+            {"varn": nfv2urb, "for_1": NFV, "for_2": URB, "outvar_condition": None},
+            {"varn": urb2nfv, "for_1": URB, "for_2": NFV, "outvar_condition": None},
+            {"varn": ran2nfv, "for_1": RAN, "for_2": NFV, "outvar_condition": "primn"},
+            {"varn": nfv2ran, "for_1": NFV, "for_2": RAN, "outvar_condition": None},
+            {"varn": ran2for, "for_1": RAN, "for_2": FOR, "outvar_condition": "primf"},
+            {"varn": for2ran, "for_1": FOR, "for_2": RAN, "outvar_condition": None},
+            {"varn": ran2cro, "for_1": RAN, "for_2": CRO, "outvar_condition": None},
+            {"varn": cro2ran, "for_1": CRO, "for_2": RAN, "outvar_condition": None},
+            {"varn": ran2urb, "for_1": RAN, "for_2": URB, "outvar_condition": None},
+            {"varn": urb2ran, "for_1": URB, "for_2": RAN, "outvar_condition": None},
+            {"varn": pas2nfv, "for_1": PAS, "for_2": NFV, "outvar_condition": "primn"},
+            {"varn": nfv2pas, "for_1": NFV, "for_2": PAS, "outvar_condition": None},
+            {"varn": pas2for, "for_1": PAS, "for_2": FOR, "outvar_condition": None},
+            {"varn": for2pas, "for_1": FOR, "for_2": PAS, "outvar_condition": None},
+            {"varn": pas2cro, "for_1": PAS, "for_2": CRO, "outvar_condition": None},
+            {"varn": cro2pas, "for_1": CRO, "for_2": PAS, "outvar_condition": None},
+            {"varn": pas2urb, "for_1": PAS, "for_2": URB, "outvar_condition": None},
+            {"varn": ran2pas, "for_1": RAN, "for_2": PAS, "outvar_condition": None},
+            {"varn": urb2pas, "for_1": URB, "for_2": PAS, "outvar_condition": None}
+
+        ]
+
+        for data in fromto_array:
+            fromto(data["varn"], data["for_1"], data["for_2"], data["outvar_condition"])
+
+    def fromto(varn, for_1, for_2, outvar_condition=None):
+        ofile=f"transitions_{syear}_{eyear}_{region}_{varn}"
+        cdo.mulc(input=f"0 -selvar,primf_to_urban {ifile}", output=f"dummy.nc")
+        for inivar in for_1:
+            for outvar in for_2:
+                if not outvar_condition:
+                    cdo.add(input=f"-selvar,{inivar}_to_{outvar} {ifile} dummy.nc", output=f"{ofile}.nc")
+                    cdo.chname(input=f"{inivar}_to_{outvar},{varn} {ofile}.nc", output=f"dummy.nc")
+                if outvar !== outvar_condition:
+                    print(f"{inivar}_to_{outvar}")
+                    cdo.add(input=f"-selvar,{inivar}_to_{outvar} {ifile} dummy.nc", output=f"{ofile}.nc")
+                    cdo.chname(input=f"{inivar}_to_{outvar},{varn} {ofile}.nc", output=f"dummy.nc")
+        shutil.move(f"{sdir}/{region}/dummy.nc", f"{ofile}.nc")
         if remap_com == "invertlat":
-            cdo.invertlat(input=f"-chname,{IRR[0]},irrig_frac -selvar,{IRR[0]} {sdir}/{region}/irri_vars_{syear}_{eyear}_{region}.nc", output=f"{sdir}/{region}/{grid}/irrigation_{syear}_{eyear}_{grid}.nc")
+            cdo.invertlat(input=f"{ofile}.nc", output=f"grid/{ofile}_{ext}_{grid}.nc")
         elif remap_com == "remapbil":
-            cdo.remapbil(f"grid_{grid}", input=f"-chname,{IRR[0]},irrig_frac -selvar,{IRR[0]} {sdir}/{region}/irri_vars_{syear}_{eyear}_{region}.nc", output=f"{sdir}/{region}/{grid}/irrigation_{syear}_{eyear}_{grid}.nc")
+            cdo.remapbil(input=f"grid_{grid} {ofile}.nc", output=f"grid/{ofile}_{ext}_{grid}.nc")
         elif remap_com == "remapcon2":
-            cdo.remapcon2(f"grid_{grid}", input=f"-chname,{IRR[0]},irrig_frac -selvar,{IRR[0]} {sdir}/{region}/irri_vars_{syear}_{eyear}_{region}.nc", output=f"{sdir}/{region}/{grid}/irrigation_{syear}_{eyear}_{grid}.nc")
-        cdo.copy(options="-setmisstoc,-999", input=f'{sdir}/{region}/{grid}/irrigation_{syear}_{eyear}_{grid}.nc', output=f"{sdir}/{region}/{grid}/irrigation_{syear}_{eyear}_$grid.srv")
-    else:
-        # cdo setmisstoc,-999 -$remap_com -varssum -selvar,$vars_crops $sdir/$region/states_${syear}_${eyear}_$grid.nc $sdir/$region/sum_crop_frac.nc
-        if remap_com in ["remapbil", "remapcon2"]:
-            cdo.setmisstoc(input=f"-999 -{remap_com}, grid_{grid} -varssum -selvar,{vars_crops} {sdir}/{region}/states_{syear}_{eyear}_{grid}.nc", output=f"{sdir}/{region}/sum_crop_frac.nc")
-        else:
-            cdo.setmisstoc(input=f"-999 -{remap_com} -varssum -selvar,{vars_crops} {sdir}/{region}/states_{syear}_{eyear}_{grid}.nc", output=f"{sdir}/{region}/sum_crop_frac.nc")
-    """
-    CHANGE VARIABLES NAMES 
-    """
-    for n in range(5):
-        if remap_com in ["remapbil", "remapcon2"]:
-            cdo.mul(input=f"-{remap_com}, grid_{grid} -selvar,{IRR[n]} {sdir}/{region}/irri_vars_{syear}_{eyear}_{region}.nc -{remap_com}, grid_{grid} -selvar,{ICR[n]} {sdir}/{region}/states_{syear}_{eyear}_{grid}.nc", output=f"{sdir}/{region}/dummy.nc")
-        else:
-            cdo.mul(input=f"-{remap_com} -selvar,{IRR[n]} {sdir}/{region}/irri_vars_{syear}_{eyear}_{region}.nc -{remap_com} -selvar,{ICR[n]} {sdir}/{region}/states_{syear}_{eyear}_{grid}.nc", output=f"{sdir}/{region}/dummy.nc")
-        
-    # for n in 0 1 2 3 4; do
-    # cdo mul -$remap_com -selvar,${IRR[$n]} $sdir/$region/irri_vars_${syear}_${eyear}_$region.nc -$remap_com -selvar,${ICR[$n]} $sdir/$region/states_${syear}_${eyear}_$grid.nc $sdir/$region/dummy.nc
-    # if [[ $n -eq 0 ]];then
-    # cdo chname,${IRR[0]},irrig_frac -selvar,${IRR[0]} $sdir/$region/dummy.nc $sdir/$region/sum_irri_frac_${syear}_${eyear}_$grid.nc
-    # else
-    # cdo add -chname,${IRR[$n]},irrig_frac -selvar,${IRR[$n]} $sdir/$region/dummy.nc $sdir/$region/sum_irri_frac_${syear}_${eyear}_$grid.nc $sdir/$region/dummy2.nc
-    # mv $sdir/$region/dummy2.nc $sdir/$region/sum_irri_frac_${syear}_${eyear}_$grid.nc
-    # fi
-    
+            cdo.remapcon2(input=f"grid_{grid} {ofile}.nc", output=f"grid/{ofile}_{ext}_{grid}.nc")
+        cdo.copy(options=f"{cutting} -setmisstoc,-999.", input=f'{grid}/{ofile}_{ext}_{grid}.nc', output=f"{grid}/{ofile}_{ext}_{grid}.srv")
