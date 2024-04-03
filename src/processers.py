@@ -1,11 +1,25 @@
-from input_params import *
 from pathlib import Path
 import shutil
 from cdo import *
+from src.config import *
 
 cdo = Cdo()
 
-def generate_namelist_dict():
+def generate_namelist(config):
+    region = config.region
+    res = config.res
+    remap = config.remap
+    scenario = config.scenario
+    grid = f"reg01_{region}"
+    irri = config.irri
+    syear = config.syear
+    eyear = config.eyear
+    mcgback = config.mcgback
+    forward = config.forward
+    backgrd = config.backgrd
+    addtr = config.addtr
+    glc = f"{config.lcd}-{config.esayear}-{config.vers}"
+    glc_lsm = f"{config.lcd}-2015-{config.vers}"
     if res == 250:
         ext = "NINT"
     else:
@@ -132,8 +146,8 @@ def generate_namelist_dict():
         "F_ADDTREE": f"{sdir}/addtree_{syear}_{eyear}_{grid}.srv", # nat2for
 
         # CONTROL
-        "XSIZE": xsize,
-        "YSIZE": ysize,
+        "xsize": xsize,
+        "ysize": ysize,
         "MCGRATH": lmcg,
         "FORWARD": lforward,
         "BACKGRD": lbackgrd,
@@ -162,7 +176,10 @@ def generate_namelist_dict():
     cdo.copy(input=f'{odir}/{ofile}.srv', options=f'setgrid,grid_{grid} -settime,12:00:00 -setctomiss,-999', output=f'{odir}/{ofile}.nc')
     return namelist_dict
 
-def prepare_files():
+def prepare_luh2_data():
+    """
+    V2.0
+    """
     URB="urban" # urban
     GRA="range pastr" # grass
     C3C="c3ann c3per c3nfx" # crops C3
@@ -272,7 +289,7 @@ def prepare_files():
             cdo.remapbil(f"grid_{grid}", input=f"{sdir}/{region}/addtree_{syear}_{eyear}_{region}.nc", output=f"{sdir}/{region}/{grid}/addtree_{syear}_{eyear}_{grid}.nc")
         elif remap_com == "remapcon2":
             cdo.remapcon2(f"grid_{grid}", input=f"{sdir}/{region}/addtree_{syear}_{eyear}_{region}.nc", output=f"{sdir}/{region}/{grid}/addtree_{syear}_{eyear}_{grid}.nc")
-        cdo.copy(input=f'{sdir}/{region}/{grid/}addtree_{syear}_{eyear}_{grid}.nc', output=f"{sdir}/{region}/{grid}/addtree_{syear}_{eyear}_{grid}.srv")
+        cdo.copy(input=f'{sdir}/{region}/{grid}/addtree_{syear}_{eyear}_{grid}.nc', output=f"{sdir}/{region}/{grid}/addtree_{syear}_{eyear}_{grid}.srv")
     
     # compute irragtion fraction 
     if irrig:
@@ -309,10 +326,6 @@ def prepare_files():
             cdo.div(input=f"{sdir}/{region}/sum_irri_frac_{syear}_{eyear}_{grid}.nc {sdir}/{region}/sum_crop_frac.nc", output=f"{sdir}/{region}/{grid}/irrigation_{syear}_{eyear}_{grid}.nc")
             cdo.copy(input=f"-setmisstoc,-999 {sdir}/{region}/{grid}/irrigation_{syear}_{eyear}_{grid}.nc", output=f"{sdir}/{region}/{grid}/irrigation_{syear}_{eyear}_{grid}.srv")
     if trans:
-        odir = grid
-        # combine land-use changes using reclassifcation\
-        ifile=f"{tfile}_{syear}_{eyear}_{region}.nc"
-        logfile=f"{tfile}_{syear}_{eyear}_{region}.log"
 
         # New classification
 
@@ -350,25 +363,72 @@ def prepare_files():
         ]
 
         for data in fromto_array:
-            fromto(data["varn"], data["for_1"], data["for_2"], data["outvar_condition"])
+            fromto(data["varn"], data["for_1"], data["for_2"], tfile, ext, cutting, data["outvar_condition"])
 
-    def fromto(varn, for_1, for_2, outvar_condition=None):
-        ofile=f"transitions_{syear}_{eyear}_{region}_{varn}"
-        cdo.mulc(input=f"0 -selvar,primf_to_urban {ifile}", output=f"dummy.nc")
-        for inivar in for_1:
-            for outvar in for_2:
-                if not outvar_condition:
-                    cdo.add(input=f"-selvar,{inivar}_to_{outvar} {ifile} dummy.nc", output=f"{ofile}.nc")
-                    cdo.chname(input=f"{inivar}_to_{outvar},{varn} {ofile}.nc", output=f"dummy.nc")
-                if outvar !== outvar_condition:
-                    print(f"{inivar}_to_{outvar}")
-                    cdo.add(input=f"-selvar,{inivar}_to_{outvar} {ifile} dummy.nc", output=f"{ofile}.nc")
-                    cdo.chname(input=f"{inivar}_to_{outvar},{varn} {ofile}.nc", output=f"dummy.nc")
-        shutil.move(f"{sdir}/{region}/dummy.nc", f"{ofile}.nc")
-        if remap_com == "invertlat":
-            cdo.invertlat(input=f"{ofile}.nc", output=f"grid/{ofile}_{ext}_{grid}.nc")
-        elif remap_com == "remapbil":
-            cdo.remapbil(input=f"grid_{grid} {ofile}.nc", output=f"grid/{ofile}_{ext}_{grid}.nc")
-        elif remap_com == "remapcon2":
-            cdo.remapcon2(input=f"grid_{grid} {ofile}.nc", output=f"grid/{ofile}_{ext}_{grid}.nc")
-        cdo.copy(options=f"{cutting} -setmisstoc,-999.", input=f'{grid}/{ofile}_{ext}_{grid}.nc', output=f"{grid}/{ofile}_{ext}_{grid}.srv")
+def prepare_mcgrath():
+    # commands for interpolation to given grid
+    if remap == "bilinear":
+        ext = "BIL"
+        remap_com = f"remapbil, grid_{grid}"
+        if grid == "EUR-011":
+            cutting = "-selindexbox,2,434,2,434"
+        else:
+            cutting = ""
+    else:
+        remap_com = ""
+    
+    # select period and region
+    if region == "Europe":
+        reg = "-56,84,16,79"
+    elif region == "Globe":
+        reg = "-180,180,-90,90"
+    ifile = f"{glcdir}/{lcd}_{syear}_{eyear}.nc"
+    #
+    # compute background for LUT classes using zonal mean
+    #
+    cdo.chname(input=f"-vertsum -sellevel,{TeBrEv} {ifile}", output=f"{glcdir}/{lcd}_{syear}_{eyear}_TeBrEv.nc")
+    cdo.maxvegetfrac(input=f"-vertsum -sellevel,{TeBrEv} {ifile}", output=f"{glcdir}/{lcd}_{syear}_{eyear}_TeBrEv.nc")
+    cdo.var803(input=f"-vertsum -sellevel,{TeBrEv} {ifile}", output=f"{glcdir}/{lcd}_{syear}_{eyear}_TeBrEv.nc")
+    cdo.chname(input=f"-vertsum -sellevel,{TeBrDec} {ifile}", output=f"{glcdir}/{lcd}_{syear}_{eyear}TeBrDec.nc")
+    cdo.maxvegetfrac(input=f"-vertsum -sellevel,{TeBrDec} {ifile}", output=f"{glcdir}/{lcd}_{syear}_{eyear}TeBrDec.nc")
+    cdo.var804(input=f"-vertsum -sellevel,{TeBrDec} {ifile}", output=f"{glcdir}/{lcd}_{syear}_{eyear}TeBrDec.nc")
+    cdo.chname(input=f"-vertsum -sellevel,{EvCon} {ifile}", output=f"{glcdir}/{lcd}_{syear}_{eyear}_ConEv.nc")
+    cdo.maxvegetfrac(input=f"-vertsum -sellevel,{EvCon} {ifile}", output=f"{glcdir}/{lcd}_{syear}_{eyear}_ConEv.nc")
+    cdo.var805(input=f"-vertsum -sellevel,{EvCon} {ifile}", output=f"{glcdir}/{lcd}_{syear}_{eyear}_ConEv.nc")
+    cdo.chname(input=f"-vertsum -sellevel,{TeBrEv},{TeBrDec},{EvCon} {ifile}", output=f"{glcdir}/{lcd}_{syear}_{eyear}_FOR.nc")
+    cdo.maxvegetfrac(input=f"-vertsum -sellevel,{TeBrEv},{TeBrDec},{EvCon} {ifile}", output=f"{glcdir}/{lcd}_{syear}_{eyear}_FOR.nc")
+    cdo.forest(input=f"-vertsum -sellevel,{TeBrEv},{TeBrDec},{EvCon} {ifile}", output=f"{glcdir}/{lcd}_{syear}_{eyear}_FOR.nc")
+    cdo.merge(input=f"{glcdir}/{lcd}_{syear}_{eyear}_TeBrEv.nc {glcdir}/{lcd}_{syear}_{eyear}_TeBrDec.nc {glcdir}/{lcd}_{syear}_{eyear}_ConEv.nc", output=f"{glcdir}/{lcd}_{syear}_{eyear}_dummy.nc")
+    cdo.setmisstoc(input=f"-999 -remapbil,grid_{grid} -sellonlatbox,{reg} -div {glcdir}/{lcd}_{syear}_{eyear}_dummy.nc -varssum {glcdir}/{lcd}_{syear}_{eyear}_dummy.nc", output=f"{glcdir}/{lcd}_{syear}_{eyear}_ForestBckgrdMcGrath_{grid}.nc")
+
+    for year in [2011, 2012, 2013, 2014, 2015]:
+        cdo.setdate(input=f"{year}-06-15 -selyear,2010 {glcdir}/{lcd}_{syear}_{eyear}_ForestBckgrdMcGrath_{grid}.nc", output=f"{glcdir}/dummy_{year}.nc")
+    cdo.mergetime(input=f"{glcdir}/dummy_????.nc", output=f"{glcdir}/{lcd}_2011_2015_ForestBckgrdMcGrath_{grid}.nc")
+    cdo.mergetime(input=f"{glcdir}/{lcd}_{syear}_{eyear}_ForestBckgrdMcGrath_{grid}.nc {glcdir}/{lcd}_2011_2015_ForestBckgrdMcGrath_{grid}.nc", output=f"{glcdir}/{lcd}_{syear}_2015_ForestBckgrdMcGrath_{grid}.nc")
+    cdo.mergetime(input=f"{glcdir}/dummy_????.nc", output=f"{glcdir}/{lcd}_2011_2015_ForestBckgrdMcGrath_{grid}.nc")
+    cdo.copy(input=f"{glcdir}/{lcd}_{syear}_2015_ForestBckgrdMcGrath_{grid}.nc", output=f"{glcdir}/{lcd}_{syear}_2015_ForestBckgrdMcGrath_{grid}.srv")
+
+def fromto(varn, for_1, for_2, tfile, ext, cutting, outvar_condition=None):
+    odir = grid
+    # combine land-use changes using reclassifcation\
+    ifile=f"{tfile}_{syear}_{eyear}_{region}.nc"
+    logfile=f"{tfile}_{syear}_{eyear}_{region}.log"
+    ofile=f"transitions_{syear}_{eyear}_{region}_{varn}"
+    cdo.mulc(input=f"0 -selvar,primf_to_urban {ifile}", output=f"dummy.nc")
+    for inivar in for_1:
+        for outvar in for_2:
+            if not outvar_condition:
+                cdo.add(input=f"-selvar,{inivar}_to_{outvar} {ifile} dummy.nc", output=f"{ofile}.nc")
+                cdo.chname(input=f"{inivar}_to_{outvar},{varn} {ofile}.nc", output=f"dummy.nc")
+            if outvar != outvar_condition:
+                print(f"{inivar}_to_{outvar}")
+                cdo.add(input=f"-selvar,{inivar}_to_{outvar} {ifile} dummy.nc", output=f"{ofile}.nc")
+                cdo.chname(input=f"{inivar}_to_{outvar},{varn} {ofile}.nc", output=f"dummy.nc")
+    shutil.move(f"{sdir}/{region}/dummy.nc", f"{ofile}.nc")
+    if remap_com == "invertlat":
+        cdo.invertlat(input=f"{ofile}.nc", output=f"grid/{ofile}_{ext}_{grid}.nc")
+    elif remap_com == "remapbil":
+        cdo.remapbil(input=f"grid_{grid} {ofile}.nc", output=f"grid/{ofile}_{ext}_{grid}.nc")
+    elif remap_com == "remapcon2":
+        cdo.remapcon2(input=f"grid_{grid} {ofile}.nc", output=f"grid/{ofile}_{ext}_{grid}.nc")
+    cdo.copy(options=f"{cutting} -setmisstoc,-999.", input=f'{grid}/{ofile}_{ext}_{grid}.nc', output=f"{grid}/{ofile}_{ext}_{grid}.srv")
