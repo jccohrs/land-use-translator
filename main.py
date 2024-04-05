@@ -1,5 +1,5 @@
 import yaml
-from src.processers import generate_namelist
+from src.processers import ProcesserClass
 from src.utils import dotdict
 
 def main():
@@ -14,5 +14,7 @@ if __name__ == '__main__':
     config = dotdict(main())
 
     # Generate Namelist
-    namelist = generate_namelist(config)
+    PRC = ProcesserClass(config)
+    namelist = PRC.generate_namelist()
+    PRC.prepare_luh2_data()
     print(namelist)
