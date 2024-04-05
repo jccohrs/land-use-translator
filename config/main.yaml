@@ -1,6 +1,6 @@
 # Input Parameters
 
-region : "NorthAmerica"
+region : "Germany"
 forward : False
 backgrd : True
 mcgrath : False
@@ -8,8 +8,8 @@ addtree : False
 mcgback : False
 irri : False
 
-syear : 2015
-eyear : 1950
+syear : 1950
+eyear : 2015
 npfts : 16
 esayear : 2015
 xsize : 95

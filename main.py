@@ -14,4 +14,5 @@ if __name__ == '__main__':
     config = dotdict(main())
 
     # Generate Namelist
-    generate_namelist(config)
+    namelist = generate_namelist(config)
+    print(namelist)

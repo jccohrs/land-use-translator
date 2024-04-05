@@ -2,6 +2,7 @@ from pathlib import Path
 import shutil
 from cdo import *
 from src.config import *
+import os
 
 cdo = Cdo()
 
@@ -17,7 +18,7 @@ def generate_namelist(config):
     mcgback = config.mcgback
     forward = config.forward
     backgrd = config.backgrd
-    addtr = config.addtr
+    addtr = config.addtree
     glc = f"{config.lcd}-{config.esayear}-{config.vers}"
     glc_lsm = f"{config.lcd}-2015-{config.vers}"
     if res == 250:
@@ -85,19 +86,17 @@ def generate_namelist(config):
 
     if irri:
         ofile = f"{oname}_{scenario}_{syear}_{eyear}_{grid}_irri"
-        lirri = True
     else:
         ofile = f"{oname}_{scenario}_{syear}_{eyear}_{grid}"
-        lirri = False
     #PH need to include other options when using other LC dataset
     if mcgback and scenario in ["historical", "historical_high", "historical_low"]:
         ofile = f"{ofile}_mcg2"
-    
-    lforward = forward 
-    lutsyear = syear
-    luteyear = eyear
-    lbackgrd = backgrd
-    laddtr = addtr
+    if forward:
+        lutsyear = syear
+        luteyear = eyear
+    else:
+        lutsyear = eyear
+        luteyear = syear
 
     if addtr and scenario not in ["historical", "historical_high", "historical_low"]:
         ofile = f"{ofile}_addtr"
@@ -146,34 +145,29 @@ def generate_namelist(config):
         "F_ADDTREE": f"{sdir}/addtree_{syear}_{eyear}_{grid}.srv", # nat2for
 
         # CONTROL
-        "xsize": xsize,
-        "ysize": ysize,
+        "XSIZE": xsize,
+        "YSIZE": ysize,
         "MCGRATH": lmcg,
-        "FORWARD": lforward,
-        "BACKGRD": lbackgrd,
-        "ADDTREE": laddtr,
-        "IRRI": lirri,
-        "SYEAR":  syear,
-        "EYEAR": eyear,
+        "FORWARD": forward,
+        "BACKGRD": backgrd,
+        "ADDTREE": addtr,
+        "IRRI": irri,
+        "SYEAR":  lutsyear,
+        "EYEAR": luteyear,
         "NPFTS" : 16,
         "GRADEF" : 9,
         "CRODEF": 13,
         "SHRDEF": 8,
         "FORDEF": 4,
         "URBDEF": 15,
-        "FORPFTS": [1 , 2, 3, 4, 5, 6, 0, 0, 0, 0],
-        "SHRPFTS": [7, 8, 0, 0, 0, 0, 0, 0, 0, 0],
-        "GRAPFTS": [9, 10, 11, 0, 0, 0, 0, 0, 0, 0],
-        "CROPFTS": [13, 14, 0, 0, 0, 0, 0, 0, 0, 0],
-        "URBPFTS": [15, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        "CONPFTS": [12, 16, 0, 0, 0, 0, 0, 0, 0, 0]
+        "FORPFTS": "1 , 2, 3, 4, 5, 6, 0, 0, 0, 0",
+        "SHRPFTS": "7, 8, 0, 0, 0, 0, 0, 0, 0, 0",
+        "GRAPFTS": "9, 10, 11, 0, 0, 0, 0, 0, 0, 0",
+        "CROPFTS": "13, 14, 0, 0, 0, 0, 0, 0, 0, 0",
+        "URBPFTS": "15, 0, 0, 0, 0, 0, 0, 0, 0, 0",
+        "CONPFTS": "12, 16, 0, 0, 0, 0, 0, 0, 0, 0"
     }
-
-    # CDO in the console
-    # f"cdo -f nc setgrid,grid_{grid} -settime,12:00:00 -setctomiss,-999 {odir}/{ofile}.srv {odir}/{ofile}.nc"
-
-    # CDO with python
-    cdo.copy(input=f'{odir}/{ofile}.srv', options=f'setgrid,grid_{grid} -settime,12:00:00 -setctomiss,-999', output=f'{odir}/{ofile}.nc')
+    cdo.setgrid(os.path.join(scriptsdir, f"grid_{grid}"), input=f"{odir}/{ofile}.srv", output=f"{odir}/{ofile}.nc", options=f"-f nc -settime,12:00:00 -setctomiss,-999") 
     return namelist_dict
 
 def prepare_luh2_data():

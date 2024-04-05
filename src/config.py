@@ -1,5 +1,6 @@
 pftdir = "data/ESA-CCI/PFT_FILES" # directory of ESA-CCI LC file
 odir = "data/LUCAS_LUC" # directory that stores orginal GLOBCOVER files
+scriptsdir = "scripts"
 luhdir = "data/LUH_V2" # directory that stores output files from SAGA
 mcgdir = "data/MCGRATH" # directory of McGrath forest fraction file
 lsmdir = "data/ESA-CCI/SRV_FILES" # land-sea mask file
@@ -22,11 +23,11 @@ ICR = ('c3ann' 'c4ann' 'c3per' 'c4per' 'c3nfx') # corrisponding states for irrig
 
 
 glcdir = "/mnt/lustre02/work/ch0636/g300089/LUCAS/DATA/MCGRATH" # directory of GLOBCOVER file
-orgdir=f"{glcdir}/ORG_FILES" # directory that stores orginal GLOBCOVER files
-sagadir=f"{glcdir}/SAGA_FILES" # directory that stores output files from SAGA
-ncdir=f"{glcdir}/NC_FILES" # directory that stores netcdf output files
-srvdir=f"{glcdir}/SRV_FILES" # directory that stores service binary files
-pftdir=f"{glcdir}/PFT_FILES"
+orgdir_mcgrath=f"{glcdir}/ORG_FILES" # directory that stores orginal GLOBCOVER files
+sagadir_mcgrath=f"{glcdir}/SAGA_FILES" # directory that stores output files from SAGA
+ncdir_mcgrath=f"{glcdir}/NC_FILES" # directory that stores netcdf output files
+srvdir_mcgrath=f"{glcdir}/SRV_FILES" # directory that stores service binary files
+pftdir_mcgrath=f"{glcdir}/PFT_FILES"
 tdir=f"{glcdir}/tmp"
 
 TeBrEv = 10
