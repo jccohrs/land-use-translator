@@ -6,6 +6,7 @@ mcgdir = "data/MCGRATH" # directory of McGrath forest fraction file
 lsmdir = "data/ESA-CCI/SRV_FILES" # land-sea mask file
 lut = "data/LUCAS_LUC/imove-preprocessing/lut/build/lucas_lut_levante.exe"
 luh2dir = "/work/ch0636/g300089/LUCAS/DATA/LUH_V2"
+datadir = "data"
 
 URB = "urban" # urban
 GRA = "range pastr" # grass
@@ -22,7 +23,7 @@ IRR = ('irrig_c3ann' 'irrig_c4ann' 'irrig_c3per' 'irrig_c4per' 'irrig_c3nfx') # 
 ICR = ('c3ann' 'c4ann' 'c3per' 'c4per' 'c3nfx') # corrisponding states for irrigation
 
 
-glcdir = "/mnt/lustre02/work/ch0636/g300089/LUCAS/DATA/MCGRATH" # directory of GLOBCOVER file
+glcdir = "data/MCGRATH" # directory of GLOBCOVER file
 orgdir_mcgrath=f"{glcdir}/ORG_FILES" # directory that stores orginal GLOBCOVER files
 sagadir_mcgrath=f"{glcdir}/SAGA_FILES" # directory that stores output files from SAGA
 ncdir_mcgrath=f"{glcdir}/NC_FILES" # directory that stores netcdf output files

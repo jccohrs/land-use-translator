@@ -17,4 +17,8 @@ if __name__ == '__main__':
     PRC = ProcesserClass(config)
     namelist = PRC.generate_namelist()
     PRC.prepare_luh2_data()
-    print(namelist)
+    #PRC.prepare_mcgrath()
+    #print(namelist)
+    ## NCDF
+    # LUT
+    # OUTPUT

@@ -12,6 +12,7 @@ syear : 1950
 eyear : 2015
 npfts : 16
 esayear : 2015
+mcgrath_eyear : 2010
 xsize : 95
 ysize : 89
 gradef : 9
@@ -19,7 +20,7 @@ crodef : 13
 shrdef : 8
 
 oname : "LUCAS_LUC7_ESACCI_LUH2"
-lcd : "ESACCI-LC-L4-LCCS-Map-300m-P1Y" # version of ESA-file
+lcd : "combined_species_mtc" # version of ESA-file
 mcg : "combined_species_mtc" # name of McGrath file
 vers : "v2.0.7"
 res : 100 # resolution in 10th of a degree
@@ -27,4 +28,4 @@ remap : "bilinear"
 scenario : "historical"
 
 trans : True
-state : False
+state : True
