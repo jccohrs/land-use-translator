@@ -1,7 +1,25 @@
 # land use and land cover change
 
-Test Readme :)
+## Installation
 
+Install pipenv 
+```
+$ pip install pipenv
+```
+Change to the project directory
+
+```
+$ cd project_name
+```
+Install the required libraries 
+
+```
+$ pipenv install 
+```
+Activate your pipenv environment
+```
+$ pipenv shell 
+```
 ## Literature
 
 Interesting related papers (recommended by Peter H.)
