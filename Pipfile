@@ -1,0 +1,16 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+pyyaml = "~=6.0.1"
+cdo = "~=1.6.0"
+cerberus = "~=1.3.5"
+netcdf4 = "~=1.6.5"
+xarray = "~=2024.3.0"
+
+[dev-packages]
+
+[requires]
+python_version = "3.11"
