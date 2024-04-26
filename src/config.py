@@ -42,4 +42,17 @@ PFT_ConDec = "var806"
 
 
 oname = "LUCAS_LUC7_ESACCI_LUH2"
-mcg = "combined_species_mtc" # name of McGrath file
+mcg = "combined_species_mtc"
+
+FORPFTS = [1, 2, 3, 4, 5, 6, 0, 0, 0, 0]
+SHRPFTS = [7, 8, 0, 0, 0, 0, 0, 0, 0, 0]
+GRAPFTS = [9, 10, 11, 0, 0, 0, 0, 0, 0, 0]
+CROPFTS = [13, 14, 0, 0, 0, 0, 0, 0, 0, 0]
+URBPFTS = [15, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+CONPFTS = [12, 16, 0, 0, 0, 0, 0, 0, 0, 0] 
+
+nr_grass = 0
+nr_crops = 0
+nr_shrubs = 0
+nr_forest = 0
+nr_urban = 1

@@ -1,6 +1,6 @@
 # Input Parameters
 
-region : "Germanys"
+region : "Germany"
 forward : False
 backgrd : True
 mcgrath : False
