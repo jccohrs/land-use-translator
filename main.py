@@ -1,63 +1,60 @@
 import yaml
 from src.lut import LUT
 from src.utils import dotdict
-from config.validation import validate_config
-import sys
+from config.validation import validate_config, validate_namelist_files
 
-
-def main():
+def load_configuration():
     with open("config/main.yaml") as stream:
         try:
             config = yaml.safe_load(stream)
-            validate_config(config)
-            return config
+            return dotdict(config)
         except yaml.YAMLError as exc:
             print(exc)
 
-if __name__ == '__main__':
-    config = dotdict(main())
+def prepare_lut(config):
+    validate_config(config)
+    lut = LUT(config)
+    namelist = lut.generate_namelist()
+    validate_namelist_files(namelist)
+    return lut
 
-    LUT = LUT(config)
-    print("Generating Namelist")
-    print("...")
-    namelist = LUT.generate_namelist()
-    print("Succesfully generated")
+def print_section_heading(heading):
     print("______________________")
-    print("Preparing LUH2 data")
+    print(heading)
     print("...")
-    LUT.prepare_luh2_data()
-    print("Succesfully generated")
-    print("______________________")
-    print("Preparing MCGRATH data")
-    print("...")
-    LUT.prepare_mcgrath()
-    print("Succesfully generated")
-    print("______________________")
-    ## perform changes in landcover changes
+
+def main():
+    config = load_configuration()
+    lut = prepare_lut(config)
+    
+    print_section_heading("Preparing LUH2 data")
+    lut.prepare_luh2_data()
+    print("Successfully generated")
+
+    print_section_heading("Preparing MCGRATH data")
+    lut.prepare_mcgrath()
+    print("Successfully generated")
+
+    print_section_heading("Calculating land use changes")
     if config.forward:
         print('CALCULATE LAND USE CHANGES FORWARD IN TIME')
-        print("...")
-        LUT.lucas_lut_forward()
+        lut.lucas_lut_forward()
     else:
         print('CALCULATE LAND USE CHANGES BACKWARD IN TIME')
-        print("...")
-        LUT.lucas_lut_backward()
-    print('FINSHED LAND USE CHANGES')
-    print("______________________")
-    # split crops into irrigated and non-irrigated crops
-    if config.irri:
-        print('SPLIT CROPS USING IRRIGATION FRACTION')
-        print("...")
-        LUT.lucas_lut_irrigation()
+        lut.lucas_lut_backward()
+    print('FINISHED LAND USE CHANGES')
 
-    # split crops into irrigated and non-irrigated crops
+    if config.irri:
+        print_section_heading("Splitting crops using irrigation fraction")
+        lut.lucas_lut_irrigation()
+
     if config.mcgrath:
-        print('ADJUST FOREST RELATIVE FOREST FRACTIONS USING MCGRATH DATA')
-        print("...")
-        LUT.lucas_lut_mcgrath()
-    
-    # Write out the data
-    print('WRITE OUT DATA')
-    LUT.lucas_lut_output()
-    #print(f"RESULTS WRITTEN TO {namelist["F_LC_OUT"]}")
+        print_section_heading("Adjusting forest relative forest fractions using McGrath data")
+        lut.lucas_lut_mcgrath()
+
+    print_section_heading("Writing out data")
+    lut.lucas_lut_output()
     print('LUCAS LUT SUCCESSFULLY FINISHED')
+
+if __name__ == '__main__':
+    main()

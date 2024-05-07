@@ -1,5 +1,6 @@
 from cerberus import Validator, errors
 import yaml
+import os
 
 schema = {
     "region": {"type": "string", "allowed": ["Germany", "Europe"]},
@@ -37,9 +38,14 @@ class CustomValidator(Validator):
         if value not in allowed:
             self._error(field, f"unallowed value {value} --> Select one of the following values: {allowed}")
 
-
 def validate_config(config):
     v = CustomValidator(schema)
     v.validate(config)
     if v.errors:
         raise ValueError(v.errors)
+
+def validate_namelist_files(namelist):
+    for key, value in namelist.items():
+        if key.startswith("F_"):
+            if not os.path.isfile(value):
+                raise ValueError(f"File {value} does not exist")

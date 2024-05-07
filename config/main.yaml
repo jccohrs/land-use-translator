@@ -20,7 +20,7 @@ crodef : 13
 shrdef : 8
 
 oname : "LUCAS_LUC7_ESACCI_LUH2"
-lcd : "combined_species_mtc" # version of ESA-file
+lcd : "ESACCI-LC-L4-LCCS-Map-300m-P1Y" # version of ESA-file
 mcg : "combined_species_mtc" # name of McGrath file
 vers : "v2.0.7"
 res : 100 # resolution in 10th of a degree
