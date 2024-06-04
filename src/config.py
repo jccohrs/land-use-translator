@@ -3,7 +3,6 @@ odir = "data/LUCAS_LUC" # directory that stores orginal GLOBCOVER files
 scriptsdir = "scripts"
 luhdir = "data/LUH_V2" # directory that stores output files from SAGA
 mcgdir = "data/MCGRATH" # directory of McGrath forest fraction file
-lsmdir = "data/ESA-CCI/SRV_FILES" # land-sea mask file
 lut = "data/LUCAS_LUC/imove-preprocessing/lut/build/lucas_lut_levante.exe"
 luh2dir = "/work/ch0636/g300089/LUCAS/DATA/LUH_V2"
 datadir = "data"

@@ -46,6 +46,12 @@ def validate_config(config):
 
 def validate_namelist_files(namelist):
     for key, value in namelist.items():
-        if key.startswith("F_"):
+        # checking irrigation file
+        if (namelist.get("IRRI") and key=="F_IRRI_IN") or (namelist.get("MCGRATH") and key=="F_MCGRATH") or (namelist.get("ADDTREE") and key=="F_ADDTREE"):
+            if not os.path.isfile(value):
+                raise ValueError(f"File {value} does not exist")
+
+            
+        if key.startswith("F_") and key not in ["F_IRRI_IN", "F_MCGRATH", "F_ADDTREE"]:
             if not os.path.isfile(value):
                 raise ValueError(f"File {value} does not exist")

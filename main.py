@@ -1,6 +1,6 @@
 import yaml
 from src.lut import LUT
-from src.utils import dotdict
+from src.utils import dotdict, print_section_heading
 from config.validation import validate_config, validate_namelist_files
 
 def load_configuration():
@@ -18,21 +18,16 @@ def prepare_lut(config):
     validate_namelist_files(namelist)
     return lut
 
-def print_section_heading(heading):
-    print("______________________")
-    print(heading)
-    print("...")
-
 def main():
     config = load_configuration()
     lut = prepare_lut(config)
     
     print_section_heading("Preparing LUH2 data")
-    lut.prepare_luh2_data()
+    #lut.prepare_luh2_data()
     print("Successfully generated")
 
     print_section_heading("Preparing MCGRATH data")
-    lut.prepare_mcgrath()
+    #lut.prepare_mcgrath()
     print("Successfully generated")
 
     print_section_heading("Calculating land use changes")
