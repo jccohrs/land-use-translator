@@ -474,7 +474,7 @@ class LUT:
    
             pft_help = self.lucas_lut_transrules(pas2cro[z, :, :].data.transpose(), pft_help, self.pfts_grass, self.pfts_crops, 0, 0, self.nr_grass, self.nr_crops, 1, 1, self.pft_grass_default, grass_backgr, False, 1, False)
 
-            pft_help = self.lucas_lut_transrules(cro2pas[z, :, :].data.transpose(), pft_help, self.pfts_crops, self.pfts_grass, 0, 0, self.nr_crops, self.nr_grass, 1, 1, self.pft_crops_default, crops_backgr, False, 1, False
+            pft_help = self.lucas_lut_transrules(cro2pas[z, :, :].data.transpose(), pft_help, self.pfts_crops, self.pfts_grass, 0, 0, self.nr_crops, self.nr_grass, 1, 1, self.pft_crops_default, crops_backgr, False, 1, False)
 
             pft_help = self.lucas_lut_transrules(cro2urb[z, :, :].data.transpose(), pft_help, self.pfts_crops, self.pfts_urban, 0, 0, self.nr_crops, self.nr_urban, 1, 1, self.pft_crops_default, crops_backgr, False, 1, False)
 
@@ -512,7 +512,7 @@ class LUT:
         self.recalc_pft_frac_ts(rcm_lsm)
 
     def plot_pft_frac_ts(self):
-
+        pass
 
 
 
