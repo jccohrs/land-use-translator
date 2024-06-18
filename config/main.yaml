@@ -7,6 +7,8 @@ mcgrath : False
 addtree : False
 mcgback : False
 irri : False
+prepare_luh2_data: False
+prepare_mcgrath: False
 
 syear : 1950
 eyear : 2015
@@ -14,7 +16,7 @@ npfts : 16
 esayear : 2015
 mcgrath_eyear : 2010
 xsize : 95
-ysize : 89
+ysize : 91
 gradef : 9
 crodef : 13
 shrdef : 8
@@ -29,3 +31,10 @@ scenario : "historical"
 
 trans : True
 state : True
+
+# Plot configuration
+plot : True
+# if not plot_npft is given, all npfts are plotted
+plot_npft: null 
+# if not plot_year is given, first year is plotted
+plot_year: 60
