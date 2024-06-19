@@ -51,6 +51,12 @@ CROPFTS = [13, 14, 0, 0, 0, 0, 0, 0, 0, 0]
 URBPFTS = [15, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 CONPFTS = [12, 16, 0, 0, 0, 0, 0, 0, 0, 0] 
 
+GRADEF = 9
+CRODEF = 13
+SHRDEF = 8
+FORDEF = 4
+URBDEF = 15
+
 nr_grass = 0
 nr_crops = 0
 nr_shrubs = 0

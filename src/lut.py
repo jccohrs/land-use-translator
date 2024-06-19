@@ -48,12 +48,12 @@ class LUT:
         self.pfts_shrubs = SHRPFTS[0:self.nr_shrubs]
         self.pfts_forest = FORPFTS[0:self.nr_forest]
         self.pfts_urban = URBPFTS[0:self.nr_urban]
-        self.pft_grass_default = self.namelist["GRADEF"]
-        self.pft_crops_default = self.namelist["CRODEF"]
-        self.pft_shrubs_default = self.namelist["SHRDEF"]
-        self.pft_forest_default = self.namelist["FORDEF"]
-        self.pft_urban_default = self.namelist["URBDEF"]
-        self.pft_crops_default = self.namelist["CRODEF"]
+        self.pft_grass_default = GRADEF
+        self.pft_crops_default = CRODEF
+        self.pft_shrubs_default = SHRDEF
+        self.pft_forest_default = FORDEF
+        self.pft_urban_default = URBDEF
+        self.pft_crops_default = CRODEF
         self.xsize = self.namelist["XSIZE"]
         self.ysize = self.namelist["YSIZE"]
         self.pft_frac_ts = np.zeros((self.xsize, self.ysize, self.npfts, self.years+1))
@@ -317,13 +317,11 @@ class LUT:
                                 filtered_inpfts = np.where(inpfts_pfts_4 < 0.0, inpfts_pfts_4, 0)
                                 helper_3 += filtered_inpfts
                                 inpfts[:, :, pfts_4[ipft]] = np.where(inpfts_pfts_4 < 0.0, 0.0, inpfts_pfts_4)
-            # adjust transition if needed (not enough of pft group 2), helper is always <= 0
             trans = np.maximum(0., trans+helper_3)
-            # add to pft group 2
-            if mcgrath and mcg_sum == 1:  # if mcgrath forest data should be used (hard coded for
+            if mcgrath and mcg_sum == 1:
                 for ipft in range(2, 5):
                     inpfts[:, :, pfts_1[ipft]] += (mcgfrac[:, :, ipft-2].T*trans)
-            else:  # just use the relative fractions
+            else:
                 if selected_pft_1_sum.size > 0:
                     for ipft in range(nr_pfts_1):
                         filtered_pft_1_sum = np.where(pft_1_sum > 0.0, pft_1_sum, 1)
@@ -484,6 +482,7 @@ class LUT:
             self.pft_frac_ts[~mask, :, z] = -999.
 
     def lucas_lut_mcgrath(self, rcm_lsm):
+        # TODO
         mcgrath_frac = xr.open_dataset(self.namelist["F_MCGRATH"])
         for z in range(self.years+1):
             zz = years + 1 - z
@@ -601,6 +600,7 @@ class LUT:
                 ext = ""
 
         # Select period and self.region
+        # CHECK
         if self.region == "Europe":
             if self.res == 100:
                 xsize = 1400
@@ -634,19 +634,12 @@ class LUT:
                 xsize = 19
                 ysize = 18
 
-        lmcg = False
         if self.scenario == "historical":
             sdir = f"{luhdir}/historic/{self.region}/{self.grid}"
-            if self.mcgback:
-                lmcg = True
         elif self.scenario == "historical_high":
             sdir = f"{luhdir}/historic_high/{self.region}/{self.grid}"
-            if self.mcgback:
-                lmcg = True
         elif self.scenario == "historical_low":
             sdir = f"{luhdir}/historic_low/{self.region}/{self.grid}"
-            if self.mcgback:
-                lmcg = True
         else:
             sdir = f"{luhdir}/scenarios/{self.scenario}/{self.region}/{self.grid}"
 
@@ -707,35 +700,16 @@ class LUT:
             "F_URB2PAS": f"{sdir}/transitions_{self.syear}_{self.eyear}_{self.region}_urb2pas_{ext}_{self.grid}.nc", # urb2pas
             "F_URB2RAN": f"{sdir}/transitions_{self.syear}_{self.eyear}_{self.region}_urb2ran_{ext}_{self.grid}.nc", # urb2ran
             "F_ADDTREE": f"{sdir}/addtree_{self.syear}_{self.eyear}_{self.grid}.nc", # nat2for
+            "F_GRID": f"{scriptsdir}/grid_{self.grid}", # grid
 
-            # CONTROL
+            # CHECK
             "XSIZE": xsize,
             "YSIZE": ysize,
-            "MCGRATH": lmcg,
-            "FORWARD": self.forward,
-            "BACKGRD": self.backgrd,
-            "ADDTREE": self.addtree,
-            "IRRI": self.irri,
-            "NPFTS" : 16,
-            "GRADEF" : 9,
-            "CRODEF": 13,
-            "SHRDEF": 8,
-            "FORDEF": 4,
-            "URBDEF": 15,
-            "FORPFTS": "1, 2, 3, 4, 5, 6, 0, 0, 0, 0",
-            "SHRPFTS": "7, 8, 0, 0, 0, 0, 0, 0, 0, 0",
-            "GRAPFTS": "9, 10, 11, 0, 0, 0, 0, 0, 0, 0",
-            "CROPFTS": "13, 14, 0, 0, 0, 0, 0, 0, 0, 0",
-            "URBPFTS": "15, 0, 0, 0, 0, 0, 0, 0, 0, 0",
-            "CONPFTS": "12, 16, 0, 0, 0, 0, 0, 0, 0, 0"
         }
         cdo.setgrid(os.path.join(scriptsdir, f"grid_{self.grid}"), input=f"{odir}/{ofile}.srv", output=f"{odir}/{ofile}.nc", options=f"-f nc -settime,12:00:00 -setctomiss,-999") 
         return namelist_dict
 
     def prepare_luh2_data(self):
-        """
-        V2.0
-        """
         if self.scenario == "historical":
             sdir="historic"
             sfile="states"
@@ -898,9 +872,8 @@ class LUT:
             remap_com = ""
 
         ifile = f"{datadir}/{self.mcg}_{self.syear}_{self.mcgrath_eyear}.nc"
-        #
+
         # compute background for LUT classes using zonal mean
-        #
         cdo.chname(f"maxvegetfrac,{PFT_TeBrEv}", input=f"-vertsum -sellevel,{TeBrEv} {ifile}", output=f"{glcdir}/{self.lcd}_{self.syear}_{self.eyear}_TeBrEv.nc")
         cdo.chname(f"maxvegetfrac,{PFT_TeBrDec}", input=f"-vertsum -sellevel,{TeBrDec} {ifile}", output=f"{glcdir}/{self.lcd}_{self.syear}_{self.eyear}_TeBrDec.nc")
         cdo.chname(f"maxvegetfrac,{PFT_ConEv}", input=f"-vertsum -sellevel,{EvCon} {ifile}", output=f"{glcdir}/{self.lcd}_{self.syear}_{self.eyear}_ConEv.nc")
