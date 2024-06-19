@@ -2,6 +2,7 @@ from cerberus import Validator, errors
 import yaml
 import os
 import xarray as xr
+from src.config import datadir, scenario_dict
 
 schema = {
     "region": {"type": "string", "allowed": ["Germany", "Europe"]},
@@ -28,8 +29,8 @@ schema = {
     "mcg" : {"type": "string"},
     "vers" : {"type": "string"},
     "res" : {"type": "integer"},
-    "remap" : {"type": "string"},
-    "scenario" : {"type": "string"},
+    "remap" : {"type": "string", "allowed": ["bilinear", "con2"]},
+    "scenario" : {"type": "string", "allowed": ["historical", "historical_high", "historical_low", "rcp19", "rcp26", "rcp34", "rcp45", "rcp60", "rcp70", "rcp85"]},
     "trans" : {"type": "boolean"},
     "state" : {"type": "boolean"},
     "plot" : {"type": "boolean"},
@@ -51,7 +52,19 @@ def validate_config(config):
         raise ValueError(v.errors)
 
 def validate_main_files(config):
-    pass
+    # IT MIGHT BE SIMPLIFIED AND INCLUDED JUST IN THE INIT FUNCTION OF LUT
+    if config.scenario in ["historical", "historical_high", "historical_low"]:
+        sfile="states"
+        tfile="transitions"
+        mfile="management"
+    elif config.scenario in scenario_dict.keys():
+        afile=f"added_tree_cover_input4MIPs_landState_ScenarioMIP_UofMD-{scenario_dict[self.scenario]}-2-1-f_gn_2015-2100"
+        sfile=f"multiple-states_input4MIPs_landState_ScenarioMIP_UofMD-{scenario_dict[self.scenario]}-2-1-f_gn_2015-2100"
+        tfile=f"multiple-transitions_input4MIPs_landState_ScenarioMIP_UofMD-{scenario_dict[self.scenario]}-2-1-f_gn_2015-2100"
+        mfile=f"multiple-management_input4MIPs_landState_ScenarioMIP_UofMD-{scenario_dict[self.scenario]}-2-1-f_gn_2015-2100"
+    for value in [sfile, tfile, mfile]:
+        if not os.path.isfile(os.path.join(datadir, value)+".nc"):
+            raise ValueError(f"File {value} does not exist")   
 
 def validate_prepared_files(namelist):
     for key, value in namelist.items():

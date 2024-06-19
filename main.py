@@ -1,7 +1,7 @@
 import yaml
 from src.lut import LUT
 from src.utils import dotdict, print_section_heading
-from config.validation import validate_config, validate_prepared_files
+from config.validation import validate_config, validate_prepared_files, validate_main_files
 
 def load_configuration():
     with open("config/main.yaml") as stream:
@@ -15,6 +15,7 @@ def prepare_lut(config):
     validate_config(config)
     lut = LUT(config)
     namelist = lut.generate_namelist()
+    validate_main_files(config)
     return lut
 
 def main():
