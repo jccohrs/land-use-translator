@@ -37,4 +37,4 @@ plot : True
 # if not plot_npft is given, all npfts are plotted
 plot_npft: null 
 # if not plot_year is given, first year is plotted
-plot_year: 60
+plot_year: 0
