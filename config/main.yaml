@@ -17,9 +17,6 @@ esayear : 2015
 mcgrath_eyear : 2010
 xsize : 95
 ysize : 91
-gradef : 9
-crodef : 13
-shrdef : 8
 
 oname : "LUCAS_LUC7_ESACCI_LUH2"
 lcd : "ESACCI-LC-L4-LCCS-Map-300m-P1Y" # version of ESA-file
