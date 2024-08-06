@@ -21,10 +21,9 @@ def prepare_lut(config):
 def main():
     config = load_configuration()
     lut = prepare_lut(config)
-    
     if config.prepare_luh2_data:
         print_section_heading("Preparing LUH2 data")
-        lut.prepare_luh2_data()
+        lut.func_prepare_luh2_data()
         print("Successfully generated")
     if config.prepare_mcgrath:
         print_section_heading("Preparing MCGRATH data")
@@ -39,8 +38,6 @@ def main():
     else:
         print('CALCULATE LAND USE CHANGES BACKWARD IN TIME')
         lut.lucas_lut_backward()
-    print('FINISHED LAND USE CHANGES')
-
     print_section_heading("Writing out data")
     lut.lucas_lut_output()
     print('LUCAS LUT SUCCESSFULLY FINISHED')

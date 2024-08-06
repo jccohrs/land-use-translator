@@ -5,7 +5,6 @@ from src.config import *
 import os
 import xarray as xr
 import numpy as np
-import netCDF4
 from src.utils import print_section_heading
 
 import matplotlib.pyplot as plt
@@ -13,7 +12,7 @@ from scipy.stats import linregress
 from matplotlib.patches import Patch
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
-from matplotlib.colors import ListedColormap, BoundaryNorm
+from matplotlib.colors import ListedColormap, BoundaryNorm, LinearSegmentedColormap
 
 cdo = Cdo()
 
@@ -104,7 +103,7 @@ class LUT:
             self.pft_frac_ts[:, :, :, z] = self.pft_help[:, :, :]
         print('land use change finished')
         # NORMALIZE TO GET A SUM OF 1 AND SET SEA POINTS TO MISSING VALUE
-        self.recalc_pft_frac_ts(rcm_lsm)
+        #self.recalc_pft_frac_ts(rcm_lsm)
         if self.irri:
             self.lucas_lut_irrigation(rcm_lsm)
         if self.mcgrath:
@@ -115,42 +114,46 @@ class LUT:
         shrubs_grass_backgr, nfv2cro, cro2nfv, for2cro, cro2for, ran2cro, cro2ran, pas2cro, cro2pas, cro2urb, nfv2urb, \
         for2urb, ran2urb, pas2urb, for2pas, pas2for, nfv2pas, ran2pas, pas2nfv, for2ran, ran2for, for2nfv, nfv2for, mcgrath_frac_help = self.lucas_lut_input()
         for z in range(self.years):
-            
             zz = self.years - z - 1
             print('year', zz)
             pft_help = self.lucas_lut_transrules(nfv2cro[zz, :, :].data.T, rcm_lsm, pft_help, self.pfts_shrubs, self.pfts_crops, 0, 0, self.nr_shrubs, self.nr_crops, 1, 1, self.pft_shrubs_default, shrubs_backgr_help, self.backgrd, 1, False)
             pft_help = self.lucas_lut_transrules(cro2nfv[zz, :, :].data.T, rcm_lsm, pft_help, self.pfts_crops, self.pfts_shrubs, self.pfts_grass, 0, self.nr_crops, self.nr_shrubs, self.nr_grass, 1, self.pft_crops_default, crops_backgr_help, self.backgrd, 2, False)
-            pft_help = self.lucas_lut_transrules(for2cro[zz, :, :].data.T, rcm_lsm, pft_help, self.pfts_forest, self.pfts_crops, 0, 0, self.nr_forest, self.nr_crops, 1, 1, self.pft_forest_default, forest_backgr_help, self.backgrd, 1, self.mcgrath, mcgfrac=mcgrath_frac_help[zz, :, :, :])
+            pft_help = self.lucas_lut_transrules(for2cro[zz, :, :].data.T, rcm_lsm, pft_help, self.pfts_forest, self.pfts_crops, 0, 0, self.nr_forest, self.nr_crops, 1, 1, self.pft_forest_default, forest_backgr_help, self.backgrd, 1, self.mcgrath, mcgfrac=mcgrath_frac_help[:, :, :, zz])
             pft_help = self.lucas_lut_transrules(cro2for[zz, :, :].data.T, rcm_lsm, pft_help, self.pfts_crops, self.pfts_forest, self.pfts_shrubs, 0, self.nr_crops, self.nr_forest, self.nr_shrubs, 1, self.pft_crops_default, crops_backgr_help, False, 2, False)
             pft_help = self.lucas_lut_transrules(ran2cro[zz, :, :].data.T, rcm_lsm, pft_help, self.pfts_grass, self.pfts_crops, 0, 0, self.nr_grass, self.nr_crops, 1, 1, self.pft_grass_default, grass_backgr_help, self.backgrd, 1, False)
             pft_help = self.lucas_lut_transrules(cro2ran[zz, :, :].data.T, rcm_lsm, pft_help, self.pfts_crops, self.pfts_grass, 0, 0, self.nr_crops, self.nr_grass, 1, 1, self.pft_crops_default, crops_backgr_help, False, 1, False)
-            pft_help = self.lucas_lut_transrules(pas2cro[zz, :, :].data.T, rcm_lsm, pft_help, self.pfts_grass, self.pfts_crops, 0, 0, self.nr_grass, self.nr_crops, 1, 1, self.pft_grass_default, grass_backgr_help, False, 1, False)
+            pft_help = self.lucas_lut_transrules(pas2cro[zz, :, :].data.T, rcm_lsm, pft_help, self.pfts_grass, self.pfts_crops, 0, 0, self.nr_grass, self.nr_crops, 1, 1, self.pft_grass_default, grass_backgr_help, self.backgrd, 1, False)
             pft_help = self.lucas_lut_transrules(cro2pas[zz, :, :].data.T, rcm_lsm, pft_help, self.pfts_crops, self.pfts_grass, 0, 0, self.nr_crops, self.nr_grass, 1, 1, self.pft_crops_default, crops_backgr_help, False, 1, False)
             pft_help = self.lucas_lut_transrules(cro2urb[zz, :, :].data.T, rcm_lsm, pft_help, self.pfts_crops, self.pfts_urban, 0, 0, self.nr_crops, self.nr_urban, 1, 1, self.pft_crops_default, crops_backgr_help, False, 1, False)
             pft_help = self.lucas_lut_transrules(nfv2urb[zz, :, :].data.T, rcm_lsm, pft_help, self.pfts_shrubs, self.pfts_urban, 0, 0, self.nr_shrubs, self.nr_urban, 1, 1, self.pft_shrubs_default, shrubs_backgr_help, self.backgrd, 1, False)
-            pft_help = self.lucas_lut_transrules(for2urb[zz, :, :].data.T, rcm_lsm, pft_help, self.pfts_forest, self.pfts_urban, 0, 0, self.nr_forest, self.nr_urban, 1, 1, self.pft_forest_default, forest_backgr_help, self.backgrd, 1, self.mcgrath, mcgfrac=mcgrath_frac_help[zz, :, :, :])
+            pft_help = self.lucas_lut_transrules(for2urb[zz, :, :].data.T, rcm_lsm, pft_help, self.pfts_forest, self.pfts_urban, 0, 0, self.nr_forest, self.nr_urban, 1, 1, self.pft_forest_default, forest_backgr_help, self.backgrd, 1, self.mcgrath, mcgfrac=mcgrath_frac_help[:, :, :, zz])
             pft_help = self.lucas_lut_transrules(ran2urb[zz, :, :].data.T, rcm_lsm, pft_help, self.pfts_shrubs_grass, self.pfts_urban, 0, 0, self.nr_shrubs+self.nr_grass, self.nr_urban, 1, 1, self.pft_shrubs_default, shrubs_grass_backgr, self.backgrd, 1, False)
             pft_help = self.lucas_lut_transrules(pas2urb[zz, :, :].data.T, rcm_lsm, pft_help, self.pfts_grass, self.pfts_urban, 0, 0, self.nr_grass, self.nr_urban, 1, 1, self.pft_grass_default, grass_backgr_help, self.backgrd, 1, False)
-            pft_help = self.lucas_lut_transrules(for2pas[zz, :, :].data.T, rcm_lsm, pft_help, self.pfts_forest, self.pfts_grass, 0, 0, self.nr_forest, self.nr_grass, 1, 1, self.pft_forest_default, forest_backgr_help, self.backgrd, 1, self.mcgrath, mcgfrac=mcgrath_frac_help[zz, :, :, :])
+            pft_help = self.lucas_lut_transrules(for2pas[zz, :, :].data.T, rcm_lsm, pft_help, self.pfts_forest, self.pfts_grass, 0, 0, self.nr_forest, self.nr_grass, 1, 1, self.pft_forest_default, forest_backgr_help, self.backgrd, 1, self.mcgrath, mcgfrac=mcgrath_frac_help[:, :, :, zz])
             pft_help = self.lucas_lut_transrules(pas2for[zz, :, :].data.T, rcm_lsm, pft_help, self.pfts_grass, self.pfts_forest, 0, 0, self.nr_grass, self.nr_forest, 1, 1, self.pft_grass_default, grass_backgr_help, self.backgrd, 1, False)
             pft_help = self.lucas_lut_transrules(nfv2pas[zz, :, :].data.T, rcm_lsm, pft_help, self.pfts_shrubs, self.pfts_grass, 0, 0, self.nr_shrubs, self.nr_grass, 1, 1, self.pft_shrubs_default, shrubs_backgr_help, self.backgrd, 1, False)
             pft_help = self.lucas_lut_transrules(ran2pas[zz, :, :].data.T, rcm_lsm, pft_help, self.pfts_shrubs, self.pfts_grass, 0, 0, self.nr_shrubs, self.nr_grass, 1, 1, self.pft_shrubs_default, shrubs_backgr_help, self.backgrd, 1, False)
             pft_help = self.lucas_lut_transrules(pas2nfv[zz, :, :].data.T, rcm_lsm, pft_help, self.pfts_grass, self.pfts_shrubs, 0, 0, self.nr_grass, self.nr_shrubs, 1, 1, self.pft_grass_default, grass_backgr_help, self.backgrd, 1, False)
-            pft_help = self.lucas_lut_transrules(for2ran[zz, :, :].data.T, rcm_lsm, pft_help, self.pfts_forest, self.pfts_shrubs, self.pfts_grass, 0, self.nr_forest, self.nr_shrubs, self.nr_grass, 1, self.pft_forest_default, forest_backgr_help, self.backgrd, 2, self.mcgrath, mcgfrac=mcgrath_frac_help[zz, :, :, :])
+            pft_help = self.lucas_lut_transrules(for2ran[zz, :, :].data.T, rcm_lsm, pft_help, self.pfts_forest, self.pfts_shrubs, self.pfts_grass, 0, self.nr_forest, self.nr_shrubs, self.nr_grass, 1, self.pft_forest_default, forest_backgr_help, self.backgrd, 2, self.mcgrath, mcgfrac=mcgrath_frac_help[:, :, :, zz])
             pft_help = self.lucas_lut_transrules(ran2for[zz, :, :].data.T, rcm_lsm, pft_help, self.pfts_shrubs_grass, self.pfts_forest, 0, 0, self.nr_grass+self.nr_shrubs, self.nr_forest, 1, 1, self.pft_shrubs_default, shrubs_grass_backgr, self.backgrd, 1, False)
-            pft_help = self.lucas_lut_transrules(for2nfv[zz, :, :].data.T, rcm_lsm, pft_help, self.pfts_forest, self.pfts_shrubs, self.pfts_grass, 0, self.nr_forest, self.nr_shrubs, self.nr_grass, 1, self.pft_forest_default, forest_backgr_help, self.backgrd, 2, self.mcgrath, mcgfrac=mcgrath_frac_help[zz, :, :, :])
+            pft_help = self.lucas_lut_transrules(for2nfv[zz, :, :].data.T, rcm_lsm, pft_help, self.pfts_forest, self.pfts_shrubs, self.pfts_grass, 0, self.nr_forest, self.nr_shrubs, self.nr_grass, 1, self.pft_forest_default, forest_backgr_help, self.backgrd, 2, self.mcgrath, mcgfrac=mcgrath_frac_help[:, :, :, zz])
             pft_help = self.lucas_lut_transrules(nfv2for[zz, :, :].data.T, rcm_lsm, pft_help, self.pfts_shrubs_grass, self.pfts_forest, 0, 0, self.nr_grass+self.nr_shrubs, self.nr_forest, 1, 1, self.pft_shrubs_default, shrubs_grass_backgr, self.backgrd, 1, False)
             self.pft_frac_ts[:, :, :, zz] = pft_help[:, :, :]
         # NORMALIZE TO GET A SUM OF 1 AND SET SEA POINTS TO MISSING VALUE
-        self.recalc_pft_frac_ts(rcm_lsm)
-        if self.plot:
-            self.plot_pft_frac_ts()
+        #self.recalc_pft_frac_ts(rcm_lsm)
+        print("Finished normalizing")
         print('LAND USE CHANGE FINISHED')
-        
         if self.irri:
+            print_section_heading('IRRIGATION')
             self.lucas_lut_irrigation(rcm_lsm)
         if self.mcgrath:
-            self.lucas_lut_mcgrath(rcm_lsm)
+            print_section_heading('MCGRATH')
+            self.lucas_lut_mcgrath(rcm_lsm, mcgrath_frac_help)
+            #self.mcgrath_recalc_pft_frac_ts(rcm_lsm)
+        if self.plot:
+            print_section_heading('PLOTTING')
+            self.plot_pft_frac_ts()
+            print('PLOTTING FINISHED')
 
     def lucas_lut_transrules(self, trans, rcm_lsm, inpfts, pfts_1, pfts_2, pfts_3, pfts_4,
                              nr_pfts_1, nr_pfts_2, nr_pfts_3, nr_pfts_4, defaultpft,
@@ -161,7 +164,7 @@ class LUT:
         pft_2_sum = sum(inpfts[:, :, pfts_2[n]-1] for n in range(nr_pfts_2))
         pft_3_sum = sum(inpfts[:, :, pfts_3[n]-1] for n in range(nr_pfts_3)) if rule >= 2 else 0
         pft_4_sum = sum(inpfts[:, :, pfts_4[n]-1] for n in range(nr_pfts_4)) if rule >= 3 else 0
-        mcg_sum = sum(mcgfrac[n] for n in range(3)) if mcgrath else 0
+        mcg_sum = sum(mcgfrac[:, :, n] for n in range(3)) if mcgrath else 0
         
         # HELP VARIABLES
         helper = np.zeros((self.xsize, self.ysize))
@@ -176,156 +179,160 @@ class LUT:
         if rule == 1:
             # limit the transition so that TRANS+PFT1 is less equal 1 and TRANS-PFT2 is greater equal 0
             trans = np.minimum(trans, trans - np.maximum(0.0, pft_1_sum + trans - 1), trans - np.maximum(0.0, trans - pft_2_sum))
-            
+            mask_trans = trans > 0.0
             # filtering pft_2_sum and trans values to avoid division by zero
-            filtered_pft_2_sum = np.where(pft_2_sum > 0.0, pft_2_sum, 1.0)
-            filtered_trans = np.where(trans > 0.0, trans, 0.0)
+            filtered_pft_2_sum = np.where((mask_trans) & (pft_2_sum > 0.0), pft_2_sum, 1.0)
+            filtered_trans = np.where((mask_trans) & (pft_2_sum > 0.0), trans, 0.0)
             filtered_pft_2_sum = np.where(filtered_trans == 0.0, 1.0, filtered_pft_2_sum)
-            filtered_trans = np.where(filtered_pft_2_sum == 1.0, 0.0, filtered_trans)
             
             # subtracting from PFT group 2
             for ipft in range(nr_pfts_2):
                 inpfts[:, :, pfts_2[ipft]-1] -= (inpfts[:, :, pfts_2[ipft]-1] / filtered_pft_2_sum * filtered_trans)
-                inpfts_pfts_2 = inpfts[:, :, pfts_2[ipft]-1]
-                
-                # if more fraction is removed than available set fraction to zero 
-                filtered_inpfts = np.where(inpfts_pfts_2 < 0.0, inpfts_pfts_2, 0)
-                helper += filtered_inpfts
-                inpfts[:, :, pfts_2[ipft]-1] = np.where(inpfts_pfts_2 < 0.0, 0.0, inpfts_pfts_2)
-            # adjust transition if needed (not enough of PFT group 2), helper is always <= 0
-            trans = np.maximum(0.0, trans + helper)
-            # if McGrath forest data should be used
-            if mcgrath and mcg_sum == 1:
-                filtered_trans = np.where(trans > 0, trans, 0)
-                for ipft in range(2, 5):
-                    inpfts[:, :, pfts_1[ipft]-1] += (mcgfrac[:, :, ipft-2].T * filtered_trans)
-            # just use the relative fractions
-            else:
-                filtered_pft_1_sum = np.where(pft_1_sum > 0.0, pft_1_sum, 1)
-                filtered_trans = np.where(trans > 0.0, trans, 0)
-                filtered_pft_1_sum = np.where(filtered_trans == 0, 1, filtered_pft_1_sum)
-                filtered_trans = np.where(filtered_pft_1_sum == 1, 0, filtered_trans)
-                for ipft in range(nr_pfts_1):
-                    inpfts[:, :, pfts_1[ipft]-1] += (inpfts[:, :, pfts_1[ipft]-1] / filtered_pft_1_sum * filtered_trans)
-                if backgrd:
-                    for ipft in range(nr_pfts_1):
-                        inpfts[:, :, pfts_1[ipft]-1] = np.where(pft_1_sum > 0.0, inpfts[:, :, pfts_1[ipft]-1], inpfts[:, :, pfts_1[ipft]-1] + (backgrdpfts[:, :, ipft] * trans))        
-                else:
-                    inpfts[:, :, defaultpft-1] = np.where(pft_1_sum > 0.0, inpfts[:, :, defaultpft-1], trans)
 
+                # if more fraction is removed than available set fraction to zero
+                helper = np.where((inpfts[:, :, pfts_2[ipft]-1] < 0.0) & (pft_2_sum > 0.0) & (mask_trans), helper + inpfts[:, :, pfts_2[ipft]-1], helper)
+                inpfts[:, :, pfts_2[ipft]-1] = np.where((inpfts[:, :, pfts_2[ipft]-1] < 0.0) & (pft_2_sum > 0.0) & (mask_trans), 0.0, inpfts[:, :, pfts_2[ipft]-1])
+            
+            # adjust transition if needed (not enough of PFT group 2), helper is always <= 0
+            trans = np.where((mask_trans), np.maximum(0.0, trans + helper), trans)
+
+            # if McGrath forest data should be used
+            mask_mcg_sum = mcg_sum == 1
+            if mcgrath:
+                for ipft in range(2, 5):
+                    inpfts[:, :, pfts_1[ipft]-1] = np.where((mask_trans) & (mask_mcg_sum), inpfts[:, :, pfts_1[ipft]-1] + (mcgfrac[:, :, ipft-2] * trans), inpfts[:, :, pfts_1[ipft]-1])
+            # just use the relative fractions
+            filtered_pft_1_sum = np.where((mask_trans) & (pft_1_sum > 0.0) & (~mcgrath) & (~mask_mcg_sum), pft_1_sum, 1)
+            filtered_trans = np.where((mask_trans) & (pft_1_sum > 0.0) & (~mcgrath) & (~mask_mcg_sum), trans, 0)
+            filtered_pft_1_sum = np.where(filtered_trans == 0, 1, filtered_pft_1_sum)
+            for ipft in range(nr_pfts_1):
+                inpfts[:, :, pfts_1[ipft]-1] += (inpfts[:, :, pfts_1[ipft]-1] / filtered_pft_1_sum * filtered_trans)
+            if backgrd:
+                for ipft in range(nr_pfts_1):
+                    inpfts[:, :, pfts_1[ipft]-1] = np.where((pft_1_sum > 0.0) & (mask_trans) & (~mcgrath) & (~mask_mcg_sum), inpfts[:, :, pfts_1[ipft]-1], inpfts[:, :, pfts_1[ipft]-1] + (backgrdpfts[:, :, ipft] * trans))        
+            else:
+                inpfts[:, :, defaultpft-1] = np.where((pft_1_sum > 0.0) & (mask_trans) & (~mcgrath) & (~mask_mcg_sum), inpfts[:, :, defaultpft-1], trans)
         # RULE 2
         elif rule == 2:
             # limit the transition so that TRANS+PFT1 is less equal 1 and TRANS-(PFT2+PFT3) is greater equal 0
             trans = np.minimum(trans, trans - np.maximum(0.0, pft_1_sum + trans - 1), trans - np.maximum(0.0, trans - (pft_2_sum + pft_3_sum)))
-            
+            mask_trans = trans > 0.0
+
             # filtering pft_2_sum and trans values to avoid division by zero
-            filtered_pft_2_sum = np.where(pft_2_sum > 0.0, pft_2_sum, 1)
-            filtered_trans = np.where(trans > 0, trans, 0)
-            filtered_pft_2_sum = np.where(filtered_trans == 0, 1, filtered_pft_2_sum)
-            filtered_trans = np.where(filtered_pft_2_sum == 1, 0, filtered_trans)
+            filtered_pft_2_sum = np.where((mask_trans) & (pft_2_sum > 0.0), pft_2_sum, 1.0)
+            filtered_trans = np.where((mask_trans) & (pft_2_sum > 0.0), trans, 0.0)
+            filtered_pft_2_sum = np.where(filtered_trans == 0.0, 1.0, filtered_pft_2_sum)
 
             # subtracting from PFT group 2
             for ipft in range(nr_pfts_2):
                 inpfts[:, :, pfts_2[ipft]-1] -= (inpfts[:, :, pfts_2[ipft]-1] / filtered_pft_2_sum * filtered_trans)
-                inpfts_pfts_2 = inpfts[:, :, pfts_2[ipft]-1]
                 
                 # if more fraction is removed than available set fraction to zero
-                filtered_inpfts = np.where(inpfts_pfts_2 < 0.0, inpfts_pfts_2, 0)
-                helper -= filtered_inpfts
-                inpfts[:, :, pfts_2[ipft]-1] = np.where(inpfts_pfts_2 < 0.0, 0, inpfts_pfts_2)
+                helper = np.where((inpfts[:, :, pfts_2[ipft]-1] < 0.0) & (pft_2_sum > 0.0) & (mask_trans), helper - inpfts[:, :, pfts_2[ipft]-1], helper)
+                inpfts[:, :, pfts_2[ipft]-1] = np.where((inpfts[:, :, pfts_2[ipft]-1] < 0.0) & (pft_2_sum > 0.0) & (mask_trans), 0.0, inpfts[:, :, pfts_2[ipft]-1])
 
-            helper = np.where((trans > 0.0) & (pft_2_sum <= 0.0), trans, helper)
-            
+            helper = np.where((mask_trans) & (pft_2_sum <= 0.0), trans, helper)
+            mask_helper = helper > 0.0
+
             # filtering pft_3_sum and helper values to avoid division by zero
-            filtered_pft_3_sum = np.where(pft_3_sum > 0.0, pft_3_sum, 1.0)
-            filtered_helper = np.where(helper > 0.0, helper, 0.0)
+            filtered_pft_3_sum = np.where((mask_trans) & (mask_helper) & (pft_3_sum > 0.0), pft_3_sum, 1.0)
+            filtered_helper = np.where((mask_trans) & (mask_helper) & (pft_3_sum > 0.0), helper, 0.0)
             filtered_pft_3_sum = np.where(filtered_helper == 0.0, 1.0, filtered_pft_3_sum)
-            filtered_helper = np.where(filtered_pft_3_sum == 1.0, 0.0, filtered_helper)
+            
             for ipft in range(nr_pfts_3):
                 inpfts[:, :, pfts_3[ipft]-1] -= (inpfts[:, :, pfts_3[ipft]-1] / filtered_pft_3_sum * filtered_helper)
-                inpfts_pfts_3 = inpfts[:, :, pfts_3[ipft]-1]
-                
-                filtered_inpfts = np.where(inpfts_pfts_3 < 0.0, inpfts_pfts_3, 0)
-                helper_2 += filtered_inpfts
-                inpfts[:, :, pfts_3[ipft]-1] = np.where(inpfts_pfts_3 < 0.0, 0, inpfts_pfts_3)
-                        
-            trans = np.maximum(0.0, trans + helper_2)
-            filtered_trans = np.where(trans > 0, trans, 0)
-            if mcgrath and mcg_sum == 1:
+
+                helper_2 = np.where((inpfts[:, :, pfts_3[ipft]-1] < 0.0) & (pft_3_sum > 0.0) & (mask_trans) & (mask_helper), helper_2 + inpfts[:, :, pfts_3[ipft]-1], helper)
+                inpfts[:, :, pfts_3[ipft]-1] = np.where((inpfts[:, :, pfts_3[ipft]-1] < 0.0) & (pft_3_sum > 0.0) & (mask_trans) & (mask_helper), 0.0, inpfts[:, :, pfts_3[ipft]-1])
+            
+            trans = np.where(mask_trans, np.maximum(0.0, trans + helper_2), trans)
+            
+            mask_mcg_sum = mcg_sum == 1 
+            
+            if mcgrath:
                 for ipft in range(2, 5):
-                    inpfts[:, :, pfts_1[ipft]-1] += (mcgfrac[:, :, ipft-2].T * filtered_trans)
-            else:
-                filtered_pft_1_sum = np.where(pft_1_sum > 0.0, pft_1_sum, 1)
-                filtered_trans = np.where(trans > 0, trans, 0)
-                filtered_pft_1_sum = np.where(filtered_trans == 0, 1, filtered_pft_1_sum)
-                filtered_trans = np.where(filtered_pft_1_sum == 1, 0, filtered_trans)
+                    inpfts[:, :, pfts_1[ipft]-1] = np.where((mask_trans) & (mask_mcg_sum), inpfts[:, :, pfts_1[ipft]-1] + (mcgfrac[:, :, ipft-2] * trans), inpfts[:, :, pfts_1[ipft]-1])
+            
+            filtered_pft_1_sum = np.where((mask_trans) & (pft_1_sum > 0.0) & (~mcgrath) & (~mask_mcg_sum), pft_1_sum, 1.0)
+            filtered_trans = np.where((mask_trans) & (pft_1_sum > 0.0) & (~mcgrath) & (~mask_mcg_sum), trans, 0.0)
+            filtered_pft_1_sum = np.where(filtered_trans == 0.0, 1.0, filtered_pft_1_sum)
+            for ipft in range(nr_pfts_1):
+                inpfts[:, :, pfts_1[ipft]-1] += (inpfts[:, :, pfts_1[ipft]-1] / filtered_pft_1_sum * filtered_trans)
+            if backgrd:
                 for ipft in range(nr_pfts_1):
-                    inpfts[:, :, pfts_1[ipft]-1] += (inpfts[:, :, pfts_1[ipft]-1] / filtered_pft_1_sum * filtered_trans)
-                if backgrd:
-                    for ipft in range(nr_pfts_1):
-                        inpfts[:, :, pfts_1[ipft]-1] = np.where(pft_1_sum > 0.0, inpfts[:, :, pfts_1[ipft]-1], inpfts[:, :, pfts_1[ipft]-1] + (backgrdpfts[:, :, ipft] * trans))
-                else:
-                    inpfts[:, :, defaultpft-1] = np.where(pft_1_sum > 0.0, inpfts[:, :, defaultpft-1], trans)
+                    inpfts[:, :, pfts_1[ipft]-1] = np.where((pft_1_sum > 0.0) & (mask_trans) & (~mcgrath) & (~mask_mcg_sum), inpfts[:, :, pfts_1[ipft]-1], inpfts[:, :, pfts_1[ipft]-1] + (backgrdpfts[:, :, ipft] * trans))
+            else:
+                inpfts[:, :, defaultpft-1] = np.where((pft_1_sum > 0.0) & (mask_trans) & (~mcgrath) & (~mask_mcg_sum), inpfts[:, :, defaultpft-1], trans)
         # RULE 3
         elif rule == 3:
+            # limit the transition so that TRANS+PFT1 is less equal 1 and TRANS-(PFT2+PFT3) is greater equal 0
             trans = np.minimum(trans, trans-np.maximum(0., pft_1_sum+trans-1), trans-np.maximum(0., trans-(pft_2_sum+pft_3_sum+pft_4_sum)))
+            mask_trans = trans > 0.0
+
+            # filtering to avoid division by zero
+            filtered_pft_2_sum = np.where((mask_trans) & (pft_2_sum > 0.0), pft_2_sum, 1.0)
+            filtered_trans = np.where((mask_trans) & (pft_2_sum > 0.0), trans, 0.0)
+            filtered_pft_2_sum = np.where(filtered_trans == 0.0, 1.0, filtered_pft_2_sum)
             
-            filtered_pft_2_sum = np.where(pft_2_sum > 0.0, pft_2_sum, 1)
-            filtered_trans = np.where(trans > 0, trans, 0)
-            filtered_pft_2_sum = np.where(filtered_trans == 0, 1, filtered_pft_2_sum)
-            filtered_trans = np.where(filtered_pft_2_sum == 1, 0, filtered_trans)
+            # subtracting from PFT group 2
             for ipft in range(nr_pfts_2):
                 inpfts[:, :, pfts_2[ipft-1]] -= (inpfts[:, :, pfts_2[ipft-1]]/filtered_pft_2_sum*filtered_trans)
                 inpfts_pfts_2 = inpfts[:, :, pfts_2[ipft-1]]
-                filtered_inpfts = np.where(inpfts_pfts_2 < 0.0, inpfts_pfts_2, 0)
-                helper -= filtered_inpfts
-                inpfts[:, :, pfts_2[ipft-1]] = np.where(inpfts_pfts_2 < 0.0, 0.0, inpfts_pfts_2)
-            helper = np.where(trans > 0, trans, helper)
+                
+                # if more fraction is removed than available set fraction to zero
+                helper = np.where((mask_trans) & (inpfts[:, :, pfts_2[ipft-1]] < 0.0) & (pft_2_sum > 0.0), helper - inpfts[:, :, pfts_2[ipft-1]], helper)
+                inpfts[:, :, pfts_2[ipft-1]] = np.where((mask_trans) & (inpfts[:, :, pfts_2[ipft-1]] < 0.0) & (pft_2_sum > 0.0), 0.0, inpfts[:, :, pfts_2[ipft-1]])
+            
+            helper = np.where((mask_trans) & (pft_2_sum <= 0.0), trans, helper)
+            mask_helper = helper > 0.0
 
-            filtered_pft_3_sum = np.where(pft_3_sum > 0.0, pft_3_sum, 1)
-            filtered_helper = np.where(helper > 0, helper, 0)
-            filtered_pft_3_sum = np.where(filtered_helper == 0, 1, filtered_pft_3_sum)
-            filtered_helper = np.where(filtered_pft_3_sum == 1, 0, filtered_helper)
+            # filtering to avoid division by zero
+            filtered_pft_3_sum = np.where((mask_trans) & (mask_helper) & (pft_3_sum > 0.0), pft_3_sum, 1.0)
+            filtered_helper = np.where((mask_trans) & (mask_helper) & (pft_3_sum > 0.0), helper, 0.0)
+            filtered_pft_3_sum = np.where(filtered_helper == 0.0, 1.0, filtered_pft_3_sum)
+            
+            # subtracting from PFT group 3
             for ipft in range(nr_pfts_3):
                 inpfts[:, :, pfts_3[ipft]-1] -= (inpfts[:, :, pfts_3[ipft]-1]/filtered_pft_3_sum*filtered_helper)
-                inpfts_pfts_3 = inpfts[:, :, pfts_3[ipft]]
-                
-                filtered_inpfts = np.where(inpfts_pfts_3 < 0.0, inpfts_pfts_3, 0)
-                helper_2 -= filtered_inpfts
-                
-                inpfts[:, :, pfts_3[ipft]-1] = np.where(inpfts_pfts_3 < 0.0, 0.0, inpfts_pfts_3)
-            
-            helper_2 = np.where(helper > 0, helper, helper_2)
 
-            filtered_pft_4_sum = np.where(pft_4_sum > 0.0, pft_4_sum, 1)
-            filtered_helper_2 = np.where(helper_2 > 0, helper_2, 1)
-            filtered_pft_4_sum = np.where(filtered_helper_2 == 0, 1, filtered_pft_4_sum)
-            filtered_helper_2 = np.where(filtered_pft_4_sum == 1, 0, filtered_helper_2)
+                # if more fraction is removed than available set fraction to zero
+                helper_2 = np.where((mask_trans) & (mask_helper) & (pft_3_sum > 0.0) & (inpfts[:, :, pfts_3[ipft]] < 0.0), helper_2 - inpfts[:, :, pfts_3[ipft]], helper_2)
+                inpfts[:, :, pfts_3[ipft]-1] = np.where((mask_trans) & (mask_helper) & (pft_3_sum > 0.0) & (inpfts[:, :, pfts_3[ipft]] < 0.0), 0.0, inpfts[:, :, pfts_3[ipft]])
+            
+            helper_2 = np.where((mask_trans) & (mask_helper) & (pft_3_sum <= 0.0), helper, helper_2)
+            mask_helper_2 = helper_2 > 0.0
+
+            # subtracting from PFT group 3
+            filtered_pft_4_sum = np.where((mask_trans) & (mask_helper_2) & (pft_4_sum > 0.0), pft_4_sum, 1.0)
+            filtered_helper_2 = np.where((mask_trans) & (mask_helper_2) & (pft_4_sum > 0.0), helper_2, 0.0)
+            filtered_pft_4_sum = np.where(filtered_helper_2 == 0.0, 1.0, filtered_pft_4_sum)
+            
+            # adding from PFT group 4
             for ipft in range(nr_pfts_4):
                 inpfts[:, :, pfts_4[ipft]-1] -= (inpfts[:, :, pfts_4[ipft]-1]/filtered_pft_4_sum*filtered_helper_2)
-                inpfts_pfts_4 = inpfts[:, :, pfts_4[ipft]-1]
 
-                filtered_inpfts = np.where(inpfts_pfts_4 < 0.0, inpfts_pfts_4, 0)
-                helper_3 += filtered_inpfts
-                inpfts[:, :, pfts_4[ipft]-1] = np.where(inpfts_pfts_4 < 0.0, 0.0, inpfts_pfts_4)
-            trans = np.maximum(0., trans+helper_3)
-            if mcgrath and mcg_sum == 1:
+                # if more fraction is removed than available set fraction to zero
+                helper_3 = np.where((mask_trans) & (mask_helper_2) & (pft_4_sum > 0.0) & (inpfts[:, :, pfts_4[ipft]-1] < 0.0), helper_3 + inpfts[:, :, pfts_4[ipft]-1], helper_3)
+                inpfts[:, :, pfts_4[ipft]-1] = np.where((mask_trans) & (mask_helper_2) & (pft_4_sum > 0.0) & (inpfts[:, :, pfts_4[ipft]-1] < 0.0), 0.0, inpfts[:, :, pfts_4[ipft]-1])
+
+            trans = np.where((mask_trans) & (pft_4_sum <= 0.0), np.maximum(0.0, trans + helper_3), trans)
+            
+            # if McGrath forest data should be used
+            mask_mcg_sum = mcg_sum == 1 
+            if mcgrath:
                 for ipft in range(2, 5):
-                    inpfts[:, :, pfts_1[ipft]-1] += (mcgfrac[:, :, ipft-2].T*trans)
+                    inpfts[:, :, pfts_1[ipft]-1] = np.where((mask_trans) & (mask_mcg_sum), inpfts[:, :, pfts_1[ipft]-1] + (mcgfrac[:, :, ipft-2] * trans), inpfts[:, :, pfts_1[ipft]-1])
             else:
+                filtered_pft_1_sum = np.where((mask_trans) & (pft_1_sum > 0.0), pft_1_sum, 1.0)
+                filtered_trans = np.where((mask_trans) & (pft_1_sum > 0.0), trans, 0.0)
+                filtered_pft_1_sum = np.where(filtered_trans == 0.0, 1.0, filtered_pft_1_sum)
                 for ipft in range(nr_pfts_1):
-                    filtered_pft_1_sum = np.where(pft_1_sum > 0.0, pft_1_sum, 1)
-                    filtered_trans = np.where(trans > 0, trans, 0)
-                    filtered_pft_1_sum = np.where(filtered_trans == 0, 1, filtered_pft_1_sum)
-                    filtered_trans = np.where(filtered_pft_1_sum == 1, 0, filtered_trans)
                     inpfts[:, :, pfts_1[ipft]-1] += (inpfts[:, :, pfts_1[ipft]-1]/filtered_pft_1_sum*filtered_trans)
-                # TODO IF (pft_1_sum .GT. 0.0) THEN
                 if backgrd:
-                    filtered_trans = np.where(trans > 0, trans, 0)
                     for ipft in range(nr_pfts_1):
-                        inpfts[:, :, pfts_1[ipft]-1] = np.where(pft_1_sum > 0.0, inpfts[:, :, pfts_1[ipft]-1], inpfts[:, :, pfts_1[ipft]-1] + (backgrdpfts[:, :, ipft] * trans))
+                        inpfts[:, :, pfts_1[ipft]-1] = np.where((mask_trans) & (pft_1_sum > 0.0), inpfts[:, :, pfts_1[ipft]-1], inpfts[:, :, pfts_1[ipft]-1] + (backgrdpfts[:, :, ipft] * trans))
                 else:
-                    inpfts[:, :, defaultpft-1] = np.where(pft_1_sum > 0.0, inpfts[:, :, defaultpft-1], trans)
+                    inpfts[:, :, defaultpft-1] = np.where((mask_trans) & (pft_1_sum > 0.0), inpfts[:, :, defaultpft-1], trans)
         
         # RESTORE STATIC VALUES
         inpfts = np.where(inpfts_trans_static_values == -999, inpfts, inpfts_trans_static_values)
@@ -406,47 +413,47 @@ class LUT:
         shrubs_grass_backgr[:, :, self.nr_shrubs:(self.nr_grass+self.nr_shrubs)] = grass_backgr_help / 2.
 
         # Mcfrac dataset
-        mcgrath_frac = netCDF4.Dataset(self.namelist["F_MCGRATH"], decode_times=False)
-        mcgrath_frac_help = np.zeros((self.years+1, self.ysize, self.xsize, 3))
+        mcgrath_frac = xr.open_dataset(self.namelist["F_MCGRATH"], decode_times=False)
+        mcgrath_frac_help = np.zeros((self.xsize, self.ysize, 3, self.years+1))
         for i in range(1, 4):
-            mcgrath_frac_help[:, :, :, i-1] = mcgrath_frac[f"var80{i+2}"][:, :, :].data
+            mcgrath_frac_help[:, :, i-1, :] = mcgrath_frac[f"var80{i+2}"][:, :, :].data.T
 
         # RCM LSM
         rcm_lsm = xr.open_dataset(self.namelist["F_RCM_LSM_IN"]).var210.values.T
         
         # Transformation datasets
-        nfv2cro = netCDF4.Dataset(self.namelist["F_NFV2CRO"], decode_times=False).variables["nfv2cro"]
-        cro2nfv = netCDF4.Dataset(self.namelist["F_CRO2NFV"], decode_times=False).variables["cro2nfv"]
-        for2cro = netCDF4.Dataset(self.namelist["F_FOR2CRO"], decode_times=False).variables["for2cro"]
-        cro2for = netCDF4.Dataset(self.namelist["F_CRO2FOR"], decode_times=False).variables["cro2for"]
-        ran2cro = netCDF4.Dataset(self.namelist["F_RAN2CRO"], decode_times=False).variables["ran2cro"]
-        cro2ran = netCDF4.Dataset(self.namelist["F_CRO2RAN"], decode_times=False).variables["cro2ran"]
-        pas2cro = netCDF4.Dataset(self.namelist["F_PAS2CRO"], decode_times=False).variables["pas2cro"]
-        cro2pas = netCDF4.Dataset(self.namelist["F_CRO2PAS"], decode_times=False).variables["cro2pas"]
-        cro2urb = netCDF4.Dataset(self.namelist["F_CRO2URB"], decode_times=False).variables["cro2urb"]
-        nfv2urb = netCDF4.Dataset(self.namelist["F_NFV2URB"], decode_times=False).variables["nfv2urb"]
-        for2urb = netCDF4.Dataset(self.namelist["F_FOR2URB"], decode_times=False).variables["for2urb"]
-        ran2urb = netCDF4.Dataset(self.namelist["F_RAN2URB"], decode_times=False).variables["ran2urb"]
-        pas2urb = netCDF4.Dataset(self.namelist["F_PAS2URB"], decode_times=False).variables["pas2urb"]
-        for2pas = netCDF4.Dataset(self.namelist["F_FOR2PAS"], decode_times=False).variables["for2pas"]
-        pas2for = netCDF4.Dataset(self.namelist["F_PAS2FOR"], decode_times=False).variables["pas2for"]
-        nfv2pas = netCDF4.Dataset(self.namelist["F_NFV2PAS"], decode_times=False).variables["nfv2pas"]
-        ran2pas = netCDF4.Dataset(self.namelist["F_RAN2PAS"], decode_times=False).variables["ran2pas"]
-        pas2nfv = netCDF4.Dataset(self.namelist["F_PAS2NFV"], decode_times=False).variables["pas2nfv"]
-        for2ran = netCDF4.Dataset(self.namelist["F_FOR2RAN"], decode_times=False).variables["for2ran"]
-        ran2for = netCDF4.Dataset(self.namelist["F_RAN2FOR"], decode_times=False).variables["ran2for"]
-        for2nfv = netCDF4.Dataset(self.namelist["F_FOR2NFV"], decode_times=False).variables["for2nfv"]
-        nfv2for = netCDF4.Dataset(self.namelist["F_NFV2FOR"], decode_times=False).variables["nfv2for"]
+        nfv2cro = xr.open_dataset(self.namelist["F_NFV2CRO"], decode_times=False)["nfv2cro"]
+        cro2nfv = xr.open_dataset(self.namelist["F_CRO2NFV"], decode_times=False)["cro2nfv"]
+        for2cro = xr.open_dataset(self.namelist["F_FOR2CRO"], decode_times=False)["for2cro"]
+        cro2for = xr.open_dataset(self.namelist["F_CRO2FOR"], decode_times=False)["cro2for"]
+        ran2cro = xr.open_dataset(self.namelist["F_RAN2CRO"], decode_times=False)["ran2cro"]
+        cro2ran = xr.open_dataset(self.namelist["F_CRO2RAN"], decode_times=False)["cro2ran"]
+        pas2cro = xr.open_dataset(self.namelist["F_PAS2CRO"], decode_times=False)["pas2cro"]
+        cro2pas = xr.open_dataset(self.namelist["F_CRO2PAS"], decode_times=False)["cro2pas"]
+        cro2urb = xr.open_dataset(self.namelist["F_CRO2URB"], decode_times=False)["cro2urb"]
+        nfv2urb = xr.open_dataset(self.namelist["F_NFV2URB"], decode_times=False)["nfv2urb"]
+        for2urb = xr.open_dataset(self.namelist["F_FOR2URB"], decode_times=False)["for2urb"]
+        ran2urb = xr.open_dataset(self.namelist["F_RAN2URB"], decode_times=False)["ran2urb"]
+        pas2urb = xr.open_dataset(self.namelist["F_PAS2URB"], decode_times=False)["pas2urb"]
+        for2pas = xr.open_dataset(self.namelist["F_FOR2PAS"], decode_times=False)["for2pas"]
+        pas2for = xr.open_dataset(self.namelist["F_PAS2FOR"], decode_times=False)["pas2for"]
+        nfv2pas = xr.open_dataset(self.namelist["F_NFV2PAS"], decode_times=False)["nfv2pas"]
+        ran2pas = xr.open_dataset(self.namelist["F_RAN2PAS"], decode_times=False)["ran2pas"]
+        pas2nfv = xr.open_dataset(self.namelist["F_PAS2NFV"], decode_times=False)["pas2nfv"]
+        for2ran = xr.open_dataset(self.namelist["F_FOR2RAN"], decode_times=False)["for2ran"]
+        ran2for = xr.open_dataset(self.namelist["F_RAN2FOR"], decode_times=False)["ran2for"]
+        for2nfv = xr.open_dataset(self.namelist["F_FOR2NFV"], decode_times=False)["for2nfv"]
+        nfv2for = xr.open_dataset(self.namelist["F_NFV2FOR"], decode_times=False)["nfv2for"]
 
         if self.forward:
-            urb2cro = netCDF4.Dataset(self.namelist["F_URB2CRO"], decode_times=False).variables["urb2cro"]
-            urb2nfv = netCDF4.Dataset(self.namelist["F_URB2NFV"], decode_times=False).variables["urb2nfv"]
-            urb2for = netCDF4.Dataset(self.namelist["F_URB2FOR"], decode_times=False).variables["urb2for"]
-            urb2ran = netCDF4.Dataset(self.namelist["F_URB2RAN"], decode_times=False).variables["urb2ran"]
-            urb2pas = netCDF4.Dataset(self.namelist["F_URB2PAS"], decode_times=False).variables["urb2pas"]
-            nfv2ran = netCDF4.Dataset(self.namelist["F_NFV2RAN"], decode_times=False).variables["nfv2ran"]
+            urb2cro = xr.open_dataset(self.namelist["F_URB2CRO"], decode_times=False)["urb2cro"]
+            urb2nfv = xr.open_dataset(self.namelist["F_URB2NFV"], decode_times=False)["urb2nfv"]
+            urb2for = xr.open_dataset(self.namelist["F_URB2FOR"], decode_times=False)["urb2for"]
+            urb2ran = xr.open_dataset(self.namelist["F_URB2RAN"], decode_times=False)["urb2ran"]
+            urb2pas = xr.open_dataset(self.namelist["F_URB2PAS"], decode_times=False)["urb2pas"]
+            nfv2ran = xr.open_dataset(self.namelist["F_NFV2RAN"], decode_times=False)["nfv2ran"]
             if self.addtree:
-                nat2for = netCDF4.Dataset(self.namelist["F_NAT2FOR"], decode_times=False).variables["nat2for"]
+                nat2for = xr.open_dataset(self.namelist["F_NAT2FOR"], decode_times=False)["nat2for"]
                 return rcm_lsm, pft_help, grass_backgr_help, crops_backgr_help, forest_backgr_help, shrubs_backgr_help, \
                        shrubs_grass_backgr, nfv2cro, cro2nfv, for2cro, cro2for, ran2cro, cro2ran, pas2cro, cro2pas, cro2urb, nfv2urb, \
                        for2urb, ran2urb, pas2urb, for2pas, pas2for, nfv2pas, ran2pas, pas2nfv, for2ran, ran2for, for2nfv, nfv2for, mcgrath_frac_help, \
@@ -482,101 +489,116 @@ class LUT:
             pft_sum = np.sum(self.pft_frac_ts[:, :, :, z], axis=2)
             pft_sum_mask = pft_sum > 0.0
             self.pft_frac_ts[mask & pft_sum_mask, :, z] /= pft_sum[mask & pft_sum_mask, np.newaxis]
-            self.pft_frac_ts[~mask, :, z] = 0.0
+            self.pft_frac_ts[~mask, :, z] = -999.0
 
-    def lucas_lut_mcgrath(self, rcm_lsm):
-        # TODO
-        mcgrath_frac = xr.open_dataset(self.namelist["F_MCGRATH"])
+    def mcgrath_recalc_pft_frac_ts(self, rcm_lsm):
+        print_section_heading('remove zeros (they still occur due to rounding issues)')
         for z in range(self.years+1):
-            zz = years + 1 - z
-            d_mcg_frac = [0.0, 0.0, 0.0]
-            d_frac = [0.0, 0.0, 0.0]
-            d_forest = [0.0, 0.0, 0.0]
-            sum_forest = 0.0
-            sum_forest_p1 = 0.0
-            sum_helper = 0.0
-            sum_mcg = 0.0
+            mask = rcm_lsm > 0.0
+            mask_pft_frac_ts = self.pft_frac_ts[:, :, :, z] < 0.0
+            self.pft_frac_ts[mask_pft_frac_ts, z] = 0.0
+            pft_sum = np.sum(self.pft_frac_ts[:, :, :, z], axis=2)
+            pft_sum_mask = pft_sum > 0.0
+            self.pft_frac_ts[mask & pft_sum_mask, :, z] /= pft_sum[mask & pft_sum_mask, np.newaxis]
+
+    def lucas_lut_mcgrath(self, rcm_lsm, mcgrath_frac):
+        for z in range(self.years):
+            sum_forest = np.zeros((self.xsize, self.ysize))
+            sum_forest_p1 = np.zeros((self.xsize, self.ysize))
+            sum_helper = np.zeros((self.xsize, self.ysize))
+            sum_mcg = np.zeros((self.xsize, self.ysize))
+            d_mcg_frac = np.zeros((self.xsize, self.ysize, 3))
+            d_frac = np.zeros((self.xsize, self.ysize, 3))
+            d_forest = np.zeros((self.xsize, self.ysize, 3))
+            abssum = np.zeros((self.xsize, self.ysize))
+            zz = self.years - 1 - z
+            print('year', zz)
+            # compute sun of the three forest types for t and t+1 as well as sum of the forest fractions given by mcgrath
             for k in range(2, 5):
-                sum_forest += pft_frac_ts[:, :, k, zz]
-                sum_forest_p1 += pft_frac_ts[:, :, k, zz]
+                sum_forest += self.pft_frac_ts[:, :, k, zz]
+                sum_forest_p1 += self.pft_frac_ts[:, :, k, zz]
                 sum_mcg += mcgrath_frac[:, :, k-2, zz]
+            mask_sum_forst_p1 = sum_forest_p1 > 0.0
+            mask_sum_mcg = sum_mcg > 0.0
+            mask_sum_forest = sum_forest > 0.0
+            # eliminate missing values
             for k in range(2, 5):
-                if mcgrath_frac[:, :, k-2, :] < -998.0 or mcgrath_frac[i-1][j-1][k-2][zz] < -998.0:
-                    sum_mcg = 0.0
-            if sum_forest_p1 < 0.0 or sum_forest < 0.0:
-                pass  # Handle problem condition
-            if sum_forest_p1 > 0.0 and sum_mcg > 0.0 and sum_forest > 0.0:
-                abssum = 0.0
+                sum_mcg = np.where((mcgrath_frac[:, :, k-2, zz] < -998.0) | (mcgrath_frac[:, :, k-2, zz] < -998.0), 0.0, sum_mcg)
+            
+            # Handle problem condition
+            #if sum_forest_p1 < 0.0 or sum_forest < 0.0:
+            #    pass
+            
+            # compute adjustment to mcgrath forest fractions only if sum of forest PFTs and sum of mcgrath data is greater zero
+            for k in range(3):
+                # conpute difference in forest type fractions (=Delta_mcg) compute absolute sum of Delta_mcg
+                d_mcg_frac[:, :, k] = np.where(mask_sum_forst_p1 & mask_sum_mcg & mask_sum_forest, mcgrath_frac[:, :, k, zz+1] - mcgrath_frac[:, :, k, zz], d_mcg_frac[:, :, k])
+                abssum = np.where(mask_sum_forst_p1 & mask_sum_mcg & mask_sum_forest, abssum + abs(d_mcg_frac[:, :, k]), abssum)
+                
+            for k in range(2, 5):    
+                # compute difference in forest PFTs from t to t+1 (delta_forest_frac_p1=forest_pft_frac/(sum_forest(t+1)*(sum_forest(t+1)-sum_forest(t)))
+                filtered_sum_forest_p1 = np.where(sum_forest_p1 > 0.0, sum_forest_p1, 1.0)
+                d_forest[:, :, k-2] = np.where(mask_sum_forst_p1 & mask_sum_mcg & mask_sum_forest, self.pft_frac_ts[:, :, k, zz+1] / filtered_sum_forest_p1 * (sum_forest_p1 - sum_forest), d_forest[:, :, k-2])
+            # continue only if there is a change in mcgrath data (i.e. Delta_mcg neq 0)
+            mask_abssum = abssum > 0.0
+            
+            # compute change in fraction due to mcgrath data for each pft Delta_forest_frac_mcg=sum_forest(t+1)*Delta_mcg
+            for k in range(2, 5):
+                d_frac[:, :, k-2] = np.where(mask_abssum & mask_sum_forst_p1 & mask_sum_mcg & mask_sum_forest, sum_forest_p1 * d_mcg_frac[:, :, k-2], d_frac[:, :, k-2])
+            
+            for k in range(2, 5):
+                self.pft_frac_ts[:, :, k, zz] = np.where(mask_abssum & mask_sum_forst_p1 & mask_sum_mcg & mask_sum_forest, self.pft_frac_ts[:, :, k, zz+1] - d_frac[:, :, k-2] - d_forest[:, :, k-2], self.pft_frac_ts[:, :, k, zz])
+            lhelp = np.ones((self.xsize, self.ysize, 3))
+            helper = np.zeros((self.xsize, self.ysize))
+            
+            # check if negative fractions occured, if so distrute negative fractions to fraction
+            for k in range(2, 5):
+                helper = np.where(mask_abssum & mask_sum_forst_p1 & mask_sum_mcg & mask_sum_forest & (self.pft_frac_ts[:, :, k, zz] < 0.0), helper + self.pft_frac_ts[:, :, k, zz], helper)
+                lhelp[:, :, k-2] = np.where(mask_abssum & mask_sum_forst_p1 & mask_sum_mcg & mask_sum_forest & (self.pft_frac_ts[:, :, k, zz] < 0.0), 0.0, lhelp[:, :, k-2])
+                self.pft_frac_ts[:, :, k, zz] = np.where(mask_abssum & mask_sum_forst_p1 & mask_sum_mcg & mask_sum_forest & (self.pft_frac_ts[:, :, k, zz] < 0.0), 0.0, self.pft_frac_ts[:, :, k, zz])
+            
+            sum_helper = np.zeros((self.xsize, self.ysize))
+            sum_lhelp = np.zeros((self.xsize, self.ysize))
+            for k in range(3):
+                sum_lhelp = np.where(mask_abssum & mask_sum_forst_p1 & mask_sum_mcg & mask_sum_forest, sum_lhelp + lhelp[:, :, k], sum_lhelp)
+            
+            # if at least one fraction is below zero
+            mask_sum_lhelp = sum_lhelp < 3
+            # sum of fractions that are larger than zero
+            mask_lhelp_1 = lhelp == 1
+            import pdb 
+            for k in range(2, 5):
+                sum_helper = np.where(mask_abssum & mask_sum_forst_p1 & mask_sum_mcg & mask_sum_forest & mask_sum_lhelp & mask_lhelp_1[:, :, k-2], sum_helper + self.pft_frac_ts[:, :, k, zz], sum_helper)
+            # if there is are fractions which are larger than zero add helper to these fractions
+            mask_sum_helper = sum_helper > 0.0
+            for k in range(2, 5):
+                filtered_sum_helper = np.where(sum_helper > 0.0, sum_helper, 1.0)
+                self.pft_frac_ts[:, :, k, zz] = np.where(mask_abssum & mask_sum_forst_p1 & mask_sum_mcg & mask_sum_forest & mask_sum_lhelp & mask_sum_helper & mask_lhelp_1[:, :, k-2], self.pft_frac_ts[:, :, k, zz] + (self.pft_frac_ts[:, :, k, zz] / filtered_sum_helper * helper), self.pft_frac_ts[:, :, k, zz])
+                self.pft_frac_ts[:, :, k, zz] = np.where(mask_abssum & mask_sum_forst_p1 & mask_sum_mcg & mask_sum_forest & mask_sum_lhelp & ~mask_sum_helper, self.pft_frac_ts[:, :, k, zz] - (1 / 3) * helper, self.pft_frac_ts[:, :, k, zz])
+            
+            # abssum <= 0.0
+            for k in range(2, 5):
+                self.pft_frac_ts[:, :, k, zz] = np.where(~mask_abssum, self.pft_frac_ts[:, :, k, zz+1]-d_forest[:, :, k-2], self.pft_frac_ts[:, :, k, zz])
+            lhelp = np.ones((self.xsize, self.ysize, 3))
+            helper = np.zeros((self.xsize, self.ysize))
+            for k in range(2, 5):
+                helper = np.where(~mask_abssum & (self.pft_frac_ts[:, :, k, zz] < 0.0), helper + self.pft_frac_ts[:, :, k, zz], helper)
+                lhelp[:, :, k-2] = np.where(~mask_abssum & (self.pft_frac_ts[:, :, k, zz] < 0.0), 0.0, lhelp[:, :, k-2])
+                self.pft_frac_ts[:, :, k, zz] = np.where(~mask_abssum & (self.pft_frac_ts[:, :, k, zz] < 0.0), 0.0, self.pft_frac_ts[:, :, k, zz])
+            sum_helper = np.zeros((self.xsize, self.ysize))
+            sum_lhelp = np.zeros((self.xsize, self.ysize))
+            for k in range(3):
+                sum_lhelp = np.where(~mask_abssum, sum_lhelp + lhelp[:, :, k], sum_lhelp)
+            mask_sum_lhelp = sum_lhelp < 3
+            mask_lhelp_1 = lhelp == 1
+            for k in range(2, 5):
+                sum_helper = np.where(~mask_abssum & mask_sum_lhelp & mask_lhelp_1[:, :, k-2], sum_helper + self.pft_frac_ts[:, :, k, zz], sum_helper)
+            mask_sum_helper = sum_helper > 0.0
+            for k in range(2, 5):
+                filter_sum_helper = np.where(sum_helper > 0.0, sum_helper, 1.0)
+                self.pft_frac_ts[:, :, k, zz] = np.where(~mask_abssum & mask_sum_lhelp & mask_sum_helper & mask_lhelp_1[:, :, k-2], self.pft_frac_ts[:, :, k, zz] + (self.pft_frac_ts[:, :, k, zz] / filtered_sum_helper * helper), self.pft_frac_ts[:, :, k, zz])
+                self.pft_frac_ts[:, :, k, zz] = np.where(~mask_abssum & mask_sum_lhelp & ~mask_sum_helper, self.pft_frac_ts[:, :, k, zz] - (1 / 3) * helper, self.pft_frac_ts[:, :, k, zz])
 
-                for k in range(3):
-                    d_mcg_frac[k] = mcgrath_frac[i-1][j-1][k][zz] - mcgrath_frac[i-1][j-1][k][zz-1]
-                    abssum += abs(d_mcg_frac[k])
-
-                for k in range(3):
-                    d_forest[k] = pft_frac_ts[i-1][j-1][k+2][zz] / sum_forest_p1 * (sum_forest_p1 - sum_forest)
-
-                if abssum > 0.0:
-                    for k in range(3):
-                        d_frac[k] = sum_forest_p1 * d_mcg_frac[k]
-
-                    for k in range(3):
-                        pft_frac_ts[i-1][j-1][k+2][zz-1] = pft_frac_ts[i-1][j-1][k+2][zz] - d_frac[k] - d_forest[k]
-                    lhelp = [1, 1, 1]
-                    helper = 0.0
-
-                    for k in range(3):
-                        if pft_frac_ts[i-1][j-1][k+2][zz-1] < 0.0:
-                            helper += pft_frac_ts[i-1][j-1][k+2][zz-1]
-                            pft_frac_ts[i-1][j-1][k+2][zz-1] = 0.0
-                            lhelp[k] = 0
-
-                    sum_helper = 0.0
-                    sum_lhelp = 0.0
-                    for k in range(3):
-                        sum_helper += lhelp[k]
-
-                    if sum_helper < 3:
-
-                        for k in range(3):
-                            if lhelp[k] == 1:
-                                sum_helper += pft_frac_ts[i-1][j-1][k+2][zz-1]
-
-                        for k in range(3):
-                            if sum_helper > 0.0 and lhelp[k] == 1:
-                                pft_frac_ts[i-1][j-1][k+2][zz-1] += pft_frac_ts[i-1][j-1][k+2][zz-1] / sum_helper * helper
-                            else:
-                                pft_frac_ts[i-1][j-1][k+2][zz-1] -= (1 / 3) * helper
-                else:
-                    for k in range(3):
-                        pft_frac_ts[i-1][j-1][k+2][zz-1] = pft_frac_ts[i-1][j-1][k+2][zz] - d_forest[k]
-
-                    lhelp = [1, 1, 1]
-                    helper = 0.0
-
-                    for k in range(3):
-                        if pft_frac_ts[i-1][j-1][k+2][zz-1] < 0.0:
-                            helper += pft_frac_ts[i-1][j-1][k+2][zz-1]
-                            pft_frac_ts[i-1][j-1][k+2][zz-1] = 0.0
-                            lhelp[k] = 0
-
-                    sum_helper = 0.0
-                    sum_lhelp = 0.0
-                    for k in range(3):
-                        sum_helper += lhelp[k]
-
-                    if sum_helper < 3:
-                        for k in range(3):
-                            if lhelp[k] == 1:
-                                sum_helper += pft_frac_ts[i-1][j-1][k+2][zz-1]
-
-                        for k in range(3):
-                            if sum_helper > 0.0 and lhelp[k] == 1:
-                                pft_frac_ts[i-1][j-1][k+2][zz-1] += pft_frac_ts[i-1][j-1][k+2][zz-1] / sum_helper * helper
-                            else:
-                                pft_frac_ts[i-1][j-1][k+2][zz-1] -= (1 / 3) * helper
-
-        # remove zeros (they still occur due to rounding issues)
-        
 
     def lucas_lut_output(self):
         coords = self.reg.split(",")
@@ -709,10 +731,10 @@ class LUT:
             "XSIZE": xsize,
             "YSIZE": ysize,
         }
-        cdo.setgrid(os.path.join(scriptsdir, f"grid_{self.grid}"), input=f"{odir}/{ofile}.srv", output=f"{odir}/{ofile}.nc", options=f"-f nc -settime,12:00:00 -setctomiss,-999") 
+        cdo.setgrid(os.path.join(scriptsdir, f"grid_{self.grid}"), input=f"-settime,12:00:00 -setctomiss,-999 {odir}/{ofile}.srv", output=f"{odir}/{ofile}.nc", options=f"-f nc") 
         return namelist_dict
 
-    def prepare_luh2_data(self):
+    def func_prepare_luh2_data(self):
         if self.scenario == "historical":
             sdir="historic"
             sfile="states"
@@ -758,17 +780,16 @@ class LUT:
 
         path_region = os.path.join(luhdir, sdir, self.region)
         path_sdir = os.path.join(luhdir, sdir)
-        print(f"Selecting time period {self.syear}/{self.eyear}")
+        print_section_heading(f"Selecting time period {self.syear}/{self.eyear}")
         cdo.selyear(f"{self.syear}/{self.eyear}", input=f"{datadir}/{tfile}.nc", output=f"{datadir}/{tfile}_2.nc")
         print(f"Done")
-        # still have to fix this part to make it lighter. 
         if self.trans:
-            print(f"Selecting variables for transitions")
+            print_section_heading(f"Selecting variables for transitions")
             ofile=f"{tfile}_{self.syear}_{self.eyear}_{self.region}.nc"
             cdo.sellonlatbox(self.reg, input=f"-selvar,{vars_trans} {datadir}/{tfile}_2.nc", output=f"{path_sdir}/{self.region}/{ofile}")
             print("Done")
         if self.state:
-            print(f"Selecting variables for states")
+            print_section_heading(f"Selecting variables for states")
             cdo.sellonlatbox(self.reg, input=f"-selyear,{self.syear}/{self.eyear} -selvar,{vars_state} {datadir}/{sfile}.nc", output=f"{path_region}/states_{self.syear}_{self.eyear}_{self.region}.nc")
             if remap_com == "invertlat":
                 cdo.invertlat(input=f"{path_region}/states_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/states_{self.syear}_{self.eyear}_{self.grid}.nc")
@@ -778,7 +799,7 @@ class LUT:
                 cdo.remapcon2(f"{scriptsdir}/grid_{self.grid}", input=f"{path_region}/states_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/states_{self.syear}_{self.eyear}_{self.grid}.nc")
             print("Done")
         if self.addtree:
-            print(f"Selecting variables for added tree cover")
+            print_section_heading(f"Selecting variables for added tree cover")
             cdo.sellonlatbox(self.reg, input=f"-selyear,{self.syear}/{self.eyear} -selvar,added_tree_cover {path_sdir}/{afile}.nc", output=f"{path_region}/addtree_{self.syear}_{self.eyear}_{self.region}.nc")
             if remap_com == "invertlat":
                 cdo.invertlat(input=f"{path_region}/addtree_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/{self.grid}/addtree_{self.syear}_{self.eyear}_{self.grid}.nc")
@@ -786,7 +807,7 @@ class LUT:
                 cdo.remapbil(f"{scriptsdir}/grid_{self.grid}", input=f"{path_region}/addtree_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/{self.grid}/addtree_{self.syear}_{self.eyear}_{self.grid}.nc")
             elif remap_com == "remapcon2":
                 cdo.remapcon2(f"{scriptsdir}/grid_{self.grid}", input=f"{path_region}/addtree_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/{self.grid}/addtree_{self.syear}_{self.eyear}_{self.grid}.nc")
-            cdo.copy(input=f'{path_region}/{self.grid}/addtree_{self.syear}_{self.eyear}_{self.grid}.nc', output=f"{path_region}/{self.grid}/addtree_{self.syear}_{self.eyear}_{self.grid}.srv")
+            cdo.copy(input=f'{path_region}/{self.grid}/addtree_{self.syear}_{self.eyear}_{self.grid}.nc', output=f"{path_region}/{self.grid}/addtree_{self.syear}_{self.eyear}_{self.grid}.nc")
             print("Done")
         # compute irragtion fraction 
         if self.irri:
@@ -800,7 +821,7 @@ class LUT:
                     cdo.remapbil(f"{scriptsdir}/grid_{grid}", input=f"-chname,{IRR[0]},irrig_frac -selvar,{IRR[0]} {path_region}/irri_vars_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/{self.grid}/irrigation_{syear}_{eyear}_{grid}.nc")
                 elif remap_com == "remapcon2":
                     cdo.remapcon2(f"{scriptsdir}/grid_{grid}", input=f"-chname,{IRR[0]},irrig_frac -selvar,{IRR[0]} {path_region}/irri_vars_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/{self.grid}/irrigation_{syear}_{eyear}_{grid}.nc")
-                cdo.copy(options="-setmisstoc,-999", input=f'{path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_{self.grid}.nc', output=f"{path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_$grid.srv")
+                cdo.copy(options="-setmisstoc,-999", input=f'{path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_{self.grid}.nc', output=f"{path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_$grid.nc")
             else:
                 if remap_com in ["remapbil", "remapcon2"]:
                     cdo.setmisstoc(input=f"-999 -{remap_com},{scriptsdir}/grid_{self.grid} -varssum -selvar,{vars_crops} {path_region}/states_{self.syear}_{self.eyear}_{self.grid}.nc", output=f"{path_region}/sum_crop_frac.nc")
@@ -821,7 +842,7 @@ class LUT:
                         shutil.move(f"{path_region}/dummy2.nc", f"{path_region}/sum_irri_frac_{self.syear}_{self.eyear}_{self.grid}.nc")
                     os.remove(f"{path_region}/dummy.nc")
                 cdo.div(input=f"{path_region}/sum_irri_frac_{self.syear}_{self.eyear}_{self.grid}.nc {path_region}/sum_crop_frac.nc", output=f"{path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_{self.grid}.nc")
-                cdo.copy(input=f"-setmisstoc,-999 {path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_{self.grid}.nc", output=f"{path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_{self.grid}.srv")
+                cdo.copy(input=f"-setmisstoc,-999 {path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_{self.grid}.nc", output=f"{path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_{self.grid}.nc")
             print("Done")
         if self.trans:
             # New classification
@@ -862,7 +883,7 @@ class LUT:
                 self.fromto(data["varn"], data["for_1"], data["for_2"], tfile, ext, cutting, path_region, remap_com, data["outvar_condition"])
             print("Done")
 
-    def prepare_mcgrath(self):
+    def func_prepare_mcgrath(self):
         # commands for interpolation to given grid
         if self.remap == "bilinear":
             ext = "BIL"
@@ -891,10 +912,11 @@ class LUT:
                 cdo.setdate(f"{year}-06-15", input=f"-selyear,2010 {glcdir}/{self.lcd}_{self.syear}_{self.eyear}_ForestBckgrdMcGrath_{self.grid}.nc", output=f"{glcdir}/dummy_{year}.nc")
         cdo.mergetime(input=f"{glcdir}/dummy_????.nc", output=f"{glcdir}/{self.lcd}_2011_2015_ForestBckgrdMcGrath_{self.grid}.nc")
         cdo.mergetime(input=f"{glcdir}/{self.lcd}_{self.syear}_{self.eyear}_ForestBckgrdMcGrath_{self.grid}.nc {glcdir}/{self.lcd}_2011_2015_ForestBckgrdMcGrath_{self.grid}.nc", output=f"{glcdir}/{self.lcd}_{self.syear}_2015_ForestBckgrdMcGrath_{self.grid}.nc")
-        cdo.copy(input=f"{glcdir}/{self.lcd}_{self.syear}_2015_ForestBckgrdMcGrath_{self.grid}.nc", output=f"{glcdir}/{self.lcd}_{self.syear}_2015_ForestBckgrdMcGrath_{self.grid}.srv")
+        cdo.copy(input=f"{glcdir}/{self.lcd}_{self.syear}_2015_ForestBckgrdMcGrath_{self.grid}.nc", output=f"{glcdir}/{self.lcd}_{self.syear}_2015_ForestBckgrdMcGrath_{self.grid}.nc")
 
     def fromto(self, varn, for_1, for_2, tfile, ext, cutting, path, remap_com, outvar_condition=None):
         odir = self.grid
+        print(f"{for_1} to {for_2}")
         # combine land-use changes using reclassifcation
         ifile=f"{tfile}_{self.syear}_{self.eyear}_{self.region}.nc"
         logfile=f"{tfile}_{self.syear}_{self.eyear}_{self.region}.log"
@@ -910,13 +932,12 @@ class LUT:
                     cdo.chname(f"{inivar}_to_{outvar},{varn}", input=f"{path}/{ofile}.nc", output=f"{path}/dummy.nc")
         shutil.move(f"{path}/dummy.nc", f"{path}/{ofile}.nc")
         if remap_com == "invertlat":
-            cdo.invertlat(input=f"{path}/{ofile}.nc", output=f"{path}/{self.grid}/{ofile}_{ext}_{self.grid}.nc")
+            cdo.invertlat(input=f"{cutting} -setmisstoc,-999. {path}/{ofile}.nc", output=f"{path}/{self.grid}/{ofile}_{ext}_{self.grid}.nc")
         elif remap_com == "remapbil":
-            cdo.remapbil(f"{scriptsdir}/grid_{self.grid}", input=f"{path}/{ofile}.nc", output=f"{path}/{self.grid}/{ofile}_{ext}_{self.grid}.nc")
+            cdo.remapbil(f"{scriptsdir}/grid_{self.grid}", input=f"{cutting} -setmisstoc,-999. {path}/{ofile}.nc", output=f"{path}/{self.grid}/{ofile}_{ext}_{self.grid}.nc")
         elif remap_com == "remapcon2":
-            cdo.remapcon2(f"{scriptsdir}/grid_{self.grid}", input=f"{path}/{ofile}.nc", output=f"{path}/{self.grid}/{ofile}_{ext}_{self.grid}.nc")
-        cdo.copy(options=f"{cutting} -setmisstoc,-999.", input=f'{path}/{self.grid}/{ofile}_{ext}_{self.grid}.nc', output=f"{path}/{self.grid}/{ofile}_{ext}_{self.grid}.srv")
-
+            cdo.remapcon2(f"{scriptsdir}/grid_{self.grid}", input=f"{cutting} -setmisstoc,-999. {path}/{ofile}.nc", output=f"{path}/{self.grid}/{ofile}_{ext}_{self.grid}.nc")
+        
     def plot_pft_frac_ts(self):
         year = self.plot_year
         Path(os.path.join(plotdir, self.region, str(self.syear+year))).mkdir(parents=True, exist_ok=True)
@@ -924,14 +945,14 @@ class LUT:
         if self.plot_npft:
             self.main_plot(self.plot_npft, year)
             self.diff_plot(self.plot_npft, year)
-            self.diff_plot(self.plot_npft, year, data=data, directory=f"lucas_diff_{self.syear+year}")
-            self.diff_2_plot(self.plot_npft, year, self.pft_frac_ts, data, directory=f"lucas_diff_2_{self.syear+year}")
+            self.diff_plot(self.plot_npft, year, data=data, directory=f"lucas_diff")
+            self.diff_2_plot(self.plot_npft, year, self.pft_frac_ts, data, directory=f"lucas_python_fortran_diff")
         else:
             for inpft in range(self.npfts):
                 self.main_plot(inpft+1, year)
                 self.diff_plot(inpft+1, year)
-                self.diff_plot(inpft+1, year, data=data, directory=f"lucas_diff_{self.syear+year}")
-                self.diff_2_plot(inpft+1, year, self.pft_frac_ts, data, directory=f"lucas_diff_2_{self.syear+year}")
+                self.diff_plot(inpft+1, year, data=data, directory=f"lucas_diff")
+                self.diff_2_plot(inpft+1, year, self.pft_frac_ts, data, directory=f"lucas_python_fortran_diff")
 
     def diff_2_plot(self, npft, year, data_1, data_2, directory):
         Path(os.path.join(plotdir, self.region, directory)).mkdir(parents=True, exist_ok=True)
@@ -951,22 +972,37 @@ class LUT:
         ax.add_feature(cfeature.LAKES, facecolor='blue')
         ax.add_feature(cfeature.RIVERS, edgecolor='blue')
         # Plot the data
-        levels = np.linspace(-0.4, 0.3, 30)  # 30 intervals
-        values = (data_1[:, :, npft-1, self.years].T-data_1[:, :, npft-1, 0].T) - (data_2[:, :, npft-1, self.years].T-data_2[:, :, npft-1, 0].T)
-        contour = ax.contourf(lon_grid, lat_grid, values, levels=levels, transform=ccrs.PlateCarree(), alpha=1)
-        # Add colorbar
+        levels = np.linspace(-0.2, 0.2, 60)  # 30 intervals
+        #values = (data_1[:, :, npft-1, year].T-data_1[:, :, npft-1, 0].T) - (data_2[:, :, npft-1, year].T-data_2[:, :, npft-1, 0].T)
+        values = (data_1[:, :, npft-1, year].T) - (data_2[:, :, npft-1, year].T)
+        # Create a custom colormap with white at the center
+        colors = [(0, 0, 1), (1, 1, 1), (1, 0, 0)]  # Blue -> White -> Red
+        n_bins = 100  # Discretize the color range into 100 bins
+        cmap_name = 'blue_white_red'
+        cm = LinearSegmentedColormap.from_list(cmap_name, colors, N=n_bins)
+
+        # Create the filled contour plot
+        contour = ax.contourf(lon_grid, lat_grid, values, levels=levels, cmap=cm, transform=ccrs.PlateCarree(), alpha=1)
+
+        # Add colorbar with label
         cbar = plt.colorbar(contour, orientation='vertical', pad=0.22, aspect=50)
         cbar.set_label('PFT Fraction')
-        # Set the extent to focus on Germany
+
+        # Set the extent to focus on Germany (coordinates provided by self.reg)
         ax.set_extent([float(coords[0]), float(coords[1]), float(coords[2]), float(coords[3])], crs=ccrs.PlateCarree())
-        # Add gridlines
+
+        # Add gridlines with labels
         gl = ax.gridlines(draw_labels=True)
         gl.top_labels = False
         gl.right_labels = False
-        # Title
-        plt.title(f'Average {npft} PFT Fraction Diff over Germany for {self.syear}-{self.eyear}')
-        # Save the plot
-        plt.savefig(f'{os.path.join(plotdir, self.region, directory)}/pft_frac_{self.region}_npft_{npft}_diff_{self.syear}_{self.eyear}.png')
+
+        # Set the title of the plot
+        plt.title(f'Average {npft} PFT Fraction Diff (PYTHON-FORTRAN) over Germany for {self.syear + year}')
+
+        # Save the plot to the specified directory
+        plt.savefig(f'{os.path.join(plotdir, self.region, directory)}/pft_frac_{self.region}_npft_{npft}_diff_{self.syear + year}.png')
+
+        # Close the plot to free memory
         plt.close()
 
     def diff_plot(self, npft, year, data=None, directory=None):

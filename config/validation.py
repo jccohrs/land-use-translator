@@ -72,7 +72,7 @@ def validate_prepared_files(namelist):
         if key == "F_GRID":
             if not os.path.isfile(value):
                 raise ValueError(f"File {value} does not exist")
-        elif key.startswith("F_") and key not in ["F_IRRI_IN", "F_ADDTREE"]:
+        elif key.startswith("F_") and key not in ["F_IRRI_IN", "F_ADDTREE", "F_MCGRATH"]:
             if not os.path.isfile(value):
                 raise ValueError(f"File {value} does not exist")
         # checking file sizes
