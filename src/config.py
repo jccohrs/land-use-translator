@@ -63,7 +63,7 @@ nr_shrubs = 0
 nr_forest = 0
 nr_urban = 1
 
-for i in range(0, 10):
+for i in range(10):
     if CROPFTS[i] > 0:
         nr_crops += 1
     if FORPFTS[i] > 0:

@@ -14,8 +14,8 @@ schema = {
     "irri" : {"type": "boolean"},
     "prepare_luh2_data": {"type": "boolean"},
     "prepare_mcgrath": {"type": "boolean"},
-    "syear" : {"type": "integer", "min": 1900, "max": 2015},
-    "eyear" : {"type": "integer", "min": 1900, "max": 2015},
+    "syear" : {"type": "integer"},
+    "eyear" : {"type": "integer"},
     "npfts" : {"type": "integer"},
     "esayear" : {"type": "integer"},
     "mcgrath_eyear" : {"type": "integer"},
@@ -50,6 +50,8 @@ def validate_config(config):
     v.validate(config)
     if v.errors:
         raise ValueError(v.errors)
+    if config.syear >= config.eyear:
+        raise ValueError("Starting year (syear) must be smaller than ending year")
 
 def validate_main_files(config):
     # IT MIGHT BE SIMPLIFIED AND INCLUDED JUST IN THE INIT FUNCTION OF LUT

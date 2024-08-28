@@ -27,7 +27,7 @@ def main():
         print("Successfully generated")
     if config.prepare_mcgrath:
         print_section_heading("Preparing MCGRATH data")
-        lut.prepare_mcgrath()
+        lut.func_prepare_mcgrath()
         print("Successfully generated")
     namelist = lut.generate_namelist()
     validate_prepared_files(namelist)
