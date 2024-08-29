@@ -74,11 +74,11 @@ def validate_prepared_files(namelist):
         if key == "F_GRID":
             if not os.path.isfile(value):
                 raise ValueError(f"File {value} does not exist")
-        elif key.startswith("F_") and key not in ["F_IRRI_IN", "F_ADDTREE", "F_MCGRATH"]:
+        elif key.startswith("F_") and key not in ["F_IRRI_IN", "F_ADDTREE", "F_MCGRATH", "F_LC_OUT"]:
             if not os.path.isfile(value):
                 raise ValueError(f"File {value} does not exist")
         # checking file sizes
-        if key.startswith("F_") and key not in ["F_IRRI_IN", "F_ADDTREE", "F_GRID"]:
+        if key.startswith("F_") and key not in ["F_IRRI_IN", "F_ADDTREE", "F_GRID", "F_LC_OUT"]:
             ds = xr.open_dataset(value, decode_times=False)
             if not (ds.dims.get("x") or ds.dims.get("lon")) and not (ds.dims.get("y") or ds.dims.get("lat")):
                 raise ValueError(f"File {value} has wrong dimensions. Expected 2D but got {ds.dims}")

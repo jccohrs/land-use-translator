@@ -122,7 +122,6 @@ class LUT:
         rcm_lsm, pft_help, grass_backgr_help, crops_backgr_help, forest_backgr_help, shrubs_backgr_help, \
         shrubs_grass_backgr, nfv2cro, cro2nfv, for2cro, cro2for, ran2cro, cro2ran, pas2cro, cro2pas, cro2urb, nfv2urb, \
         for2urb, ran2urb, pas2urb, for2pas, pas2for, nfv2pas, ran2pas, pas2nfv, for2ran, ran2for, for2nfv, nfv2for, mcgrath_frac_help = self.lucas_lut_input()
-        self.mcgrath = False
         for z in range(self.years):
             zz = self.years - z -1
             print('year', zz)
@@ -150,7 +149,6 @@ class LUT:
             pft_help = self.lucas_lut_transrules(nfv2for[zz, :, :].data.T, rcm_lsm, pft_help, self.pfts_shrubs_grass, self.pfts_forest, 0, 0, self.nr_grass+self.nr_shrubs, self.nr_forest, 1, 1, self.pft_shrubs_default, shrubs_grass_backgr, self.backgrd, 1, False)
             self.pft_frac_ts[:, :, :, zz] = pft_help[:, :, :]
         # NORMALIZE TO GET A SUM OF 1 AND SET SEA POINTS TO MISSING VALUE
-        self.mcgrath = True
         self.recalc_pft_frac_ts(rcm_lsm)
         print("Finished normalizing")
         print('LAND USE CHANGE FINISHED')
@@ -162,6 +160,7 @@ class LUT:
             print_section_heading('MCGRATH')
             self.lucas_lut_mcgrath(rcm_lsm, mcgrath_frac_help)
             self.recalc_null_pft_frac_ts(rcm_lsm)
+        self.recalc_pft_frac_ts(rcm_lsm)
         if self.plot:
             print_section_heading('PLOTTING')
             self.plot_pft_frac_ts()
@@ -208,7 +207,6 @@ class LUT:
             mask_mcg_sum = mcg_sum == 1
             if mcgrath:
                 for ipft in range(2, 5):
-                    import pdb; pdb.set_trace()
                     inpfts[:, :, pfts_1[ipft]-1] = np.where((mcgrath) & (mask_trans) & (mask_mcg_sum), inpfts[:, :, pfts_1[ipft]-1] + (mcgfrac[:, :, ipft-2] * trans), inpfts[:, :, pfts_1[ipft]-1])
             # just use the relative fractions
             filtered_pft_1_sum = np.where((mask_trans) & (pft_1_sum > 0.0) & ((~mcgrath) | (~mask_mcg_sum)), pft_1_sum, 1)
@@ -345,7 +343,7 @@ class LUT:
 
     def lucas_lut_help(self):
         data_help = np.zeros((self.xsize, self.ysize, self.npfts, self.years+1))
-        data = xr.open_dataset("data/LUCAS_LUC7_ESACCI_LUH2_historical_1950_2015_reg01_Germany.nc")
+        data = xr.open_dataset("data/LUCAS_LUC7_ESACCI_LUH2_historical_1950_2015_reg01_Germany_irri.nc")
         for i in range(self.npfts):
             num = i + 1
             if len(str(num)) > 1:
@@ -470,18 +468,19 @@ class LUT:
                for2urb, ran2urb, pas2urb, for2pas, pas2for, nfv2pas, ran2pas, pas2nfv, for2ran, ran2for, for2nfv, nfv2for, mcgrath_frac_help
 
     def lucas_lut_irrigation(self, rcm_lsm):
-        irri_frac = xr.open_dataset(self.namelist["F_IRRI_IN"])
-        mask = (rcm_lsm > 0.0) & ((self.pft_frac_ts[:, :, 12, :] + self.pft_frac_ts[:, :, 13, :]) > 0.0)
-        sum_crops = self.pft_frac_ts[:, :, 12, :] + self.pft_frac_ts[:, :, 13, :]
-        irri_mask = irri_frac > 0.0
-        self.pft_frac_ts[mask & irri_mask, 12, :] = (1.0 - irri_frac[mask & irri_mask]) * sum_crops[mask & irri_mask]
-        self.pft_frac_ts[mask & irri_mask, 13, :] = irri_frac[mask & irri_mask] * sum_crops[mask & irri_mask]
-        self.pft_frac_ts[mask & ~irri_mask, 12, :] = sum_crops[mask & ~irri_mask]
-        mask = rcm_lsm > 0.0
-        self.pft_frac_ts = np.where(self.pft_frac_ts < 0.0, 0.0, self.pft_frac_ts)
-        pft_sum = np.sum(self.pft_frac_ts, axis=2)
-        pft_sum_mask = pft_sum > 0.0
-        self.pft_frac_ts[mask & pft_sum_mask] /= pft_sum[mask & pft_sum_mask, np.newaxis]
+        irri_frac = xr.open_dataset(self.namelist["F_IRRI_IN"], decode_times=False)["irrig_frac"].data.T
+        for z in range(self.years+1):
+            mask = (rcm_lsm > 0.0) & ((self.pft_frac_ts[:, :, 12, z] + self.pft_frac_ts[:, :, 13, z]) > 0.0)
+            sum_crops = self.pft_frac_ts[:, :, 12, z] + self.pft_frac_ts[:, :, 13, z]
+            irri_mask = irri_frac[:, :, z] > 0.0
+            self.pft_frac_ts[mask & irri_mask, 12, z] = (1.0 - irri_frac[mask & irri_mask, z]) * sum_crops[mask & irri_mask]
+            self.pft_frac_ts[mask & irri_mask, 13, z] = irri_frac[mask & irri_mask, z] * sum_crops[mask & irri_mask]
+            self.pft_frac_ts[mask & ~irri_mask, 12, z] = sum_crops[mask & ~irri_mask]
+            mask = rcm_lsm > 0.0
+            self.pft_frac_ts[:, :, :, z] = np.where(self.pft_frac_ts[:, :, :, z] < 0.0, 0.0, self.pft_frac_ts[:, :, :, z])
+            pft_sum = np.sum(self.pft_frac_ts[:, :, :, z], axis=2)
+            pft_sum_mask = pft_sum > 0.0
+            self.pft_frac_ts[mask & pft_sum_mask, :, z] /= pft_sum[mask & pft_sum_mask, np.newaxis]
 
     def recalc_pft_frac_ts(self, rcm_lsm):
         print_section_heading('NORMALIZE TO GET A SUM OF 1 AND SET SEA POINTS TO MISSING VALUE')
@@ -513,7 +512,6 @@ class LUT:
             d_forest = np.zeros((self.xsize, self.ysize, 3), dtype="float32")
             abssum = np.zeros((self.xsize, self.ysize), dtype="float32")
             zz = self.years - 1 - z
-            print('year', zz)
             # compute sun of the three forest types for t and t+1 as well as sum of the forest fractions given by mcgrath
             for k in range(2, 5):
                 sum_forest = np.where(mask_rcm_lsm, sum_forest + self.pft_frac_ts[:, :, k, zz], sum_forest)
@@ -779,9 +777,6 @@ class LUT:
 
         path_region = os.path.join(luhdir, sdir, self.region)
         path_sdir = os.path.join(luhdir, sdir)
-        #print_section_heading(f"Selecting time period {self.syear}/{self.eyear}")
-        #cdo.selyear(f"{self.syear}/{self.eyear}", input=f"{datadir}/{tfile}.nc", output=f"{datadir}/{tfile}_{self.syear}_{self.eyear}.nc")
-        #print(f"Done")
         if self.trans:
             print_section_heading(f"Selecting variables for transitions")
             ofile=f"{tfile}_{self.syear}_{self.eyear}_{self.region}.nc"
@@ -811,15 +806,16 @@ class LUT:
         # compute irragtion fraction 
         if self.irri:
             print(f"Selecting variables for irrigation")
-            cdo.sellonlatbox(self.reg, input=f"-selyear,{self.syear}/{self.eyear} -selvar,{vars_irrig} {path_sdir}/{mfile}.nc", output=f"{path_region}/irri_vars_{self.syear}_{self.eyear}_{self.region}.nc")
+            cdo.sellonlatbox(self.reg, input=f"-selyear,{self.syear}/{self.eyear} -selvar,{vars_irrig} {datadir}/{mfile}.nc", output=f"{path_region}/irri_vars_{self.syear}_{self.eyear}_{self.region}.nc")
 
             if self.scenario in ["historical", "historical_low", "historical_high"]:
                 if remap_com == "invertlat":
-                    cdo.invertlat(input=f"-chname,{IRR[0]},irrig_frac -selvar,{IRR[0]} {path_region}/irri_vars_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/{grid}/irrigation_{syear}_{eyear}_{grid}.nc")
+                    cdo.invertlat(input=f"-chname,{IRR[0]},irrig_frac -selvar,{IRR[0]} {path_region}/irri_vars_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_{self.grid}.nc")
                 elif remap_com == "remapbil":
-                    cdo.remapbil(f"{scriptsdir}/grid_{grid}", input=f"-chname,{IRR[0]},irrig_frac -selvar,{IRR[0]} {path_region}/irri_vars_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/{self.grid}/irrigation_{syear}_{eyear}_{grid}.nc")
+                    import pdb; pdb.set_trace()
+                    cdo.remapbil(f"{scriptsdir}/grid_{self.grid}", input=f"-chname,{IRR[0]},irrig_frac -selvar,{IRR[0]} {path_region}/irri_vars_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_{self.grid}.nc")
                 elif remap_com == "remapcon2":
-                    cdo.remapcon2(f"{scriptsdir}/grid_{grid}", input=f"-chname,{IRR[0]},irrig_frac -selvar,{IRR[0]} {path_region}/irri_vars_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/{self.grid}/irrigation_{syear}_{eyear}_{grid}.nc")
+                    cdo.remapcon2(f"{scriptsdir}/grid_{self.grid}", input=f"-chname,{IRR[0]},irrig_frac -selvar,{IRR[0]} {path_region}/irri_vars_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_{self.grid}.nc")
                 cdo.copy(options="-setmisstoc,-999", input=f'{path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_{self.grid}.nc', output=f"{path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_$grid.nc")
             else:
                 if remap_com in ["remapbil", "remapcon2"]:
@@ -831,9 +827,9 @@ class LUT:
 
                 for n in range(5):
                     if remap_com in ["remapbil", "remapcon2"]:
-                        cdo.mul(input=f"-{remap_com}, grid_{grid} -selvar,{IRR[n]} {path_region}/irri_vars_{self.syear}_{self.eyear}_{self.region}.nc -{remap_com}, grid_{self.grid} -selvar,{ICR[n]} {path_region}/states_{self.syear}_{self.eyear}_{self.grid}.nc", output=f"{sdir}/{self.region}/dummy.nc")
+                        cdo.mul(input=f"-{remap_com}, grid_{self.grid} -selvar,{IRR[n]} {path_region}/irri_vars_{self.syear}_{self.eyear}_{self.region}.nc -{remap_com}, grid_{self.grid} -selvar,{ICR[n]} {path_region}/states_{self.syear}_{self.eyear}_{self.grid}.nc", output=f"{sdir}/{self.region}/dummy.nc")
                     else:
-                        cdo.mul(input=f"-{remap_com} -selvar,{IRR[n]} {path_region}/irri_vars_{self.syear}_{self.eyear}_{self.region}.nc -{remap_com} -selvar,{ICR[n]} {path_region}/states_{syear}_{eyear}_{grid}.nc", output=f"{sdir}/{self.region}/dummy.nc")
+                        cdo.mul(input=f"-{remap_com} -selvar,{IRR[n]} {path_region}/irri_vars_{self.syear}_{self.eyear}_{self.region}.nc -{remap_com} -selvar,{ICR[n]} {path_region}/states_{self.syear}_{self.eyear}_{self.grid}.nc", output=f"{sdir}/{self.region}/dummy.nc")
                     if n == 0:
                         cdo.chname(input=f"{IRR[0]},irrig_frac -selvar,{IRR[0]} {path_region}/dummy.nc", output=f"{path_region}/sum_irri_frac_{self.syear}_{self.eyear}_{self.grid}.nc")
                     else:

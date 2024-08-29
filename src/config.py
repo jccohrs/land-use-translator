@@ -19,8 +19,8 @@ NFV = ["primn", "secdn"] # non-forest natural vegetation
 NAT = ["primn", "secdn", "primf", "secdf"] # natural vegetation
 PAS = ["pastr"] # pasture
 RAN = ["range"] # rangeland
-IRR = ('irrig_c3ann' 'irrig_c4ann' 'irrig_c3per' 'irrig_c4per' 'irrig_c3nfx') # irrigation fractions
-ICR = ('c3ann' 'c4ann' 'c3per' 'c4per' 'c3nfx') # corrisponding states for irrigation
+IRR = ['irrig_c3ann', 'irrig_c4ann', 'irrig_c3per', 'irrig_c4per', 'irrig_c3nfx'] # irrigation fractions
+ICR = ['c3ann', 'c4ann', 'c3per', 'c4per', 'c3nfx'] # corrisponding states for irrigation
 
 
 glcdir = "data/MCGRATH" # directory of GLOBCOVER file
