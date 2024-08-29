@@ -533,7 +533,8 @@ class LUT:
             for k in range(3):
                 # conpute difference in forest type fractions (=Delta_mcg) compute absolute sum of Delta_mcg
                 d_mcg_frac[:, :, k] = np.where(mask_rcm_lsm & mask_sum_forest_p1 & mask_sum_mcg & mask_sum_forest, mcgrath_frac[:, :, k, zz+1] - mcgrath_frac[:, :, k, zz], d_mcg_frac[:, :, k])
-                abssum = np.where(mask_rcm_lsm & mask_sum_forest_p1 & mask_sum_mcg & mask_sum_forest, abssum + abs(d_mcg_frac[:, :, k]), abssum)
+                abssum = np.where(mask_rcm_lsm & mask_sum_forest_p1 & mask_sum_mcg & mask_sum_forest, abssum + np.absolute(d_mcg_frac[:, :, k]), abssum)
+            
             
             for k in range(2, 5):    
                 # compute difference in forest PFTs from t to t+1 (delta_forest_frac_p1=forest_pft_frac/(sum_forest(t+1)*(sum_forest(t+1)-sum_forest(t)))
@@ -576,28 +577,28 @@ class LUT:
                 self.pft_frac_ts[:, :, k, zz] = np.where(mask_rcm_lsm & mask_abssum & mask_sum_forest_p1 & mask_sum_mcg & mask_sum_forest & mask_sum_lhelp & ~mask_sum_helper, self.pft_frac_ts[:, :, k, zz] - ((1 / 3) * helper), self.pft_frac_ts[:, :, k, zz])
             # abssum <= 0.0
             for k in range(2, 5):
-                self.pft_frac_ts[:, :, k, zz] = np.where(mask_rcm_lsm & ~mask_abssum, self.pft_frac_ts[:, :, k, zz+1]-d_forest[:, :, k-2], self.pft_frac_ts[:, :, k, zz])
+                self.pft_frac_ts[:, :, k, zz] = np.where(mask_rcm_lsm & ~mask_abssum & mask_sum_forest_p1 & mask_sum_mcg & mask_sum_forest, self.pft_frac_ts[:, :, k, zz+1]-d_forest[:, :, k-2], self.pft_frac_ts[:, :, k, zz])
             lhelp = np.ones((self.xsize, self.ysize, 3), dtype="float32")
             helper = np.zeros((self.xsize, self.ysize), dtype="float32")
             for k in range(2, 5):
-                helper = np.where(mask_rcm_lsm & ~mask_abssum & (self.pft_frac_ts[:, :, k, zz] < 0.0), helper + self.pft_frac_ts[:, :, k, zz], helper)
-                lhelp[:, :, k-2] = np.where(mask_rcm_lsm & ~mask_abssum & (self.pft_frac_ts[:, :, k, zz] < 0.0), 0.0, lhelp[:, :, k-2])
-                self.pft_frac_ts[:, :, k, zz] = np.where(mask_rcm_lsm & ~mask_abssum & (self.pft_frac_ts[:, :, k, zz] < 0.0), 0.0, self.pft_frac_ts[:, :, k, zz])
+                helper = np.where(mask_rcm_lsm & ~mask_abssum & (self.pft_frac_ts[:, :, k, zz] < 0.0) & mask_sum_forest_p1 & mask_sum_mcg & mask_sum_forest, helper + self.pft_frac_ts[:, :, k, zz], helper)
+                lhelp[:, :, k-2] = np.where(mask_rcm_lsm & ~mask_abssum & (self.pft_frac_ts[:, :, k, zz] < 0.0) & mask_sum_forest_p1 & mask_sum_mcg & mask_sum_forest, 0.0, lhelp[:, :, k-2])
+                self.pft_frac_ts[:, :, k, zz] = np.where(mask_rcm_lsm & ~mask_abssum & (self.pft_frac_ts[:, :, k, zz] < 0.0) & mask_sum_forest_p1 & mask_sum_mcg & mask_sum_forest, 0.0, self.pft_frac_ts[:, :, k, zz])
             sum_helper = np.zeros((self.xsize, self.ysize), dtype="float32")
             sum_lhelp = np.zeros((self.xsize, self.ysize), dtype="float32")
             for k in range(3):
-                sum_lhelp = np.where(mask_rcm_lsm & ~mask_abssum, sum_lhelp + lhelp[:, :, k], sum_lhelp)
-            
+                sum_lhelp = np.where(mask_rcm_lsm & ~mask_abssum & mask_sum_forest_p1 & mask_sum_mcg & mask_sum_forest, sum_lhelp + lhelp[:, :, k], sum_lhelp)
             mask_sum_lhelp = sum_lhelp < 3
             mask_lhelp_1 = lhelp == 1
             for k in range(2, 5):
-                sum_helper = np.where(mask_rcm_lsm & ~mask_abssum & mask_sum_lhelp & mask_lhelp_1[:, :, k-2], sum_helper + self.pft_frac_ts[:, :, k, zz], sum_helper)
+                sum_helper = np.where(mask_rcm_lsm & ~mask_abssum & mask_sum_lhelp & mask_lhelp_1[:, :, k-2] & mask_sum_forest_p1 & mask_sum_mcg & mask_sum_forest, sum_helper + self.pft_frac_ts[:, :, k, zz], sum_helper)
             mask_sum_helper = sum_helper > 0.0
             for k in range(2, 5):
-                filter_sum_helper = np.where(mask_rcm_lsm & ~mask_abssum & mask_sum_lhelp & mask_sum_helper & mask_lhelp_1[:, :, k-2], sum_helper, 1.0)
-                filtered_helper = np.where(mask_rcm_lsm & ~mask_abssum & mask_sum_lhelp & mask_sum_helper & mask_lhelp_1[:, :, k-2], helper, 0.0)
-                self.pft_frac_ts[:, :, k, zz] = np.where(mask_rcm_lsm & ~mask_abssum & mask_sum_lhelp & mask_sum_helper & mask_lhelp_1[:, :, k-2], self.pft_frac_ts[:, :, k, zz] + (self.pft_frac_ts[:, :, k, zz] / filtered_sum_helper * filtered_helper), self.pft_frac_ts[:, :, k, zz])
-                self.pft_frac_ts[:, :, k, zz] = np.where(mask_rcm_lsm & ~mask_abssum & mask_sum_lhelp & ~mask_sum_helper, self.pft_frac_ts[:, :, k, zz] - ((1 / 3) * helper), self.pft_frac_ts[:, :, k, zz])
+                filter_sum_helper = np.where(mask_rcm_lsm & ~mask_abssum & mask_sum_lhelp & mask_sum_helper & mask_lhelp_1[:, :, k-2] & mask_sum_forest_p1 & mask_sum_mcg & mask_sum_forest, sum_helper, 1.0)
+                filtered_helper = np.where(mask_rcm_lsm & ~mask_abssum & mask_sum_lhelp & mask_sum_helper & mask_lhelp_1[:, :, k-2] & mask_sum_forest_p1 & mask_sum_mcg & mask_sum_forest, helper, 0.0)
+                self.pft_frac_ts[:, :, k, zz] = np.where(mask_rcm_lsm & ~mask_abssum & mask_sum_lhelp & mask_sum_helper & mask_lhelp_1[:, :, k-2] & mask_sum_forest_p1 & mask_sum_mcg & mask_sum_forest, self.pft_frac_ts[:, :, k, zz] + (self.pft_frac_ts[:, :, k, zz] / filtered_sum_helper * filtered_helper), self.pft_frac_ts[:, :, k, zz])
+                self.pft_frac_ts[:, :, k, zz] = np.where(mask_rcm_lsm & ~mask_abssum & mask_sum_lhelp & ~mask_sum_helper & mask_sum_forest_p1 & mask_sum_mcg & mask_sum_forest, self.pft_frac_ts[:, :, k, zz] - ((1 / 3) * helper), self.pft_frac_ts[:, :, k, zz])
+
 
     def lucas_lut_output(self):
         coords = self.reg.split(",")
