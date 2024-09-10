@@ -24,19 +24,17 @@ def main():
     if config.prepare_luh2_data:
         print_section_heading("Preparing LUH2 data")
         lut.func_prepare_luh2_data()
-        print("Successfully generated")
     if config.prepare_mcgrath:
         print_section_heading("Preparing MCGRATH data")
         lut.func_prepare_mcgrath()
-        print("Successfully generated")
     namelist = lut.generate_namelist()
     validate_prepared_files(namelist)
     print_section_heading("Calculating land use changes")
     if config.forward:
-        print('CALCULATE LAND USE CHANGES FORWARD IN TIME')
+        print('FORWARD IN TIME')
         lut.lucas_lut_forward()
     else:
-        print('CALCULATE LAND USE CHANGES BACKWARD IN TIME')
+        print('BACKWARD IN TIME')
         lut.lucas_lut_backward()
     print_section_heading("Writing out data")
     lut.lucas_lut_output()

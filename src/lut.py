@@ -12,7 +12,7 @@ from scipy.stats import linregress
 from matplotlib.patches import Patch
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
-from matplotlib.colors import ListedColormap, BoundaryNorm, LinearSegmentedColormap
+from matplotlib.colors import ListedColormap, BoundaryNorm, LinearSegmentedColormap 
 
 cdo = Cdo()
 
@@ -150,21 +150,19 @@ class LUT:
             self.pft_frac_ts[:, :, :, zz] = pft_help[:, :, :]
         # NORMALIZE TO GET A SUM OF 1 AND SET SEA POINTS TO MISSING VALUE
         self.recalc_pft_frac_ts(rcm_lsm)
-        print("Finished normalizing")
-        print('LAND USE CHANGE FINISHED')
         if self.irri:
             print_section_heading('IRRIGATION')
             self.lucas_lut_irrigation(rcm_lsm)
             self.recalc_null_pft_frac_ts(rcm_lsm)
+            self.recalc_pft_frac_ts(rcm_lsm)
         if self.mcgrath:
             print_section_heading('MCGRATH')
             self.lucas_lut_mcgrath(rcm_lsm, mcgrath_frac_help)
             self.recalc_null_pft_frac_ts(rcm_lsm)
-        self.recalc_pft_frac_ts(rcm_lsm)
+            self.recalc_pft_frac_ts(rcm_lsm)
         if self.plot:
             print_section_heading('PLOTTING')
             self.plot_pft_frac_ts()
-            print('PLOTTING FINISHED')
 
     def lucas_lut_transrules(self, trans, rcm_lsm, inpfts, pfts_1, pfts_2, pfts_3, pfts_4,
                              nr_pfts_1, nr_pfts_2, nr_pfts_3, nr_pfts_4, defaultpft,
@@ -343,7 +341,7 @@ class LUT:
 
     def lucas_lut_help(self):
         data_help = np.zeros((self.xsize, self.ysize, self.npfts, self.years+1))
-        data = xr.open_dataset("data/LUCAS_LUC7_ESACCI_LUH2_historical_1950_2015_reg01_Germany_irri.nc")
+        data = xr.open_dataset("data/LUCAS_LUC7_ESACCI_LUH2_historical_1950_2015_reg01_Germany_mcgrath.nc")
         for i in range(self.npfts):
             num = i + 1
             if len(str(num)) > 1:
@@ -483,7 +481,7 @@ class LUT:
             self.pft_frac_ts[mask & pft_sum_mask, :, z] /= pft_sum[mask & pft_sum_mask, np.newaxis]
 
     def recalc_pft_frac_ts(self, rcm_lsm):
-        print_section_heading('NORMALIZE TO GET A SUM OF 1 AND SET SEA POINTS TO MISSING VALUE')
+        print("normalize to get a sum of 1 and set sea points to missing value")
         for z in range(self.years+1):
             mask = rcm_lsm > 0.0
             pft_sum = np.sum(self.pft_frac_ts[:, :, :, z], axis=2)
@@ -492,7 +490,7 @@ class LUT:
             self.pft_frac_ts[~mask, :, z] = -999.0
 
     def recalc_null_pft_frac_ts(self, rcm_lsm):
-        print_section_heading('remove zeros (they still occur due to rounding issues)')
+        print('remove zeros (they still occur due to rounding issues)')
         for z in range(self.years+1):
             mask = rcm_lsm > 0.0
             mask_pft_frac_ts = self.pft_frac_ts[:, :, :, z] < 0.0
@@ -781,68 +779,8 @@ class LUT:
         if self.trans:
             print_section_heading(f"Selecting variables for transitions")
             ofile=f"{tfile}_{self.syear}_{self.eyear}_{self.region}.nc"
-            cdo.sellonlatbox(self.reg, input=f"-selyear,{self.syear}/{self.eyear} -selvar,{vars_trans} {datadir}/{tfile}.nc", output=f"{path_sdir}/{self.region}/{ofile}")
-            print("Done")
-        if self.state:
-            print_section_heading(f"Selecting variables for states")
-            cdo.sellonlatbox(self.reg, input=f"-selyear,{self.syear}/{self.eyear} -selvar,{vars_state} {datadir}/{sfile}.nc", output=f"{path_region}/states_{self.syear}_{self.eyear}_{self.region}.nc")
-            if remap_com == "invertlat":
-                cdo.invertlat(input=f"{path_region}/states_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/states_{self.syear}_{self.eyear}_{self.grid}.nc")
-            elif remap_com == "remapbil":
-                cdo.remapbil(f"{scriptsdir}/grid_{self.grid}", input=f"{path_region}/states_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/states_{self.syear}_{self.eyear}_{self.grid}.nc")
-            elif remap_com == "remapcon2":
-                cdo.remapcon2(f"{scriptsdir}/grid_{self.grid}", input=f"{path_region}/states_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/states_{self.syear}_{self.eyear}_{self.grid}.nc")
-            print("Done")
-        if self.addtree:
-            print_section_heading(f"Selecting variables for added tree cover")
-            cdo.sellonlatbox(self.reg, input=f"-selyear,{self.syear}/{self.eyear} -selvar,added_tree_cover {path_sdir}/{afile}.nc", output=f"{path_region}/addtree_{self.syear}_{self.eyear}_{self.region}.nc")
-            if remap_com == "invertlat":
-                cdo.invertlat(input=f"{path_region}/addtree_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/{self.grid}/addtree_{self.syear}_{self.eyear}_{self.grid}.nc")
-            elif remap_com == "remapbil":
-                cdo.remapbil(f"{scriptsdir}/grid_{self.grid}", input=f"{path_region}/addtree_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/{self.grid}/addtree_{self.syear}_{self.eyear}_{self.grid}.nc")
-            elif remap_com == "remapcon2":
-                cdo.remapcon2(f"{scriptsdir}/grid_{self.grid}", input=f"{path_region}/addtree_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/{self.grid}/addtree_{self.syear}_{self.eyear}_{self.grid}.nc")
-            cdo.copy(input=f'{path_region}/{self.grid}/addtree_{self.syear}_{self.eyear}_{self.grid}.nc', output=f"{path_region}/{self.grid}/addtree_{self.syear}_{self.eyear}_{self.grid}.nc")
-            print("Done")
-        # compute irragtion fraction 
-        if self.irri:
-            print(f"Selecting variables for irrigation")
-            cdo.sellonlatbox(self.reg, input=f"-selyear,{self.syear}/{self.eyear} -selvar,{vars_irrig} {datadir}/{mfile}.nc", output=f"{path_region}/irri_vars_{self.syear}_{self.eyear}_{self.region}.nc")
-
-            if self.scenario in ["historical", "historical_low", "historical_high"]:
-                if remap_com == "invertlat":
-                    cdo.invertlat(input=f"-chname,{IRR[0]},irrig_frac -selvar,{IRR[0]} {path_region}/irri_vars_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_{self.grid}.nc")
-                elif remap_com == "remapbil":
-                    import pdb; pdb.set_trace()
-                    cdo.remapbil(f"{scriptsdir}/grid_{self.grid}", input=f"-chname,{IRR[0]},irrig_frac -selvar,{IRR[0]} {path_region}/irri_vars_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_{self.grid}.nc")
-                elif remap_com == "remapcon2":
-                    cdo.remapcon2(f"{scriptsdir}/grid_{self.grid}", input=f"-chname,{IRR[0]},irrig_frac -selvar,{IRR[0]} {path_region}/irri_vars_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_{self.grid}.nc")
-                cdo.copy(options="-setmisstoc,-999", input=f'{path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_{self.grid}.nc', output=f"{path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_$grid.nc")
-            else:
-                if remap_com in ["remapbil", "remapcon2"]:
-                    cdo.setmisstoc(input=f"-999 -{remap_com},{scriptsdir}/grid_{self.grid} -varssum -selvar,{vars_crops} {path_region}/states_{self.syear}_{self.eyear}_{self.grid}.nc", output=f"{path_region}/sum_crop_frac.nc")
-                else:
-                    cdo.setmisstoc(input=f"-999 -{remap_com} -varssum -selvar,{vars_crops} {path_region}/states_{self.syear}_{self.eyear}_{self.grid}.nc", output=f"{path_region}/sum_crop_frac.nc")
-
-                # Change variables names
-
-                for n in range(5):
-                    if remap_com in ["remapbil", "remapcon2"]:
-                        cdo.mul(input=f"-{remap_com}, grid_{self.grid} -selvar,{IRR[n]} {path_region}/irri_vars_{self.syear}_{self.eyear}_{self.region}.nc -{remap_com}, grid_{self.grid} -selvar,{ICR[n]} {path_region}/states_{self.syear}_{self.eyear}_{self.grid}.nc", output=f"{sdir}/{self.region}/dummy.nc")
-                    else:
-                        cdo.mul(input=f"-{remap_com} -selvar,{IRR[n]} {path_region}/irri_vars_{self.syear}_{self.eyear}_{self.region}.nc -{remap_com} -selvar,{ICR[n]} {path_region}/states_{self.syear}_{self.eyear}_{self.grid}.nc", output=f"{sdir}/{self.region}/dummy.nc")
-                    if n == 0:
-                        cdo.chname(input=f"{IRR[0]},irrig_frac -selvar,{IRR[0]} {path_region}/dummy.nc", output=f"{path_region}/sum_irri_frac_{self.syear}_{self.eyear}_{self.grid}.nc")
-                    else:
-                        cdo.add(input=f"-chname,{IRR[n]},irrig_frac -selvar,{IRR[n]} {path_region}/dummy.nc {path_region}/sum_irri_frac_{self.syear}_{self.eyear}_{self.grid}.nc")   
-                        shutil.move(f"{path_region}/dummy2.nc", f"{path_region}/sum_irri_frac_{self.syear}_{self.eyear}_{self.grid}.nc")
-                    os.remove(f"{path_region}/dummy.nc")
-                cdo.div(input=f"{path_region}/sum_irri_frac_{self.syear}_{self.eyear}_{self.grid}.nc {path_region}/sum_crop_frac.nc", output=f"{path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_{self.grid}.nc")
-                cdo.copy(input=f"-setmisstoc,-999 {path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_{self.grid}.nc", output=f"{path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_{self.grid}.nc")
-            print("Done")
-        if self.trans:
-            # New classification
-            print(f"Selecting variables for transitions")
+            cdo.selyear(f"{self.syear}/{self.eyear}", input=f"{datadir}/{tfile}.nc", output=f"{path_sdir}/{self.region}/tmp_{ofile}")
+            cdo.sellonlatbox(self.reg, input=f"-selvar,{vars_trans} {path_sdir}/{self.region}/tmp_{ofile}", output=f"{path_sdir}/{self.region}/{ofile}")
             fromto_array = [
                 {"varn": "for2urb", "for_1": FOR, "for_2": URB, "outvar_condition": None},
                 {"varn": "urb2for", "for_1": URB, "for_2": FOR, "outvar_condition": "primf"},
@@ -877,7 +815,61 @@ class LUT:
             ]
             for data in fromto_array:
                 self.fromto(data["varn"], data["for_1"], data["for_2"], tfile, ext, cutting, path_region, remap_com, data["outvar_condition"])
-            print("Done")
+
+        if self.state:
+            print_section_heading(f"Selecting variables for states")
+            cdo.selyear(f"{self.syear}/{self.eyear}", input=f"{datadir}/{sfile}.nc", output=f"{path_sdir}/{self.region}/tmp_{sfile}_{self.syear}_{self.eyear}.nc")
+            cdo.sellonlatbox(self.reg, input=f"-selvar,{vars_state} {path_sdir}/{self.region}/tmp_{sfile}_{self.syear}_{self.eyear}.nc", output=f"{path_region}/states_{self.syear}_{self.eyear}_{self.region}.nc")
+            if remap_com == "invertlat":
+                cdo.invertlat(input=f"{path_region}/states_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/states_{self.syear}_{self.eyear}_{self.grid}.nc")
+            elif remap_com == "remapbil":
+                cdo.remapbil(f"{scriptsdir}/grid_{self.grid}", input=f"{path_region}/states_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/states_{self.syear}_{self.eyear}_{self.grid}.nc")
+            elif remap_com == "remapcon2":
+                cdo.remapcon2(f"{scriptsdir}/grid_{self.grid}", input=f"{path_region}/states_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/states_{self.syear}_{self.eyear}_{self.grid}.nc")
+        if self.addtree:
+            print_section_heading(f"Selecting variables for added tree cover")
+            cdo.sellonlatbox(self.reg, input=f"-selyear,{self.syear}/{self.eyear} -selvar,added_tree_cover {path_sdir}/{afile}.nc", output=f"{path_region}/addtree_{self.syear}_{self.eyear}_{self.region}.nc")
+            if remap_com == "invertlat":
+                cdo.invertlat(input=f"{path_region}/addtree_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/{self.grid}/addtree_{self.syear}_{self.eyear}_{self.grid}.nc")
+            elif remap_com == "remapbil":
+                cdo.remapbil(f"{scriptsdir}/grid_{self.grid}", input=f"{path_region}/addtree_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/{self.grid}/addtree_{self.syear}_{self.eyear}_{self.grid}.nc")
+            elif remap_com == "remapcon2":
+                cdo.remapcon2(f"{scriptsdir}/grid_{self.grid}", input=f"{path_region}/addtree_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/{self.grid}/addtree_{self.syear}_{self.eyear}_{self.grid}.nc")
+            cdo.copy(input=f'{path_region}/{self.grid}/addtree_{self.syear}_{self.eyear}_{self.grid}.nc', output=f"{path_region}/{self.grid}/addtree_{self.syear}_{self.eyear}_{self.grid}.nc")
+        # compute irragtion fraction 
+        if self.irri:
+            print_section_heading(f"Selecting variables for irrigation")
+            cdo.sellonlatbox(self.reg, input=f"-selyear,{self.syear}/{self.eyear} -selvar,{vars_irrig} {datadir}/{mfile}.nc", output=f"{path_region}/irri_vars_{self.syear}_{self.eyear}_{self.region}.nc")
+
+            if self.scenario in ["historical", "historical_low", "historical_high"]:
+                if remap_com == "invertlat":
+                    cdo.invertlat(input=f"-chname,{IRR[0]},irrig_frac -selvar,{IRR[0]} {path_region}/irri_vars_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_{self.grid}.nc")
+                elif remap_com == "remapbil":
+                    cdo.remapbil(f"{scriptsdir}/grid_{self.grid}", input=f"-chname,{IRR[0]},irrig_frac -selvar,{IRR[0]} {path_region}/irri_vars_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_{self.grid}.nc")
+                elif remap_com == "remapcon2":
+                    cdo.remapcon2(f"{scriptsdir}/grid_{self.grid}", input=f"-chname,{IRR[0]},irrig_frac -selvar,{IRR[0]} {path_region}/irri_vars_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_{self.grid}.nc")
+                cdo.copy(options="-setmisstoc,-999", input=f'{path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_{self.grid}.nc', output=f"{path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_$grid.nc")
+            else:
+                if remap_com in ["remapbil", "remapcon2"]:
+                    cdo.setmisstoc(input=f"-999 -{remap_com},{scriptsdir}/grid_{self.grid} -varssum -selvar,{vars_crops} {path_region}/states_{self.syear}_{self.eyear}_{self.grid}.nc", output=f"{path_region}/sum_crop_frac.nc")
+                else:
+                    cdo.setmisstoc(input=f"-999 -{remap_com} -varssum -selvar,{vars_crops} {path_region}/states_{self.syear}_{self.eyear}_{self.grid}.nc", output=f"{path_region}/sum_crop_frac.nc")
+
+                # Change variables names
+
+                for n in range(5):
+                    if remap_com in ["remapbil", "remapcon2"]:
+                        cdo.mul(input=f"-{remap_com}, grid_{self.grid} -selvar,{IRR[n]} {path_region}/irri_vars_{self.syear}_{self.eyear}_{self.region}.nc -{remap_com}, grid_{self.grid} -selvar,{ICR[n]} {path_region}/states_{self.syear}_{self.eyear}_{self.grid}.nc", output=f"{sdir}/{self.region}/dummy.nc")
+                    else:
+                        cdo.mul(input=f"-{remap_com} -selvar,{IRR[n]} {path_region}/irri_vars_{self.syear}_{self.eyear}_{self.region}.nc -{remap_com} -selvar,{ICR[n]} {path_region}/states_{self.syear}_{self.eyear}_{self.grid}.nc", output=f"{sdir}/{self.region}/dummy.nc")
+                    if n == 0:
+                        cdo.chname(input=f"{IRR[0]},irrig_frac -selvar,{IRR[0]} {path_region}/dummy.nc", output=f"{path_region}/sum_irri_frac_{self.syear}_{self.eyear}_{self.grid}.nc")
+                    else:
+                        cdo.add(input=f"-chname,{IRR[n]},irrig_frac -selvar,{IRR[n]} {path_region}/dummy.nc {path_region}/sum_irri_frac_{self.syear}_{self.eyear}_{self.grid}.nc")   
+                        shutil.move(f"{path_region}/dummy2.nc", f"{path_region}/sum_irri_frac_{self.syear}_{self.eyear}_{self.grid}.nc")
+                    os.remove(f"{path_region}/dummy.nc")
+                cdo.div(input=f"{path_region}/sum_irri_frac_{self.syear}_{self.eyear}_{self.grid}.nc {path_region}/sum_crop_frac.nc", output=f"{path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_{self.grid}.nc")
+                cdo.copy(input=f"-setmisstoc,-999 {path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_{self.grid}.nc", output=f"{path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_{self.grid}.nc")
 
     def func_prepare_mcgrath(self):
         # commands for interpolation to given grid
@@ -903,12 +895,12 @@ class LUT:
             cdo.setmisstoc(-999, input=f"-remapbil,{scriptsdir}/grid_{self.grid} -sellonlatbox,{self.reg} -div {glcdir}/{self.lcd}_{self.syear}_{self.eyear}_dummy.nc -varssum {glcdir}/{self.lcd}_{self.syear}_{self.eyear}_dummy.nc", output=f"{glcdir}/{self.lcd}_{self.syear}_{self.eyear}_ForestBckgrdMcGrath_{self.grid}.nc")
         else:
             cdo.setmisstoc(-999, input=f"-remapbil,{scriptsdir}/grid_{self.grid} -div {glcdir}/{self.lcd}_{self.syear}_{self.eyear}_dummy.nc -varssum {glcdir}/{self.lcd}_{self.syear}_{self.eyear}_dummy.nc", output=f"{glcdir}/{self.lcd}_{self.syear}_{self.eyear}_ForestBckgrdMcGrath_{self.grid}.nc")
-        if self.mcgrath_eyear < self.eyear:
-            for year in range(self.mcgrath_eyear, self.eyear+1):
-                cdo.setdate(f"{year}-06-15", input=f"-selyear,2010 {glcdir}/{self.lcd}_{self.syear}_{self.eyear}_ForestBckgrdMcGrath_{self.grid}.nc", output=f"{glcdir}/dummy_{year}.nc")
-        cdo.mergetime(input=f"{glcdir}/dummy_????.nc", output=f"{glcdir}/{self.lcd}_2011_2015_ForestBckgrdMcGrath_{self.grid}.nc")
-        cdo.mergetime(input=f"{glcdir}/{self.lcd}_{self.syear}_{self.eyear}_ForestBckgrdMcGrath_{self.grid}.nc {glcdir}/{self.lcd}_2011_2015_ForestBckgrdMcGrath_{self.grid}.nc", output=f"{glcdir}/{self.lcd}_{self.syear}_2015_ForestBckgrdMcGrath_{self.grid}.nc")
-        #cdo.copy(input=f"{glcdir}/{self.lcd}_{self.syear}_2015_ForestBckgrdMcGrath_{self.grid}.nc", output=f"{glcdir}/{self.lcd}_{self.syear}_2015_ForestBckgrdMcGrath_{self.grid}.nc")
+        if self.mcgrath_eyear:
+            if self.mcgrath_eyear < self.eyear:
+                for year in range(self.mcgrath_eyear, self.eyear+1):
+                    cdo.setdate(f"{year}-06-15", input=f"-selyear,2010 {glcdir}/{self.lcd}_{self.syear}_{self.eyear}_ForestBckgrdMcGrath_{self.grid}.nc", output=f"{glcdir}/dummy_{year}.nc")
+        cdo.mergetime(input=f"{glcdir}/dummy_????.nc", output=f"{glcdir}/{self.lcd}_{self.mcgrath_eyear}_{self.eyear}_ForestBckgrdMcGrath_{self.grid}.nc")
+        cdo.mergetime(input=f"{glcdir}/{self.lcd}_{self.syear}_{self.eyear}_ForestBckgrdMcGrath_{self.grid}.nc {glcdir}/{self.lcd}_{self.mcgrath_eyear}_{self.eyear}_ForestBckgrdMcGrath_{self.grid}.nc", output=f"{glcdir}/{self.lcd}_{self.syear}_2015_ForestBckgrdMcGrath_{self.grid}.nc")
 
     def fromto(self, varn, for_1, for_2, tfile, ext, cutting, path, remap_com, outvar_condition=None):
         odir = self.grid

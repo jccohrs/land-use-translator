@@ -18,7 +18,7 @@ schema = {
     "eyear" : {"type": "integer"},
     "npfts" : {"type": "integer"},
     "esayear" : {"type": "integer"},
-    "mcgrath_eyear" : {"type": "integer"},
+    "mcgrath_eyear" : {"type": "integer", "nullable": True},
     "xsize" : {"type": "integer"},
     "ysize" : {"type": "integer"},
     "gradef" : {"type": "integer"},
@@ -51,7 +51,12 @@ def validate_config(config):
     if v.errors:
         raise ValueError(v.errors)
     if config.syear >= config.eyear:
-        raise ValueError("Starting year (syear) must be smaller than ending year")
+        raise ValueError("Starting year (syear) must be smaller than ending year (eyear)")
+    if config.mcgrath_eyear:
+        if config.mcgrath_eyear > config.eyear:
+            raise ValueError("Mcgrath year (mcgrath_eyear) must be equal or smaller than ending year (eyear)")
+        if config.mcgrath_eyear < config.syear:
+            raise ValueError("Mcgrath year (mcgrath_eyear) must be equal or bigger than starting year (syear)")
 
 def validate_main_files(config):
     # IT MIGHT BE SIMPLIFIED AND INCLUDED JUST IN THE INIT FUNCTION OF LUT
@@ -60,13 +65,19 @@ def validate_main_files(config):
         tfile="transitions"
         mfile="management"
     elif config.scenario in scenario_dict.keys():
-        afile=f"added_tree_cover_input4MIPs_landState_ScenarioMIP_UofMD-{scenario_dict[self.scenario]}-2-1-f_gn_2015-2100"
-        sfile=f"multiple-states_input4MIPs_landState_ScenarioMIP_UofMD-{scenario_dict[self.scenario]}-2-1-f_gn_2015-2100"
-        tfile=f"multiple-transitions_input4MIPs_landState_ScenarioMIP_UofMD-{scenario_dict[self.scenario]}-2-1-f_gn_2015-2100"
-        mfile=f"multiple-management_input4MIPs_landState_ScenarioMIP_UofMD-{scenario_dict[self.scenario]}-2-1-f_gn_2015-2100"
+        afile=f"added_tree_cover_input4MIPs_landState_ScenarioMIP_UofMD-{scenario_dict[config.scenario]}-2-1-f_gn_2015-2100"
+        sfile=f"multiple-states_input4MIPs_landState_ScenarioMIP_UofMD-{scenario_dict[config.scenario]}-2-1-f_gn_2015-2100"
+        tfile=f"multiple-transitions_input4MIPs_landState_ScenarioMIP_UofMD-{scenario_dict[config.scenario]}-2-1-f_gn_2015-2100"
+        mfile=f"multiple-management_input4MIPs_landState_ScenarioMIP_UofMD-{scenario_dict[config.scenario]}-2-1-f_gn_2015-2100"
+    if config.mcgrath or config.prepare_mcgrath:
+        ifile=f"{config.mcg}_{config.syear}_{config.mcgrath_eyear}.nc"
+        if not os.path.isfile(os.path.join(datadir, ifile)):
+            path = os.path.join(datadir, ifile)
+            raise ValueError(f"File {path} does not exist")
     for value in [sfile, tfile, mfile]:
         if not os.path.isfile(os.path.join(datadir, value)+".nc"):
-            raise ValueError(f"File {value} does not exist")   
+            path = os.path.join(datadir, value)+".nc"
+            raise ValueError(f"File {path} does not exist")
 
 def validate_prepared_files(namelist):
     for key, value in namelist.items():

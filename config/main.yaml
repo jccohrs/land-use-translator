@@ -3,12 +3,12 @@
 region : "Germany"
 forward : False
 backgrd : True
-mcgrath : False
+mcgrath : True
 addtree : False
 mcgback : False
-irri : False
-prepare_luh2_data: False
-prepare_mcgrath: False
+irri : True
+prepare_luh2_data: True
+prepare_mcgrath: True
 
 syear : 1950
 eyear : 2015
