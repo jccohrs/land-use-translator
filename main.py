@@ -11,24 +11,34 @@ def load_configuration():
         except yaml.YAMLError as exc:
             print(exc)
 
-def prepare_lut(config):
-    validate_config(config)
-    lut = LUT(config)
-    namelist = lut.generate_namelist()
-    validate_main_files(config)
-    return lut
-
 def main():
+    # Load configuration
     config = load_configuration()
-    lut = prepare_lut(config)
+
+    # Validate configuration
+    validate_config(config)
+
+    # Initialize LUT class
+    lut = LUT(config)
+
+    # Generate namelist
+    namelist = lut.generate_namelist()
+
+    # Validate main files
+    validate_main_files(config)
+
+    # Preparing the data for the lut calculation
     if config.prepare_luh2_data:
         print_section_heading("Preparing LUH2 data")
         lut.func_prepare_luh2_data()
     if config.prepare_mcgrath:
         print_section_heading("Preparing MCGRATH data")
         lut.func_prepare_mcgrath()
-    namelist = lut.generate_namelist()
-    validate_prepared_files(namelist)
+    
+    # validating the prepared files
+    validate_prepared_files(namelist, config)
+
+    # Running the LUT calculation
     print_section_heading("Calculating land use changes")
     if config.forward:
         print('FORWARD IN TIME')
@@ -36,6 +46,8 @@ def main():
     else:
         print('BACKWARD IN TIME')
         lut.lucas_lut_backward()
+    
+    # Writing out the data
     print_section_heading("Writing out data")
     lut.lucas_lut_output()
     print('LUCAS LUT SUCCESSFULLY FINISHED')

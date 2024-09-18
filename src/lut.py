@@ -21,9 +21,9 @@ class LUT:
     def __init__(self, config):
         for key, value in config.items():
             setattr(self, key, value)
-        self.grid = f"reg01_{self.region}"
-        self.glc = f"{config.lcd}-{config.esayear}-{config.vers}"
-        self.glc_lsm = f"{config.lcd}-2015-{config.vers}"
+        self.grid = f"reg{str(self.grid).replace('.', '')}_{self.region}"
+        self.glc = f"{lcd}-{config.esayear}-{vers}"
+        self.glc_lsm = f"{lcd}-2015-{vers}"
         self.namelist = self.generate_namelist()
         self.nr_crops = nr_crops
         self.nr_forest = nr_forest
@@ -52,12 +52,15 @@ class LUT:
         self.pft_shrubs_default = SHRDEF
         self.pft_forest_default = FORDEF
         self.pft_urban_default = URBDEF
-        self.xsize = self.namelist["XSIZE"]
-        self.ysize = self.namelist["YSIZE"]
+        #self.xsize = self.namelist["XSIZE"]
+        #self.ysize = self.namelist["YSIZE"]
         self.pft_frac_ts = np.zeros((self.xsize, self.ysize, self.npfts, self.years+1), dtype="float32")
         self.pfts_shrubs_grass = self.pfts_grass + self.pfts_shrubs
 
     def lucas_lut_forward(self):
+        """
+        This function runs the LUCAS LUT forward in time
+        """
         if self.addtree:
             rcm_lsm, pft_help, grass_backgr_help, crops_backgr_help, forest_backgr_help, shrubs_backgr_help, \
             shrubs_grass_backgr, nfv2cro, cro2nfv, for2cro, cro2for, ran2cro, cro2ran, pas2cro, cro2pas, cro2urb, nfv2urb, \
@@ -69,6 +72,7 @@ class LUT:
             for2urb, ran2urb, pas2urb, for2pas, pas2for, nfv2pas, ran2pas, pas2nfv, for2ran, ran2for, for2nfv, nfv2for, mcgrath_frac_help, \
             urb2cro, urb2nfv, urb2for, urb2ran, urb2pas, nfv2ran, urban_backgr_help = self.lucas_lut_input()
         for z in range(self.years):
+            print('year', z)
             pft_help = self.lucas_lut_transrules(for2cro[z, :, :].data.T, rcm_lsm, pft_help, self.pfts_crops, self.pfts_forest, self.pfts_shrubs, self.pfts_grass, self.nr_crops, self.nr_forest, self.nr_shrubs, self.nr_grass, self.pft_crops_default, crops_backgr_help, False, 3, False)
             pft_help = self.lucas_lut_transrules(nfv2cro[z, :, :].data.T, rcm_lsm, pft_help, self.pfts_crops, self.pfts_shrubs, self.pfts_grass, 0, self.nr_crops, self.nr_shrubs, self.nr_grass, 1, self.pft_crops_default, crops_backgr_help, False, 2, False)
             pft_help = self.lucas_lut_transrules(ran2cro[z, :, :].data.T, rcm_lsm, pft_help, self.pfts_crops, self.pfts_shrubs, self.pfts_grass, 0, self.nr_crops, self.nr_shrubs, self.nr_grass, 1, self.pft_crops_default, crops_backgr_help, False, 2, False)
@@ -79,14 +83,14 @@ class LUT:
             pft_help = self.lucas_lut_transrules(cro2pas[z, :, :].data.T, rcm_lsm, pft_help, self.pfts_grass, self.pfts_crops, 0, 0, self.nr_grass, self.nr_crops, 1, 1, self.pft_grass_default, grass_backgr_help, self.backgrd, 1, False)
             pft_help = self.lucas_lut_transrules(cro2urb[z, :, :].data.T, rcm_lsm, pft_help, self.pfts_urban, self.pfts_crops, 0, 0, self.nr_urban, self.nr_crops, 1, 1, self.pft_urban_default, urban_backgr_help, False, 1, False)
             pft_help = self.lucas_lut_transrules(for2urb[z, :, :].data.T, rcm_lsm, pft_help, self.pfts_urban, self.pfts_forest, self.pfts_shrubs, self.pfts_grass, self.nr_urban, self.nr_forest, self.nr_shrubs, self.nr_grass, self.pft_urban_default, urban_backgr_help, False, 3, False)
-            pft_help = self.lucas_lut_transrules(nfv2urb[z, :, :].data.T, rcm_lsm, pft_help, self.pfts_urban, self.pfts_shrubs, self.pfts_grass, 0, self.nr_urban, self.nr_shrubs, self.nr_grass, 1, self.pft_urban_default, self.backgrd, 2, False)
+            pft_help = self.lucas_lut_transrules(nfv2urb[z, :, :].data.T, rcm_lsm, pft_help, self.pfts_urban, self.pfts_shrubs, self.pfts_grass, 0, self.nr_urban, self.nr_shrubs, self.nr_grass, 1, self.pft_urban_default, urban_backgr_help, self.backgrd, 2, False)
             pft_help = self.lucas_lut_transrules(ran2urb[z, :, :].data.T, rcm_lsm, pft_help, self.pfts_urban, self.pfts_shrubs_grass, 0, 0, self.nr_urban, self.nr_shrubs + self.nr_grass, 1, 1, self.pft_urban_default, urban_backgr_help, False, 1, False)
             pft_help = self.lucas_lut_transrules(pas2urb[z, :, :].data.T, rcm_lsm, pft_help, self.pfts_urban, self.pfts_grass, 0, 0, self.nr_urban, self.nr_grass, 1, 1, self.pft_urban_default, urban_backgr_help, False, 1, False)
             pft_help = self.lucas_lut_transrules(urb2cro[z, :, :].data.T, rcm_lsm, pft_help, self.pfts_crops, self.pfts_urban, 0, 0, self.nr_crops, self.nr_urban, 1, 1, self.pft_crops_default, crops_backgr_help, False, 1, False)
             pft_help = self.lucas_lut_transrules(urb2nfv[z, :, :].data.T, rcm_lsm, pft_help, self.pfts_shrubs_grass, self.pfts_urban, 0, 0, self.nr_shrubs + self.nr_grass, self.nr_urban, 1, 1, self.pft_shrubs_default, shrubs_grass_backgr, self.backgrd, 1, False)
-            pft_help = self.lucas_lut_transrules(urb2for[z, :, :].data.T, rcm_lsm, pft_help, self.pfts_forest, self.pfts_urban, 0, 0, self.nr_forest, self.nr_urban, 1, 1, self.pft_forest_default, forest_backgr, self.backgrd, 1, False)
+            pft_help = self.lucas_lut_transrules(urb2for[z, :, :].data.T, rcm_lsm, pft_help, self.pfts_forest, self.pfts_urban, 0, 0, self.nr_forest, self.nr_urban, 1, 1, self.pft_forest_default, forest_backgr_help, self.backgrd, 1, False)
             pft_help = self.lucas_lut_transrules(urb2ran[z, :, :].data.T, rcm_lsm, pft_help, self.pfts_shrubs_grass, self.pfts_urban, 0, 0, self.nr_shrubs + self.nr_grass, self.nr_urban, 1, 1, self.pft_shrubs_default, shrubs_grass_backgr, self.backgrd, 1, False)
-            pft_help = self.lucas_lut_transrules(urb2pas[z, :, :].data.T, rcm_lsm, pft_help, self.pfts_grass, self.pfts_urban, 0, 0, self.nr_grass, self.nr_urban, 1, 1, pft_grass_default, grass_backgr[i, j, :], self.backgrd, 1, False)
+            pft_help = self.lucas_lut_transrules(urb2pas[z, :, :].data.T, rcm_lsm, pft_help, self.pfts_grass, self.pfts_urban, 0, 0, self.nr_grass, self.nr_urban, 1, 1, self.pft_grass_default, grass_backgr_help, self.backgrd, 1, False)
             pft_help = self.lucas_lut_transrules(for2pas[z, :, :].data.T, rcm_lsm, pft_help, self.pfts_grass, self.pfts_forest, 0, 0, self.nr_grass, self.nr_forest, 1, 1, self.pft_grass_default, grass_backgr_help, self.backgrd, 1, False)
             pft_help = self.lucas_lut_transrules(nfv2pas[z, :, :].data.T, rcm_lsm, pft_help, self.pfts_grass, self.pfts_shrubs, 0, 0, self.nr_grass, self.nr_shrubs, 1, 1, self.pft_grass_default, grass_backgr_help, self.backgrd, 1, False)
             pft_help = self.lucas_lut_transrules(ran2pas[z, :, :].data.T, rcm_lsm, pft_help, self.pfts_grass, self.pfts_shrubs, 0, 0, self.nr_grass, self.nr_shrubs, 1, 1, self.pft_grass_default, grass_backgr_help, self.backgrd, 1, False)
@@ -99,26 +103,27 @@ class LUT:
             #pft_help = self.lucas_lut_transrules(nfv2for[z, :, :].data.T, rcm_lsm, pft_help, self.pfts_forest, self.pfts_shrubs, self.pfts_grass, 0, self.nr_forest, self.nr_shrubs, self.nr_grass, 1, self.pft_forest_default, forest_backgr_help, self.backgrd, 2, False)
             if self.addtree:
                 self.lucas_lut_transrules(nat2for[z, :, :].data.T, rcm_lsm, pft_help, self.pfts_forest, self.pfts_shrubs, self.pfts_grass, 0, self.nr_forest, self.nr_shrubs, self.nr_grass, 1, self.pft_forest_default, forest_backgr_help, self.backgrd, 2, False)
-            self.pft_frac_ts[:, :, :, z] = self.pft_help[:, :, :]
-        print('land use change finished')
+            self.pft_frac_ts[:, :, :, z] = pft_help[:, :, :]
         # NORMALIZE TO GET A SUM OF 1 AND SET SEA POINTS TO MISSING VALUE
         self.recalc_pft_frac_ts(rcm_lsm)
-        print("Finished normalizing")
-        print('LAND USE CHANGE FINISHED')
         if self.irri:
             print_section_heading('IRRIGATION')
             self.lucas_lut_irrigation(rcm_lsm)
             self.recalc_null_pft_frac_ts(rcm_lsm)
+            self.recalc_pft_frac_ts(rcm_lsm)
         if self.mcgrath:
             print_section_heading('MCGRATH')
             self.lucas_lut_mcgrath(rcm_lsm, mcgrath_frac_help)
             self.recalc_null_pft_frac_ts(rcm_lsm)
+            self.recalc_pft_frac_ts(rcm_lsm)
         if self.plot:
             print_section_heading('PLOTTING')
             self.plot_pft_frac_ts()
-            print('PLOTTING FINISHED')
 
     def lucas_lut_backward(self):
+        """
+        This function runs the LUCAS LUT backward in time
+        """
         rcm_lsm, pft_help, grass_backgr_help, crops_backgr_help, forest_backgr_help, shrubs_backgr_help, \
         shrubs_grass_backgr, nfv2cro, cro2nfv, for2cro, cro2for, ran2cro, cro2ran, pas2cro, cro2pas, cro2urb, nfv2urb, \
         for2urb, ran2urb, pas2urb, for2pas, pas2for, nfv2pas, ran2pas, pas2nfv, for2ran, ran2for, for2nfv, nfv2for, mcgrath_frac_help = self.lucas_lut_input()
@@ -167,7 +172,9 @@ class LUT:
     def lucas_lut_transrules(self, trans, rcm_lsm, inpfts, pfts_1, pfts_2, pfts_3, pfts_4,
                              nr_pfts_1, nr_pfts_2, nr_pfts_3, nr_pfts_4, defaultpft,
                              backgrdpfts, backgrd, rule, mcgrath, mcgfrac=np.zeros((3), dtype="float32")):
-
+        """
+        This function applies the transition rules to the input PFTs
+        """
         # SUM VARIABLES
         pft_1_sum = sum(inpfts[:, :, pfts_1[n]-1] for n in range(nr_pfts_1))
         pft_2_sum = sum(inpfts[:, :, pfts_2[n]-1] for n in range(nr_pfts_2))
@@ -181,7 +188,7 @@ class LUT:
         # STATIC VALUES TO RESTORE LATER
         inpfts_static_values = np.where(rcm_lsm[..., np.newaxis] > 0.0, -998, inpfts)
         inpfts_trans_static_values = np.where(trans[..., np.newaxis] > 0.0, -999, inpfts)
-        # RULE 1 : subtract one group and increas one group
+        # RULE 1 : subtract one group and increase one group
         if rule == 1:
             var1 = trans - np.maximum(0.0, trans + pft_1_sum - 1)
             var2 = trans - np.maximum(0.0, trans - pft_2_sum)
@@ -351,6 +358,9 @@ class LUT:
         return data_help
 
     def lucas_lut_input(self):
+        """
+        This function reads the input data
+        """
         pft_help = np.zeros((self.xsize, self.ysize, self.npfts), dtype='float32')
         self.pft_frac = xr.open_dataset(self.namelist["F_LC_IN"]).isel(time=0)
         for i in range(self.npfts):
@@ -412,10 +422,11 @@ class LUT:
         shrubs_grass_backgr[:, :, :self.nr_shrubs] = shrubs_backgr_help / 2.
         shrubs_grass_backgr[:, :, self.nr_shrubs:(self.nr_grass+self.nr_shrubs)] = grass_backgr_help / 2.
         # Mcfrac dataset
-        mcgrath_frac = xr.open_dataset(self.namelist["F_MCGRATH"], decode_times=False)
-        mcgrath_frac_help = np.zeros((self.xsize, self.ysize, 3, self.years+1), dtype='float32')
-        for i in range(1, 4):
-            mcgrath_frac_help[:, :, i-1, :] = mcgrath_frac[f"var80{i+2}"][:, :, :].data.T
+        mcgrath_frac = xr.open_dataset(self.namelist["F_MCGRATH"], decode_times=False) if self.mcgrath else None
+        mcgrath_frac_help = np.zeros((self.xsize, self.ysize, 3, self.years+1), dtype='float32') if self.mcgrath else None
+        if self.mcgrath:
+            for i in range(1, 4):
+                mcgrath_frac_help[:, :, i-1, :] = mcgrath_frac[f"var80{i+2}"][:, :, :].data.T
         # RCM LSM
         rcm_lsm = xr.open_dataset(self.namelist["F_RCM_LSM_IN"]).var210.values.T
         # Transformation datasets
@@ -450,7 +461,7 @@ class LUT:
             urb2pas = xr.open_dataset(self.namelist["F_URB2PAS"], decode_times=False)["urb2pas"]
             nfv2ran = xr.open_dataset(self.namelist["F_NFV2RAN"], decode_times=False)["nfv2ran"]
             if self.addtree:
-                nat2for = xr.open_dataset(self.namelist["F_NAT2FOR"], decode_times=False)["nat2for"]
+                nat2for = xr.open_dataset(self.namelist["F_ADDTREE"], decode_times=False)["added_tree_cover"]
                 return rcm_lsm, pft_help, grass_backgr_help, crops_backgr_help, forest_backgr_help, shrubs_backgr_help, \
                        shrubs_grass_backgr, nfv2cro, cro2nfv, for2cro, cro2for, ran2cro, cro2ran, pas2cro, cro2pas, cro2urb, nfv2urb, \
                        for2urb, ran2urb, pas2urb, for2pas, pas2for, nfv2pas, ran2pas, pas2nfv, for2ran, ran2for, for2nfv, nfv2for, mcgrath_frac_help, \
@@ -466,6 +477,9 @@ class LUT:
                for2urb, ran2urb, pas2urb, for2pas, pas2for, nfv2pas, ran2pas, pas2nfv, for2ran, ran2for, for2nfv, nfv2for, mcgrath_frac_help
 
     def lucas_lut_irrigation(self, rcm_lsm):
+        """
+        This function applies the irrigation fractions to the PFT fractions
+        """
         irri_frac = xr.open_dataset(self.namelist["F_IRRI_IN"], decode_times=False)["irrig_frac"].data.T
         for z in range(self.years+1):
             mask = (rcm_lsm > 0.0) & ((self.pft_frac_ts[:, :, 12, z] + self.pft_frac_ts[:, :, 13, z]) > 0.0)
@@ -481,6 +495,9 @@ class LUT:
             self.pft_frac_ts[mask & pft_sum_mask, :, z] /= pft_sum[mask & pft_sum_mask, np.newaxis]
 
     def recalc_pft_frac_ts(self, rcm_lsm):
+        """
+        This function recalculates the PFT fractions
+        """
         print("normalize to get a sum of 1 and set sea points to missing value")
         for z in range(self.years+1):
             mask = rcm_lsm > 0.0
@@ -490,6 +507,9 @@ class LUT:
             self.pft_frac_ts[~mask, :, z] = -999.0
 
     def recalc_null_pft_frac_ts(self, rcm_lsm):
+        """
+        This function recalculates the PFT fractions
+        """
         print('remove zeros (they still occur due to rounding issues)')
         for z in range(self.years+1):
             mask = rcm_lsm > 0.0
@@ -500,6 +520,9 @@ class LUT:
             self.pft_frac_ts[mask & pft_sum_mask, :, z] /= pft_sum[mask & pft_sum_mask, np.newaxis]
 
     def lucas_lut_mcgrath(self, rcm_lsm, mcgrath_frac):
+        """
+        This function applies the Mcgrath fractions to the PFT fractions
+        """
         mask_rcm_lsm = rcm_lsm > 0.0
         for z in range(self.years):
             sum_forest = np.zeros((self.xsize, self.ysize), dtype="float32")
@@ -599,6 +622,9 @@ class LUT:
 
 
     def lucas_lut_output(self):
+        """
+        Save the pft_frac_ts array to a NetCDF file
+        """
         coords = self.reg.split(",")
         lon = np.linspace(float(coords[0]), float(coords[1]), self.xsize)
         lat = np.linspace(float(coords[2]), float(coords[3]), self.ysize)
@@ -614,7 +640,10 @@ class LUT:
         dataset.to_netcdf(self.namelist["F_LC_OUT"])
 
     def generate_namelist(self):
-        if self.res == 250:
+        """
+        Generate the namelist for the LUCAS-LUT model
+        """
+        if self.grid == 0.25:
             ext = "NINT"
         else:
             if self.remap == "bilinear":
@@ -624,38 +653,38 @@ class LUT:
 
         # Select period and self.region
         # CHECK
-        if self.region == "Europe":
-            if self.res == 100:
-                xsize = 1400
-                ysize = 630
-            elif self.res == 250:
-                xsize = 560
-                ysize = 252
-        elif self.region == "Global":
-            xsize = 3600
-            ysize = 1800
-        elif self.region == "Australasia":
-            xsize = 1160
-            ysize = 570
-        elif self.region == "NorthAmerica":
-            xsize = 1900
-            ysize = 850
-        elif self.region == "GAR011":
-            xsize = 145
-            ysize = 129
-        elif self.region == "Germany":
-            if self.res ==  25:
-                xsize = 371
-                ysize = 351
-            elif self.res == 100:
-                xsize = 95
-                ysize = 91
-            elif self.res == 250:
-                xsize = 38
-                ysize = 36
-            elif self.res == 500:
-                xsize = 19
-                ysize = 18
+        #if self.region == "Europe":
+        #    if self.res == 100:
+        #        xsize = 1400
+        #        ysize = 630
+        #    elif self.res == 250:
+        #        xsize = 560
+        #        ysize = 252
+        #elif self.region == "Global":
+        #    xsize = 3600
+        #    ysize = 1800
+        #elif self.region == "Australasia":
+        #    xsize = 1160
+        #    ysize = 570
+        #elif self.region == "NorthAmerica":
+        #    xsize = 1900
+        #    ysize = 850
+        #elif self.region == "GAR011":
+        #    xsize = 145
+        #    ysize = 129
+        #elif self.region == "Germany":
+        #    if self.res ==  25:
+        #        xsize = 371
+        #        ysize = 351
+        #    elif self.res == 100:
+        #        xsize = 95
+        #        ysize = 91
+        #    elif self.res == 250:
+        #        xsize = 38
+        #        ysize = 36
+        #    elif self.res == 500:
+        #        xsize = 19
+        #        ysize = 18
 
         if self.scenario == "historical":
             sdir = f"{luhdir}/historic/{self.region}/{self.grid}"
@@ -690,8 +719,7 @@ class LUT:
             "F_BACKFOR": f"{pftdir}/FORB_{self.glc_lsm}_{self.grid}_v11.nc", # forbfile
             "F_BACKCRO": f"{pftdir}/CROB_{self.glc_lsm}_{self.grid}_v11.nc", # crobfile
             "F_BACKURB": f"{pftdir}/URBB_{self.glc_lsm}_{self.grid}_v11.nc", # urbbfile
-            #"F_MCGRATH": f"{mcgdir}/{mcg}_{self.syear}_{self.eyear}_ForestBckgrdMcGrath_{self.grid}.nc", # mcgfile
-            "F_MCGRATH": f"data/{mcg}_{self.syear}_{self.eyear}_ForestBckgrdMcGrath_{self.grid}.nc",
+            "F_MCGRATH": f"{datadir}/{mcg}_{self.syear}_{self.eyear}_ForestBckgrdMcGrath_{self.grid}.nc", # mcgfile
             "F_IRRI_IN": f"{sdir}/irrigation_{self.syear}_{self.eyear}_{self.grid}.nc", # irrfile
             "F_LC_OUT": f"{odir}/{ofile}.nc", # outfile
             "F_FOR2CRO": f"{sdir}/transitions_{self.syear}_{self.eyear}_{self.region}_for2cro_{ext}_{self.grid}.nc", # for2cro
@@ -725,12 +753,15 @@ class LUT:
             "F_URB2RAN": f"{sdir}/transitions_{self.syear}_{self.eyear}_{self.region}_urb2ran_{ext}_{self.grid}.nc", # urb2ran
             "F_ADDTREE": f"{sdir}/addtree_{self.syear}_{self.eyear}_{self.grid}.nc", # nat2for
             "F_GRID": f"{scriptsdir}/grid_{self.grid}", # grid
-            "XSIZE": xsize,
-            "YSIZE": ysize,
+            #"XSIZE": xsize,
+            #"YSIZE": ysize,
         }
         return namelist_dict
 
     def func_prepare_luh2_data(self):
+        """
+        Prepare the LUH2 data for the LUCAS-LUT model
+        """
         if self.scenario == "historical":
             sdir="historic"
             sfile="states"
@@ -776,66 +807,69 @@ class LUT:
 
         path_region = os.path.join(luhdir, sdir, self.region)
         path_sdir = os.path.join(luhdir, sdir)
-        if self.trans:
-            print_section_heading(f"Selecting variables for transitions")
-            ofile=f"{tfile}_{self.syear}_{self.eyear}_{self.region}.nc"
-            cdo.selyear(f"{self.syear}/{self.eyear}", input=f"{datadir}/{tfile}.nc", output=f"{path_sdir}/{self.region}/tmp_{ofile}")
-            cdo.sellonlatbox(self.reg, input=f"-selvar,{vars_trans} {path_sdir}/{self.region}/tmp_{ofile}", output=f"{path_sdir}/{self.region}/{ofile}")
-            fromto_array = [
-                {"varn": "for2urb", "for_1": FOR, "for_2": URB, "outvar_condition": None},
-                {"varn": "urb2for", "for_1": URB, "for_2": FOR, "outvar_condition": "primf"},
-                {"varn": "for2nfv", "for_1": FOR, "for_2": NFV, "outvar_condition": "primn"},
-                {"varn": "for2cro", "for_1": FOR, "for_2": CRO, "outvar_condition": None},
-                {"varn": "nfv2for", "for_1": NFV, "for_2": FOR, "outvar_condition": "primf"},
-                {"varn": "cro2for", "for_1": CRO, "for_2": FOR, "outvar_condition": "primf"},
-                {"varn": "cro2urb", "for_1": CRO, "for_2": URB, "outvar_condition": None},
-                {"varn": "urb2cro", "for_1": URB, "for_2": CRO, "outvar_condition": None},
-                {"varn": "cro2nfv", "for_1": CRO, "for_2": NFV, "outvar_condition": "primn"},
-                {"varn": "nfv2cro", "for_1": NFV, "for_2": CRO, "outvar_condition": None},
-                {"varn": "nfv2urb", "for_1": NFV, "for_2": URB, "outvar_condition": None},
-                {"varn": "urb2nfv", "for_1": URB, "for_2": NFV, "outvar_condition": "primn"},
-                {"varn": "ran2nfv", "for_1": RAN, "for_2": NFV, "outvar_condition": "primn"},
-                {"varn": "nfv2ran", "for_1": NFV, "for_2": RAN, "outvar_condition": None},
-                {"varn": "ran2for", "for_1": RAN, "for_2": FOR, "outvar_condition": "primf"},
-                {"varn": "for2ran", "for_1": FOR, "for_2": RAN, "outvar_condition": None},
-                {"varn": "ran2cro", "for_1": RAN, "for_2": CRO, "outvar_condition": None},
-                {"varn": "cro2ran", "for_1": CRO, "for_2": RAN, "outvar_condition": None},
-                {"varn": "ran2urb", "for_1": RAN, "for_2": URB, "outvar_condition": None},
-                {"varn": "urb2ran", "for_1": URB, "for_2": RAN, "outvar_condition": None},
-                {"varn": "pas2nfv", "for_1": PAS, "for_2": NFV, "outvar_condition": "primn"},
-                {"varn": "nfv2pas", "for_1": NFV, "for_2": PAS, "outvar_condition": None},
-                {"varn": "pas2for", "for_1": PAS, "for_2": FOR, "outvar_condition": "primf"},
-                {"varn": "for2pas", "for_1": FOR, "for_2": PAS, "outvar_condition": None},
-                {"varn": "pas2cro", "for_1": PAS, "for_2": CRO, "outvar_condition": None},
-                {"varn": "cro2pas", "for_1": CRO, "for_2": PAS, "outvar_condition": None},
-                {"varn": "pas2urb", "for_1": PAS, "for_2": URB, "outvar_condition": None},
-                {"varn": "ran2pas", "for_1": RAN, "for_2": PAS, "outvar_condition": None},
-                {"varn": "urb2pas", "for_1": URB, "for_2": PAS, "outvar_condition": None}
+        
+        # prepare states
+        print_section_heading(f"Selecting variables for transitions")
+        ofile=f"{tfile}_{self.syear}_{self.eyear}_{self.region}.nc"
+        cdo.selyear(f"{self.syear}/{self.eyear}", input=f"{datadir}/{tfile}.nc", output=f"{path_sdir}/{self.region}/tmp_{ofile}")
+        cdo.sellonlatbox(self.reg, input=f"-selvar,{vars_trans} {path_sdir}/{self.region}/tmp_{ofile}", output=f"{path_sdir}/{self.region}/{ofile}")
+        os.remove(f"{path_sdir}/{self.region}/tmp_{ofile}")
+        fromto_array = [
+            {"varn": "for2urb", "for_1": FOR, "for_2": URB, "outvar_condition": None},
+            {"varn": "urb2for", "for_1": URB, "for_2": FOR, "outvar_condition": "primf"},
+            {"varn": "for2nfv", "for_1": FOR, "for_2": NFV, "outvar_condition": "primn"},
+            {"varn": "for2cro", "for_1": FOR, "for_2": CRO, "outvar_condition": None},
+            {"varn": "nfv2for", "for_1": NFV, "for_2": FOR, "outvar_condition": "primf"},
+            {"varn": "cro2for", "for_1": CRO, "for_2": FOR, "outvar_condition": "primf"},
+            {"varn": "cro2urb", "for_1": CRO, "for_2": URB, "outvar_condition": None},
+            {"varn": "urb2cro", "for_1": URB, "for_2": CRO, "outvar_condition": None},
+            {"varn": "cro2nfv", "for_1": CRO, "for_2": NFV, "outvar_condition": "primn"},
+            {"varn": "nfv2cro", "for_1": NFV, "for_2": CRO, "outvar_condition": None},
+            {"varn": "nfv2urb", "for_1": NFV, "for_2": URB, "outvar_condition": None},
+            {"varn": "urb2nfv", "for_1": URB, "for_2": NFV, "outvar_condition": "primn"},
+            {"varn": "ran2nfv", "for_1": RAN, "for_2": NFV, "outvar_condition": "primn"},
+            {"varn": "nfv2ran", "for_1": NFV, "for_2": RAN, "outvar_condition": None},
+            {"varn": "ran2for", "for_1": RAN, "for_2": FOR, "outvar_condition": "primf"},
+            {"varn": "for2ran", "for_1": FOR, "for_2": RAN, "outvar_condition": None},
+            {"varn": "ran2cro", "for_1": RAN, "for_2": CRO, "outvar_condition": None},
+            {"varn": "cro2ran", "for_1": CRO, "for_2": RAN, "outvar_condition": None},
+            {"varn": "ran2urb", "for_1": RAN, "for_2": URB, "outvar_condition": None},
+            {"varn": "urb2ran", "for_1": URB, "for_2": RAN, "outvar_condition": None},
+            {"varn": "pas2nfv", "for_1": PAS, "for_2": NFV, "outvar_condition": "primn"},
+            {"varn": "nfv2pas", "for_1": NFV, "for_2": PAS, "outvar_condition": None},
+            {"varn": "pas2for", "for_1": PAS, "for_2": FOR, "outvar_condition": "primf"},
+            {"varn": "for2pas", "for_1": FOR, "for_2": PAS, "outvar_condition": None},
+            {"varn": "pas2cro", "for_1": PAS, "for_2": CRO, "outvar_condition": None},
+            {"varn": "cro2pas", "for_1": CRO, "for_2": PAS, "outvar_condition": None},
+            {"varn": "pas2urb", "for_1": PAS, "for_2": URB, "outvar_condition": None},
+            {"varn": "ran2pas", "for_1": RAN, "for_2": PAS, "outvar_condition": None},
+            {"varn": "urb2pas", "for_1": URB, "for_2": PAS, "outvar_condition": None}
+        ]
+        for data in fromto_array:
+            self.fromto(data["varn"], data["for_1"], data["for_2"], tfile, ext, cutting, path_region, remap_com, data["outvar_condition"])
 
-            ]
-            for data in fromto_array:
-                self.fromto(data["varn"], data["for_1"], data["for_2"], tfile, ext, cutting, path_region, remap_com, data["outvar_condition"])
-
-        if self.state:
-            print_section_heading(f"Selecting variables for states")
-            cdo.selyear(f"{self.syear}/{self.eyear}", input=f"{datadir}/{sfile}.nc", output=f"{path_sdir}/{self.region}/tmp_{sfile}_{self.syear}_{self.eyear}.nc")
-            cdo.sellonlatbox(self.reg, input=f"-selvar,{vars_state} {path_sdir}/{self.region}/tmp_{sfile}_{self.syear}_{self.eyear}.nc", output=f"{path_region}/states_{self.syear}_{self.eyear}_{self.region}.nc")
-            if remap_com == "invertlat":
-                cdo.invertlat(input=f"{path_region}/states_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/states_{self.syear}_{self.eyear}_{self.grid}.nc")
-            elif remap_com == "remapbil":
-                cdo.remapbil(f"{scriptsdir}/grid_{self.grid}", input=f"{path_region}/states_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/states_{self.syear}_{self.eyear}_{self.grid}.nc")
-            elif remap_com == "remapcon2":
-                cdo.remapcon2(f"{scriptsdir}/grid_{self.grid}", input=f"{path_region}/states_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/states_{self.syear}_{self.eyear}_{self.grid}.nc")
+        # compute states
+        print_section_heading(f"Selecting variables for states")
+        cdo.selyear(f"{self.syear}/{self.eyear}", input=f"{datadir}/{sfile}.nc", output=f"{path_sdir}/{self.region}/tmp_{sfile}_{self.syear}_{self.eyear}.nc")
+        cdo.sellonlatbox(self.reg, input=f"-selvar,{vars_state} {path_sdir}/{self.region}/tmp_{sfile}_{self.syear}_{self.eyear}.nc", output=f"{path_region}/states_{self.syear}_{self.eyear}_{self.region}.nc")
+        if remap_com == "invertlat":
+            cdo.invertlat(input=f"{path_region}/states_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/states_{self.syear}_{self.eyear}_{self.grid}.nc")
+        elif remap_com == "remapbil":
+            cdo.remapbil(f"{scriptsdir}/grid_{self.grid}", input=f"{path_region}/states_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/states_{self.syear}_{self.eyear}_{self.grid}.nc")
+        elif remap_com == "remapcon2":
+            cdo.remapcon2(f"{scriptsdir}/grid_{self.grid}", input=f"{path_region}/states_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/states_{self.syear}_{self.eyear}_{self.grid}.nc")
+        
+        # compute management
         if self.addtree:
             print_section_heading(f"Selecting variables for added tree cover")
-            cdo.sellonlatbox(self.reg, input=f"-selyear,{self.syear}/{self.eyear} -selvar,added_tree_cover {path_sdir}/{afile}.nc", output=f"{path_region}/addtree_{self.syear}_{self.eyear}_{self.region}.nc")
+            cdo.sellonlatbox(self.reg, input=f"-selyear,{self.syear}/{self.eyear} -selvar,added_tree_cover {datadir}/{afile}.nc", output=f"{path_region}/addtree_{self.syear}_{self.eyear}_{self.region}.nc")
             if remap_com == "invertlat":
                 cdo.invertlat(input=f"{path_region}/addtree_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/{self.grid}/addtree_{self.syear}_{self.eyear}_{self.grid}.nc")
             elif remap_com == "remapbil":
                 cdo.remapbil(f"{scriptsdir}/grid_{self.grid}", input=f"{path_region}/addtree_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/{self.grid}/addtree_{self.syear}_{self.eyear}_{self.grid}.nc")
             elif remap_com == "remapcon2":
                 cdo.remapcon2(f"{scriptsdir}/grid_{self.grid}", input=f"{path_region}/addtree_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/{self.grid}/addtree_{self.syear}_{self.eyear}_{self.grid}.nc")
-            cdo.copy(input=f'{path_region}/{self.grid}/addtree_{self.syear}_{self.eyear}_{self.grid}.nc', output=f"{path_region}/{self.grid}/addtree_{self.syear}_{self.eyear}_{self.grid}.nc")
+        
         # compute irragtion fraction 
         if self.irri:
             print_section_heading(f"Selecting variables for irrigation")
@@ -851,27 +885,27 @@ class LUT:
                 cdo.copy(options="-setmisstoc,-999", input=f'{path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_{self.grid}.nc', output=f"{path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_$grid.nc")
             else:
                 if remap_com in ["remapbil", "remapcon2"]:
-                    cdo.setmisstoc(input=f"-999 -{remap_com},{scriptsdir}/grid_{self.grid} -varssum -selvar,{vars_crops} {path_region}/states_{self.syear}_{self.eyear}_{self.grid}.nc", output=f"{path_region}/sum_crop_frac.nc")
+                    cdo.setmisstoc("-999", input=f"-{remap_com},{scriptsdir}/grid_{self.grid} -varssum -selvar,{vars_crops} {path_region}/states_{self.syear}_{self.eyear}_{self.grid}.nc", output=f"{path_region}/sum_crop_frac.nc")
                 else:
-                    cdo.setmisstoc(input=f"-999 -{remap_com} -varssum -selvar,{vars_crops} {path_region}/states_{self.syear}_{self.eyear}_{self.grid}.nc", output=f"{path_region}/sum_crop_frac.nc")
+                    cdo.setmisstoc("-999", input=f"-{remap_com} -varssum -selvar,{vars_crops} {path_region}/states_{self.syear}_{self.eyear}_{self.grid}.nc", output=f"{path_region}/sum_crop_frac.nc")
 
                 # Change variables names
-
                 for n in range(5):
                     if remap_com in ["remapbil", "remapcon2"]:
-                        cdo.mul(input=f"-{remap_com}, grid_{self.grid} -selvar,{IRR[n]} {path_region}/irri_vars_{self.syear}_{self.eyear}_{self.region}.nc -{remap_com}, grid_{self.grid} -selvar,{ICR[n]} {path_region}/states_{self.syear}_{self.eyear}_{self.grid}.nc", output=f"{sdir}/{self.region}/dummy.nc")
+                        cdo.mul(input=f"-{remap_com},{scriptsdir}/grid_{self.grid} -selvar,{IRR[n]} {path_region}/irri_vars_{self.syear}_{self.eyear}_{self.region}.nc -{remap_com},{scriptsdir}/grid_{self.grid} -selvar,{ICR[n]} {path_region}/states_{self.syear}_{self.eyear}_{self.grid}.nc", output=f"{luhdir}/{sdir}/{self.region}/dummy.nc")
                     else:
                         cdo.mul(input=f"-{remap_com} -selvar,{IRR[n]} {path_region}/irri_vars_{self.syear}_{self.eyear}_{self.region}.nc -{remap_com} -selvar,{ICR[n]} {path_region}/states_{self.syear}_{self.eyear}_{self.grid}.nc", output=f"{sdir}/{self.region}/dummy.nc")
                     if n == 0:
-                        cdo.chname(input=f"{IRR[0]},irrig_frac -selvar,{IRR[0]} {path_region}/dummy.nc", output=f"{path_region}/sum_irri_frac_{self.syear}_{self.eyear}_{self.grid}.nc")
+                        cdo.chname(f"{IRR[0]},irrig_frac", input=f"-selvar,{IRR[0]} {path_region}/dummy.nc", output=f"{path_region}/sum_irri_frac_{self.syear}_{self.eyear}_{self.grid}.nc")
                     else:
-                        cdo.add(input=f"-chname,{IRR[n]},irrig_frac -selvar,{IRR[n]} {path_region}/dummy.nc {path_region}/sum_irri_frac_{self.syear}_{self.eyear}_{self.grid}.nc")   
-                        shutil.move(f"{path_region}/dummy2.nc", f"{path_region}/sum_irri_frac_{self.syear}_{self.eyear}_{self.grid}.nc")
+                        cdo.add(input=f"-chname,{IRR[n]},irrig_frac -selvar,{IRR[n]} {path_region}/dummy.nc {path_region}/sum_irri_frac_{self.syear}_{self.eyear}_{self.grid}.nc")
                     os.remove(f"{path_region}/dummy.nc")
-                cdo.div(input=f"{path_region}/sum_irri_frac_{self.syear}_{self.eyear}_{self.grid}.nc {path_region}/sum_crop_frac.nc", output=f"{path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_{self.grid}.nc")
-                cdo.copy(input=f"-setmisstoc,-999 {path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_{self.grid}.nc", output=f"{path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_{self.grid}.nc")
+                cdo.div(input=f"-setmisstoc,-999 {path_region}/sum_irri_frac_{self.syear}_{self.eyear}_{self.grid}.nc {path_region}/sum_crop_frac.nc", output=f"{path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_{self.grid}.nc")
 
     def func_prepare_mcgrath(self):
+        """
+        Prepare the McGrath data for the LUCAS-LUT model
+        """
         # commands for interpolation to given grid
         if self.remap == "bilinear":
             ext = "BIL"
@@ -903,6 +937,9 @@ class LUT:
         cdo.mergetime(input=f"{glcdir}/{self.lcd}_{self.syear}_{self.eyear}_ForestBckgrdMcGrath_{self.grid}.nc {glcdir}/{self.lcd}_{self.mcgrath_eyear}_{self.eyear}_ForestBckgrdMcGrath_{self.grid}.nc", output=f"{glcdir}/{self.lcd}_{self.syear}_2015_ForestBckgrdMcGrath_{self.grid}.nc")
 
     def fromto(self, varn, for_1, for_2, tfile, ext, cutting, path, remap_com, outvar_condition=None):
+        """
+        Combine land-use changes using reclassification
+        """
         odir = self.grid
         print(f"{for_1} to {for_2}")
         # combine land-use changes using reclassifcation
@@ -915,32 +952,39 @@ class LUT:
                 if not outvar_condition or outvar != outvar_condition:
                     cdo.add(input=f"-selvar,{inivar}_to_{outvar} {path}/{ifile} {path}/dummy.nc", output=f"{path}/{ofile}.nc")
                     cdo.chname(f"{inivar}_to_{outvar},{varn}", input=f"{path}/{ofile}.nc", output=f"{path}/dummy.nc")
-        shutil.move(f"{path}/dummy.nc", f"{path}/{ofile}.nc")
+        #shutil.move(f"{path}/dummy.nc", f"{path}/{ofile}.nc")
         if remap_com == "invertlat":
-            cdo.invertlat(input=f"{path}/{ofile}.nc", output=f"{path}/{self.grid}/{ofile}_{ext}_{self.grid}_2.nc")
+            cdo.invertlat(input=f"{path}/dummy.nc", output=f"{path}/{self.grid}/{ofile}_{ext}_{self.grid}_2.nc")
         elif remap_com == "remapbil":
-            cdo.remapbil(f"{scriptsdir}/grid_{self.grid}", input=f"{path}/{ofile}.nc", output=f"{path}/{self.grid}/{ofile}_{ext}_{self.grid}_2.nc")
+            cdo.remapbil(f"{scriptsdir}/grid_{self.grid}", input=f"{path}/dummy.nc", output=f"{path}/{self.grid}/{ofile}_{ext}_{self.grid}_2.nc")
         elif remap_com == "remapcon2":
-            cdo.remapcon2(f"{scriptsdir}/grid_{self.grid}", input=f"{path}/{ofile}.nc", output=f"{path}/{self.grid}/{ofile}_{ext}_{self.grid}_2.nc")
+            cdo.remapcon2(f"{scriptsdir}/grid_{self.grid}", input=f"{path}/dummy.nc", output=f"{path}/{self.grid}/{ofile}_{ext}_{self.grid}_2.nc")
         cdo.copy(input=f"{cutting} -setmisstoc,-999. {path}/{self.grid}/{ofile}_{ext}_{self.grid}_2.nc", output=f"{path}/{self.grid}/{ofile}_{ext}_{self.grid}.nc", options="-f nc")
+        os.remove(f"{path}/{self.grid}/{ofile}_{ext}_{self.grid}_2.nc")
+        os.remove(f"{path}/dummy.nc")
+        os.remove(f"{path}/{ofile}.nc")
 
     def plot_pft_frac_ts(self):
+        """
+        Plot the PFT fraction time series
+        """
         year = self.plot_year
-        Path(os.path.join(plotdir, self.region, str(self.syear+year))).mkdir(parents=True, exist_ok=True)
-        data = self.lucas_lut_help()
+        Path(os.path.join(plotdir, "scenarios", self.scenario, self.region, self.grid, str(self.syear+year))).mkdir(parents=True, exist_ok=True)
+        path = os.path.join(plotdir, "scenarios", self.scenario, self.region, self.grid)
+        #data = self.lucas_lut_help()
         if self.plot_npft:
-            self.main_plot(self.plot_npft, year)
-            self.diff_plot(self.plot_npft, year)
-            self.diff_plot(self.plot_npft, year, data=data, directory=f"lucas_diff")
-            self.diff_2_plot(self.plot_npft, year, self.pft_frac_ts, data, directory=f"lucas_python_fortran_diff")
+            self.main_plot(self.plot_npft, year, path)
+            self.diff_plot(self.plot_npft, year, path)
+            #self.diff_plot(self.plot_npft, year, path, data=data, directory=f"lucas_diff")
+            #self.diff_2_plot(self.plot_npft, year, self.pft_frac_ts, data, path, directory=f"lucas_python_fortran_diff")
         else:
             for inpft in range(self.npfts):
-                self.main_plot(inpft+1, year)
-                self.diff_plot(inpft+1, year)
-                self.diff_plot(inpft+1, year, data=data, directory=f"lucas_diff")
-                self.diff_2_plot(inpft+1, year, self.pft_frac_ts, data, directory=f"lucas_python_fortran_diff")
+                self.main_plot(inpft+1, year, path)
+                self.diff_plot(inpft+1, year, path)
+                #self.diff_plot(inpft+1, year, path, data=data, directory=f"lucas_diff")
+                #self.diff_2_plot(inpft+1, year, self.pft_frac_ts, data, path, directory=f"lucas_python_fortran_diff")
 
-    def diff_2_plot(self, npft, year, data_1, data_2, directory):
+    def diff_2_plot(self, npft, year, data_1, data_2, path, directory):
         Path(os.path.join(plotdir, self.region, directory)).mkdir(parents=True, exist_ok=True)
         coords = self.reg.split(",")
         lon = self.pft_frac.lon.values
@@ -991,10 +1035,10 @@ class LUT:
         # Close the plot to free memory
         plt.close()
 
-    def diff_plot(self, npft, year, data=None, directory=None):
+    def diff_plot(self, npft, year, path, data=None, directory=None):
         directory = f"diff_{self.syear+year}" if directory is None else directory
         data = self.pft_frac_ts if data is None else data
-        Path(os.path.join(plotdir, self.region, directory)).mkdir(parents=True, exist_ok=True)
+        Path(os.path.join(path, directory)).mkdir(parents=True, exist_ok=True)
         coords = self.reg.split(",")
         lon = self.pft_frac.lon.values
         lat = self.pft_frac.lat.values
@@ -1025,10 +1069,10 @@ class LUT:
         # Title
         plt.title(f'Average {npft} PFT Fraction Diff over Germany for {self.syear}-{self.eyear}')
         # Save the plot
-        plt.savefig(f'{os.path.join(plotdir, self.region, directory)}/pft_frac_{self.region}_npft_{npft}_diff_{self.syear}_{self.eyear}.png')
+        plt.savefig(f'{os.path.join(path, directory)}/pft_frac_{self.region}_npft_{npft}_diff_{self.syear}_{self.eyear}.png')
         plt.close()
 
-    def main_plot(self, npft, year):
+    def main_plot(self, npft, year, path):
         coords = self.reg.split(",")
         lon = self.pft_frac.lon.values
         lat = self.pft_frac.lat.values
@@ -1059,5 +1103,5 @@ class LUT:
         # Title
         plt.title(f'Average {npft} PFT Fraction over Germany for {self.syear+year}')
         # Save the plot
-        plt.savefig(f'{os.path.join(plotdir, self.region, str(self.syear+year))}/pft_frac_{self.region}_npft_{npft}_{self.syear+year}.png')
+        plt.savefig(f'{os.path.join(path, str(self.syear+year))}/pft_frac_{self.region}_npft_{npft}_{self.syear+year}.png')
         plt.close()

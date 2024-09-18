@@ -1,37 +1,29 @@
 # Input Parameters
 
+# LUT configuration
 region : "Germany"
-forward : False
-backgrd : True
-mcgrath : True
-addtree : False
-mcgback : False
-irri : True
-prepare_luh2_data: True
-prepare_mcgrath: True
-
-syear : 1950
-eyear : 2015
-npfts : 16
+forward : True # forward or backward simulation
+backgrd : True # background  
+mcgrath : False # mcgrath
+addtree : True # addtree
+mcgback : False # mcgback
+irri : True # irrigation
+syear : 2015 # start year
+eyear : 2100 # end year
+npfts : 16 # number of PFTs
 esayear : 2015
-mcgrath_eyear : 2010
-xsize : 95
-ysize : 91
+mcgrath_eyear : 2100 # end year of mcgrath file (in case that its different from eyear)
+xsize : 95 # xsize of the region
+ysize : 91 # ysize of the region
+remap : "bilinear" # remapping method
+scenario : "rcp26" # scenario
+grid : 0.1 # resolution in degrees
 
-oname : "LUCAS_LUC7_ESACCI_LUH2"
-lcd : "ESACCI-LC-L4-LCCS-Map-300m-P1Y" # version of ESA-file
-mcg : "combined_species_mtc" # name of McGrath file
-vers : "v2.0.7"
-res : 100 # resolution in 10th of a degree
-remap : "bilinear"
-scenario : "historical"
-
-trans : True
-state : True
+# LUH2 prepare data configuration
+prepare_luh2_data: False # prepare LUH2 data
+prepare_mcgrath: False # prepare mcgrath data
 
 # Plot configuration
 plot : True
-# if not plot_npft is given, all npfts are plotted
-plot_npft: null 
-# if not plot_year is given, first year is plotted
-plot_year: 0
+plot_npft: null # if not plot_npft is given, all npfts are plotted 
+plot_year: 70 # if not plot_year is given, first year is plotted

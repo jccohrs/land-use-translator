@@ -42,7 +42,9 @@ PFT_ConDec = "var806"
 
 
 oname = "LUCAS_LUC7_ESACCI_LUH2"
-mcg = "combined_species_mtc"
+lcd = "ESACCI-LC-L4-LCCS-Map-300m-P1Y" # version of ESA-file
+mcg = "combined_species_mtc" # name of McGrath file
+vers = "v2.0.7" # version of the model
 
 FORPFTS = [1, 2, 3, 4, 5, 6, 0, 0, 0, 0]
 SHRPFTS = [7, 8, 0, 0, 0, 0, 0, 0, 0, 0]
