@@ -28,7 +28,7 @@ To add other regions, include the appropriate grid files in the configuration.
 
 ## Usage Instructions
 
-1. **Configuration File**: The main configuration file is located at `conf/conf.yaml`. Modify the options in this file to customize the program:
+1. **Configuration File**: The main configuration file is located at `config/main.yaml`. Modify the options in this file to customize the program:
 
    - **Select Region**: Choose from pre-configured regions, or add a new region by providing the necessary grid files.
    - **Define Time Period**: Specify the time period for LU calculations by setting the starting year (`syear`) and ending year (`eyear`).
@@ -38,7 +38,6 @@ To add other regions, include the appropriate grid files in the configuration.
      - **Background Data**: Optionally include background data if available.
 
 2. **Execution**: Once configured, the program will process the data, filtering and aligning datasets according to the selected options. To run it just go to the project directory and
-
 
 
    ```bash
