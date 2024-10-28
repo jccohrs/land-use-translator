@@ -31,7 +31,7 @@ class LUT:
         self.nr_shrubs = nr_shrubs
         self.nr_urban = nr_urban
         self.years = abs(config.eyear - config.syear)
-        self.rcm_lsm_var = rcm_lsm_var
+        self.rcm_lsm_var = config.rcm_lsm_var
 
         # select period and self.region
         if self.region == 'Europe':
@@ -42,7 +42,7 @@ class LUT:
             self.reg = "170,360,0,85"
         elif self.region == 'Germany':
             self.reg = "6,15.5,46.4,55.5"
-        elif self.region == 'Africa':
+        elif self.region == 'WestAfrica':
             self.reg = "-26.64,20.88,-1.52,28.18"
 
         self.pfts_grass = GRAPFTS[0:self.nr_grass]
@@ -694,13 +694,13 @@ class LUT:
         Path(odir).mkdir(parents=True, exist_ok=True)
         namelist_dict = {
             # FILES
-            "F_RCM_LSM_IN": f"{pftdir}/{self.glc_lsm}_{self.grid}.nc", # lsmfile
-            "F_LC_IN": f"{pftdir}/PFTS_{self.glc}_{self.grid}_v11.nc", # pftfile
-            "F_BACKGRA": f"{pftdir}/GRAB_{self.glc_lsm}_{self.grid}_v11.nc", # grabfile
-            "F_BACKSHR": f"{pftdir}/SHRB_{self.glc_lsm}_{self.grid}_v11.nc", # shrbfile
-            "F_BACKFOR": f"{pftdir}/FORB_{self.glc_lsm}_{self.grid}_v11.nc", # forbfile
-            "F_BACKCRO": f"{pftdir}/CROB_{self.glc_lsm}_{self.grid}_v11.nc", # crobfile
-            "F_BACKURB": f"{pftdir}/URBB_{self.glc_lsm}_{self.grid}_v11.nc", # urbbfile
+            "F_RCM_LSM_IN": f"{pftdir}/{self.glc_lsm}_{self.grid}.nc" if not self.path_file_rcm_lsm_in else self.path_file_rcm_lsm_in, # lsmfile
+            "F_LC_IN": f"{pftdir}/PFTS_{self.glc}_{self.grid}_v11.nc" if not self.path_file_lc_in else self.path_file_lc_in, # pftfile
+            "F_BACKGRA": f"{pftdir}/GRAB_{self.glc_lsm}_{self.grid}_v11.nc" if not self.path_file_backgra else self.path_file_backgra, # grabfile
+            "F_BACKSHR": f"{pftdir}/SHRB_{self.glc_lsm}_{self.grid}_v11.nc" if not self.path_file_backshr else self.path_file_backshr, # shrbfile
+            "F_BACKFOR": f"{pftdir}/FORB_{self.glc_lsm}_{self.grid}_v11.nc" if not self.path_file_backfor else self.path_file_backfor, # forbfile
+            "F_BACKCRO": f"{pftdir}/CROB_{self.glc_lsm}_{self.grid}_v11.nc" if not self.path_file_backcro else self.path_file_backcro, # crobfile
+            "F_BACKURB": f"{pftdir}/URBB_{self.glc_lsm}_{self.grid}_v11.nc" if not self.path_file_backurb else self.path_file_backurb, # urbbfile
             "F_MCGRATH": f"{datadir}/{mcg}_{self.syear}_{self.eyear}_ForestBckgrdMcGrath_{self.grid}.nc", # mcgfile
             "F_IRRI_IN": f"{sdir}/irrigation_{self.syear}_{self.eyear}_{self.grid}.nc", # irrfile
             "F_LC_OUT": f"{odir}/{ofile}.nc", # outfile
@@ -791,7 +791,8 @@ class LUT:
         # prepare states
         print_section_heading(f"Selecting variables for transitions")
         ofile=f"{tfile}_{self.syear}_{self.eyear}_{self.region}.nc"
-        cdo.selyear(f"{self.syear}/{self.eyear}", input=f"{datadir}/{tfile}.nc", output=f"{path_sdir}/{self.region}/tmp_{ofile}")
+        input_file = f"{path_region}/{sfile}.nc" if not self.path_file_trans else self.path_file_trans
+        cdo.selyear(f"{self.syear}/{self.eyear}", input=f"{input_file}", output=f"{path_sdir}/{self.region}/tmp_{ofile}")
         cdo.sellonlatbox(self.reg, input=f"-selvar,{vars_trans} {path_sdir}/{self.region}/tmp_{ofile}", output=f"{path_sdir}/{self.region}/{ofile}")
         os.remove(f"{path_sdir}/{self.region}/tmp_{ofile}")
         fromto_array = [
@@ -830,7 +831,8 @@ class LUT:
 
         # compute states
         print_section_heading(f"Selecting variables for states")
-        cdo.selyear(f"{self.syear}/{self.eyear}", input=f"{datadir}/{sfile}.nc", output=f"{path_sdir}/{self.region}/tmp_{sfile}_{self.syear}_{self.eyear}.nc")
+        input_file = f"{datadir}/{sfile}.nc" if not self.path_file_states else self.path_file_states
+        cdo.selyear(f"{self.syear}/{self.eyear}", input=f"{input_file}", output=f"{path_sdir}/{self.region}/tmp_{sfile}_{self.syear}_{self.eyear}.nc")
         cdo.sellonlatbox(self.reg, input=f"-selvar,{vars_state} {path_sdir}/{self.region}/tmp_{sfile}_{self.syear}_{self.eyear}.nc", output=f"{path_region}/states_{self.syear}_{self.eyear}_{self.region}.nc")
         if remap_com == "invertlat":
             cdo.invertlat(input=f"{path_region}/states_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/states_{self.syear}_{self.eyear}_{self.grid}.nc")
@@ -842,7 +844,8 @@ class LUT:
         # compute management
         if self.addtree:
             print_section_heading(f"Selecting variables for added tree cover")
-            cdo.sellonlatbox(self.reg, input=f"-selyear,{self.syear}/{self.eyear} -selvar,added_tree_cover {datadir}/{afile}.nc", output=f"{path_region}/addtree_{self.syear}_{self.eyear}_{self.region}.nc")
+            input_file = f"{datadir}/{afile}.nc" if not self.path_file_addtree else self.path_file_addtree
+            cdo.sellonlatbox(self.reg, input=f"-selyear,{self.syear}/{self.eyear} -selvar,added_tree_cover {input_file}", output=f"{path_region}/addtree_{self.syear}_{self.eyear}_{self.region}.nc")
             if remap_com == "invertlat":
                 cdo.invertlat(input=f"{path_region}/addtree_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/{self.grid}/addtree_{self.syear}_{self.eyear}_{self.grid}.nc")
             elif remap_com == "remapbil":
@@ -853,7 +856,8 @@ class LUT:
         # compute irragtion fraction 
         if self.irri:
             print_section_heading(f"Selecting variables for irrigation")
-            cdo.sellonlatbox(self.reg, input=f"-selyear,{self.syear}/{self.eyear} -selvar,{vars_irrig} {datadir}/{mfile}.nc", output=f"{path_region}/irri_vars_{self.syear}_{self.eyear}_{self.region}.nc")
+            input_file = f"{datadir}/{mfile}.nc" if not self.path_file_manag else self.path_file_manag
+            cdo.sellonlatbox(self.reg, input=f"-selyear,{self.syear}/{self.eyear} -selvar,{vars_irrig} {input_file}", output=f"{path_region}/irri_vars_{self.syear}_{self.eyear}_{self.region}.nc")
 
             if self.scenario in ["historical", "historical_low", "historical_high"]:
                 if remap_com == "invertlat":

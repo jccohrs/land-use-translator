@@ -40,8 +40,6 @@ PFT_TeBrDec = "var804"
 PFT_ConEv = "var805"
 PFT_ConDec = "var806"
 
-rcm_lsm_var = "BLA"
-
 
 oname = "LUCAS_LUC7_ESACCI_LUH2"
 lcd = "LSM" # version of ESA-file

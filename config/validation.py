@@ -27,9 +27,21 @@ schema = {
     "remap" : {"type": "string", "allowed": ["bilinear", "con2"]},
     "scenario" : {"type": "string", "allowed": ["historical", "historical_high", "historical_low", "rcp19", "rcp26", "rcp34", "rcp45", "rcp60", "rcp70", "rcp85"]},
     "grid": {"type": "float"},
+    "rcm_lsm_var": {"type": "string"},
     "plot" : {"type": "boolean"},
     "plot_npft" : {"type": "integer", "nullable": True},
     "plot_year" : {"type": "integer", "nullable": True},
+    "path_file_states" : {"type": "string", "nullable": True},
+    "path_file_trans" : {"type": "string", "nullable": True},
+    "path_file_manag" : {"type": "string", "nullable": True},
+    "path_file_addtree" : {"type": "string", "nullable": True},
+    "path_file_rcm_lsm_in" : {"type": "string", "nullable": True},
+    "path_file_lc_in" : {"type": "string", "nullable": True},
+    "path_file_backgra" : {"type": "string", "nullable": True},
+    "path_file_backshr" : {"type": "string", "nullable": True},
+    "path_file_backfor" : {"type": "string", "nullable": True},
+    "path_file_backurb" : {"type": "string", "nullable": True},
+    "path_file_backcro" : {"type": "string", "nullable": True},
 }
 
 
@@ -73,28 +85,33 @@ def validate_main_files(namelist, config):
         if key in ("F_RCM_LSM_IN", "F_LC_IN") or (config.backgrd and key.startswith("F_BACK")):
             validate_path(value)
             validate_dimensions(value, config)
+            if key == "F_RCM_LSM_IN":
+                ds = xr.open_dataset(value, decode_times=False)
+                try:
+                    ds[config.rcm_lsm_var]
+                except KeyError:
+                    raise ValueError(f"Variable {config.rcm_lsm_var} not found in file {value}")
     if config.scenario in ["historical", "historical_high", "historical_low"]:
-        sfile="states"
-        tfile="transitions"
-        mfile="management"
+        sfile="states.nc" if not config.path_file_states else config.path_file_states
+        tfile="transitions.nc" if not config.path_file_trans else config.path_file_trans
+        mfile="management.nc" if not config.path_file_manag else config.path_file_manag
     elif config.scenario in scenario_dict.keys():
-        afile=f"added_tree_cover_input4MIPs_landState_ScenarioMIP_UofMD-{scenario_dict[config.scenario]}-2-1-f_gn_2015-2100"
-        sfile=f"multiple-states_input4MIPs_landState_ScenarioMIP_UofMD-{scenario_dict[config.scenario]}-2-1-f_gn_2015-2100"
-        tfile=f"multiple-transitions_input4MIPs_landState_ScenarioMIP_UofMD-{scenario_dict[config.scenario]}-2-1-f_gn_2015-2100"
-        mfile=f"multiple-management_input4MIPs_landState_ScenarioMIP_UofMD-{scenario_dict[config.scenario]}-2-1-f_gn_2015-2100"
+        afile=f"added_tree_cover_input4MIPs_landState_ScenarioMIP_UofMD-{scenario_dict[config.scenario]}-2-1-f_gn_2015-2100.nc" if not config.path_file_addtree else config.path_file_addtree
+        sfile=f"multiple-states_input4MIPs_landState_ScenarioMIP_UofMD-{scenario_dict[config.scenario]}-2-1-f_gn_2015-2100.nc" if not config.path_file_states else config.path_file_states
+        tfile=f"multiple-transitions_input4MIPs_landState_ScenarioMIP_UofMD-{scenario_dict[config.scenario]}-2-1-f_gn_2015-2100.nc" if not config.path_file_trans else config.path_file_trans
+        mfile=f"multiple-management_input4MIPs_landState_ScenarioMIP_UofMD-{scenario_dict[config.scenario]}-2-1-f_gn_2015-2100.nc" if not config.path_file_manag else config.path_file_manag
     if (config.mcgrath or config.prepare_mcgrath) and not config.forward:
         ifile=f"{mcg}_{config.syear}_{config.mcgrath_eyear}.nc"
         validate_path(ifile, datadir)
-    if config.trans:
-        validate_path(tfile+".nc", datadir)
-    if config.state:
-        validate_path(sfile+".nc", datadir)
+    if config.prepare_luh2_data:
+        validate_path(tfile, datadir)
+        validate_path(sfile, datadir)
     if config.irri:
         if config.scenario not in ["historical", "historical_low", "historical_high"]:
-            validate_path(sfile+".nc", datadir)
-        validate_path(mfile+".nc", datadir)
+            validate_path(sfile, datadir)
+        validate_path(mfile, datadir)
     if config.addtree:
-        validate_path(afile+".nc", datadir)
+        validate_path(afile, datadir)
 
 def validate_prepared_files(namelist, config):
     for key, value in namelist.items():

@@ -1,29 +1,43 @@
 # Input Parameters
 
 # LUT configuration
-region : "Germany"
-forward : True # forward or backward simulation
-backgrd : True # background  
+region : "WestAfrica"
+forward : False # forward or backward simulation
+backgrd : False # background  
 mcgrath : False # mcgrath
-addtree : True # addtree
+addtree : False # addtree
 mcgback : False # mcgback
-irri : True # irrigation
-syear : 2015 # start year
-eyear : 2100 # end year
+irri : False # irrigation
+syear : 1950 # start year
+eyear : 2015 # end year
 npfts : 16 # number of PFTs
 esayear : 2015
-mcgrath_eyear : 2100 # end year of mcgrath file (in case that its different from eyear)
-xsize : 95 # xsize of the region
-ysize : 91 # ysize of the region
+mcgrath_eyear : 2010 # end year of mcgrath file (in case that its different from eyear)
+xsize : 433 # xsize of the region
+ysize : 271 # ysize of the region
 remap : "bilinear" # remapping method
-scenario : "rcp26" # scenario
+scenario : "historical" # scenario
 grid : 0.1 # resolution in degrees
+rcm_lsm_var : "BLA" # variable name in the RCM LSM file
 
 # LUH2 prepare data configuration
-prepare_luh2_data: False # prepare LUH2 data
+prepare_luh2_data: True # prepare LUH2 data
 prepare_mcgrath: False # prepare mcgrath data
 
 # Plot configuration
-plot : True
-plot_npft: null # if not plot_npft is given, all npfts are plotted 
-plot_year: 70 # if not plot_year is given, first year is plotted
+plot : False
+plot_npft : null # if not plot_npft is given, all npfts are plotted 
+plot_year : 0 # if not plot_year is given, first year is plotted
+
+# Optional file paths
+path_file_trans: null # file path to transitions file
+path_file_states: null # file path to state file
+path_file_manag: null # file path to management file
+path_file_addtree: null # file path to addtree file
+path_file_rcm_lsm_in : null # file path to RCM LSM file
+path_file_lc_in : null # file path to PFT file
+path_file_backgra : null # file path to background file
+path_file_backshr : null # file path to background shrub file
+path_file_backfor : null # file path to background forest file
+path_file_backcro : null # file path to background cropland file
+path_file_backurb : null # file path to background urban file
