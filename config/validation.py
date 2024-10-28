@@ -5,7 +5,7 @@ import xarray as xr
 from src.config import datadir, scenario_dict, mcg
 
 schema = {
-    "region": {"type": "string", "allowed": ["Germany", "Europe"]},
+    "region": {"type": "string", "allowed": ["Germany", "Europe", "WestAfrica"]},
     "forward" : {"type": "boolean"},
     "addtree": {"type": "boolean"},
     "backgrd" : {"type": "boolean"},
@@ -46,7 +46,7 @@ def validate_config(config):
         raise ValueError(v.errors)
     if config.syear >= config.eyear:
         raise ValueError("Starting year (syear) must be smaller than ending year (eyear)")
-    if config.mcgrath_eyear:
+    if config.mcgrath_eyear and config.mcgrath:
         if config.mcgrath_eyear > config.eyear:
             raise ValueError("Mcgrath year (mcgrath_eyear) must be equal or smaller than ending year (eyear)")
         if config.mcgrath_eyear < config.syear:
@@ -55,13 +55,24 @@ def validate_config(config):
         if config.plot_year > (config.eyear-config.syear):
             raise ValueError("Plot year (plot_year) must be smaller than the number of years in the simulation")
 
-def validation_outline(datadir, file):
-    if not os.path.isfile(os.path.join(datadir, file)):
-        path = os.path.join(datadir, file)
-        raise ValueError(f"File {path} does not exist")
+def validate_path(file, datadir=None):
+    if datadir:
+        if not os.path.isfile(os.path.join(datadir, file)):
+            path = os.path.join(datadir, file)
+            raise ValueError(f"File {path} does not exist")
+    else:
+        if not os.path.isfile(file):
+            raise ValueError(f"File {file} does not exist")
 
-def validate_main_files(config):
+def validate_main_files(namelist, config):
     # IT MIGHT BE SIMPLIFIED AND INCLUDED JUST IN THE INIT FUNCTION OF LUT
+    for key, value in namelist.items():
+        # checking if files exist
+        if key == "F_GRID":
+            validate_path(value)
+        if key in ("F_RCM_LSM_IN", "F_LC_IN") or (config.backgrd and key.startswith("F_BACK")):
+            validate_path(value)
+            validate_dimensions(value, config)
     if config.scenario in ["historical", "historical_high", "historical_low"]:
         sfile="states"
         tfile="transitions"
@@ -71,42 +82,46 @@ def validate_main_files(config):
         sfile=f"multiple-states_input4MIPs_landState_ScenarioMIP_UofMD-{scenario_dict[config.scenario]}-2-1-f_gn_2015-2100"
         tfile=f"multiple-transitions_input4MIPs_landState_ScenarioMIP_UofMD-{scenario_dict[config.scenario]}-2-1-f_gn_2015-2100"
         mfile=f"multiple-management_input4MIPs_landState_ScenarioMIP_UofMD-{scenario_dict[config.scenario]}-2-1-f_gn_2015-2100"
-    if config.mcgrath or config.prepare_mcgrath:
+    if (config.mcgrath or config.prepare_mcgrath) and not config.forward:
         ifile=f"{mcg}_{config.syear}_{config.mcgrath_eyear}.nc"
-        validation_outline(datadir, ifile)
+        validate_path(ifile, datadir)
     if config.trans:
-        validation_outline(datadir, tfile+".nc")
+        validate_path(tfile+".nc", datadir)
     if config.state:
-        validation_outline(datadir, sfile+".nc")
+        validate_path(sfile+".nc", datadir)
     if config.irri:
         if config.scenario not in ["historical", "historical_low", "historical_high"]:
-            validation_outline(datadir, sfile+".nc")
-        validation_outline(datadir, mfile+".nc")
+            validate_path(sfile+".nc", datadir)
+        validate_path(mfile+".nc", datadir)
     if config.addtree:
-        validation_outline(datadir, afile+".nc")
+        validate_path(afile+".nc", datadir)
 
 def validate_prepared_files(namelist, config):
     for key, value in namelist.items():
         # checking if files exist
         if key == "F_GRID":
-            if not os.path.isfile(value):
-                raise ValueError(f"File {value} does not exist")
-        elif key.startswith("F_") and key not in ["F_IRRI_IN", "F_ADDTREE", "F_MCGRATH", "F_LC_OUT"]:
-            if not os.path.isfile(value):
-                raise ValueError(f"File {value} does not exist")
+            validate_path(value)
+        elif key not in ["F_IRRI_IN", "F_ADDTREE", "F_MCGRATH", "F_LC_OUT"] and not key.startswith("F_BACK"):
+            validate_path(value)
         # checking file sizes
         
-        if key.startswith("F_") and key not in ["F_IRRI_IN", "F_ADDTREE", "F_MCGRATH", "F_GRID", "F_LC_OUT"]:
-            ds = xr.open_dataset(value, decode_times=False)
-            if not (ds.dims.get("x") or ds.dims.get("lon")) and not (ds.dims.get("y") or ds.dims.get("lat")):
-                raise ValueError(f"File {value} has wrong dimensions. Expected 2D but got {ds.dims}")
-            else:
-                x_dim = "x" if ds.dims.get("x") else "lon"
-                y_dim = "y" if ds.dims.get("y") else "lat"
-            if ds.dims.get(x_dim) != config.xsize or ds.dims.get(y_dim) != config.ysize:
-                raise ValueError(f"File {value} has wrong dimensions. Expected {config.xisze}x{config.ysize} but got {ds.dims.get(x_dim)}x{ds.dims.get(y_dim)}")
-        # checking irrigation file
-        if (namelist.get("IRRI") and key=="F_IRRI_IN") or (namelist.get("ADDTREE") and key=="F_ADDTREE") or (namelist.get("MCGRATH") and key=="F_MCGRATH"):
-            if not os.path.isfile(value):
-                raise ValueError(f"File {value} does not exist")
+        if key not in ["F_IRRI_IN", "F_ADDTREE", "F_MCGRATH", "F_GRID", "F_LC_OUT"] and not key.startswith("F_BACK"):
+            validate_dimensions(value, config)
 
+        if config.backgrd and key.startswith("F_BACK"):
+            validate_dimensions(value, config)
+
+        # checking irrigation file
+        if (config.irri and key=="F_IRRI_IN") or (config.addtree and key=="F_ADDTREE") or (config.mcgrath and key=="F_MCGRATH"):
+            validate_path(value)
+            validate_dimensions(value, config)
+
+def validate_dimensions(value, config):
+    ds = xr.open_dataset(value, decode_times=False)
+    if not (ds.dims.get("x") or ds.dims.get("lon") or ds.dims.get("rlon")) and not (ds.dims.get("y") or ds.dims.get("lat") or ds.dims.get("rlat")):
+        raise ValueError(f"File {value} has wrong dimensions. Expected 2D but got {ds.dims}")
+    else:
+        x_dim = "x" if ds.dims.get("x") else "lon" if ds.dims.get("lon") else "rlon"
+        y_dim = "y" if ds.dims.get("y") else "lat" if ds.dims.get("lat") else "rlat"
+    if ds.dims.get(x_dim) != config.xsize or ds.dims.get(y_dim) != config.ysize:
+        raise ValueError(f"File {value} has wrong dimensions. Expected {config.xsize}x{config.ysize} but got {ds.dims.get(x_dim)}x{ds.dims.get(y_dim)}")

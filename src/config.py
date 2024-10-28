@@ -40,9 +40,11 @@ PFT_TeBrDec = "var804"
 PFT_ConEv = "var805"
 PFT_ConDec = "var806"
 
+rcm_lsm_var = "BLA"
+
 
 oname = "LUCAS_LUC7_ESACCI_LUH2"
-lcd = "ESACCI-LC-L4-LCCS-Map-300m-P1Y" # version of ESA-file
+lcd = "LSM" # version of ESA-file
 mcg = "combined_species_mtc" # name of McGrath file
 vers = "v2.0.7" # version of the model
 
@@ -56,7 +58,7 @@ CONPFTS = [12, 16, 0, 0, 0, 0, 0, 0, 0, 0]
 GRADEF = 9
 CRODEF = 13
 SHRDEF = 8
-FORDEF = 4
+FORDEF = 1
 URBDEF = 15
 
 nr_grass = 0

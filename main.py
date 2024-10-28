@@ -25,13 +25,13 @@ def main():
     namelist = lut.generate_namelist()
 
     # Validate main files
-    validate_main_files(config)
+    validate_main_files(namelist, config)
 
     # Preparing the data for the lut calculation
     if config.prepare_luh2_data:
         print_section_heading("Preparing LUH2 data")
         lut.func_prepare_luh2_data()
-    if config.prepare_mcgrath:
+    if config.prepare_mcgrath and not config.forward:
         print_section_heading("Preparing MCGRATH data")
         lut.func_prepare_mcgrath()
     
