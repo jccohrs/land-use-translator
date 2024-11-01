@@ -15,6 +15,8 @@ The following datasets are required to run the program:
 - **Irrigation Data** *(Optional)*: Required if irrigation data is included in the calculations.
 - **Background Data** *(Optional)*: Additional background data for enhanced simulation detail.
 
+By default, all required and optional datasets should be located in a designated data/ directory. If different storage locations are prefered, alternative paths for each dataset can be specified in a configuration file. This will be further detailed in the Usage section bellow.
+
 ## Regional and Temporal Scope
 
 The program is pre-configured to calculate LULC for the following regions:
@@ -30,14 +32,32 @@ To add other regions, include the appropriate grid files in the configuration.
 
 1. **Configuration File**: The main configuration file is located at `config/main.yaml`. Modify the options in this file to customize the program:
 
-   - **Select Region**: Choose from pre-configured regions, or add a new region by providing the necessary grid files.
-   - **Define Time Period**: Specify the time period for LU calculations by setting the starting year (`syear`) and ending year (`eyear`).
-   - **Optional Dataset Inclusion**:
-     - **McGrath Forest Types**: Choose to include or exclude this dataset.
-     - **Irrigation Data**: Enable or disable irrigation data, if the irrigation dataset is available.
-     - **Background Data**: Optionally include background data if available.
+   ### LUT configuration
+   - (`region`): Choose from pre-configured regions, or add a new region by providing the necessary grid files.
+   - (`forward`): **True** for future simulation or **False** for historical simulation.
+   - (`backgrd`): True/False. Optionally include background data if available.
+   - (`mcgrath`): True/False for using mcgrath data in the LUT. 
+   - (`addtree`): True/False for using addtree data in the LUT. 
+   - (`irri`): True/False. Enable or disable irrigation data, if the irrigation dataset is available.
+   - (`syear`)/(`eyear`): Specify the time period for LU calculations by setting the starting year (`syear`) and ending year (`eyear`).
+   - (`mcgrath_eyear`): end year of mcgrath file (in case that its different from eyear).
+   - (`npfts`): number of npfts used in the LUT.
+   - (`xsize`): xsize of the region.
+   - (`ysize`): ysize of the region. 
+   - (`rcm_lsm_var`): variable name in the RCM LSM file.
 
-2. **Execution**: Once configured, the program will process the data, filtering and aligning datasets according to the selected options. To run it just go to the project directory and
+
+   ### LUH2 prepare data configuration
+   - (`prepare_luh2_data`): True/False. Files preparation for the LUT by extracting required data from the given transitions and landmate-pft-maps files (required if first time using this program).
+   - (`prepare_mcgrath`): True/False. Preparation of Mcgrath data (Optional) for the LUT by extracting required data from given mcgrath file.
+   - (`remap`): remapping method used for extracting data in the preparation data section (**bilinear** or **con2**).
+   - (`scenario`): choose scenario name ("historical", "historical_high", "historical_low", "rcp19", "rcp26", "rcp34", "rcp45", "rcp60", "rcp70", "rcp85").
+   - (`grid`): choose the resolution in degrees.
+
+   ### Optional file paths
+   - (`path_file_*`): Specify file path for the used files. In case of not specifying default locations will be checked by the programm. 
+
+2. **Execution**: To run it just go to the project directory and
 
 
    ```bash
