@@ -6,23 +6,21 @@ forward : False # forward or backward simulation
 backgrd : False # background  
 mcgrath : False # mcgrath
 addtree : False # addtree
-mcgback : False # mcgback
 irri : False # irrigation
 syear : 1950 # start year
 eyear : 2015 # end year
-npfts : 16 # number of PFTs
-esayear : 2015
 mcgrath_eyear : 2010 # end year of mcgrath file (in case that its different from eyear)
+npfts : 16 # number of PFTs
 xsize : 433 # xsize of the region
 ysize : 271 # ysize of the region
-remap : "bilinear" # remapping method
-scenario : "historical" # scenario
-grid : 0.1 # resolution in degrees
 rcm_lsm_var : "BLA" # variable name in the RCM LSM file
 
 # LUH2 prepare data configuration
 prepare_luh2_data: True # prepare LUH2 data
 prepare_mcgrath: False # prepare mcgrath data
+remap : "bilinear" # remapping method
+scenario : "historical" # scenario name
+grid : 0.1 # resolution in degrees
 
 # Plot configuration
 plot : False

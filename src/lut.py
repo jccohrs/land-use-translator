@@ -22,7 +22,7 @@ class LUT:
         for key, value in config.items():
             setattr(self, key, value)
         self.grid = f"reg{str(self.grid).replace('.', '')}_{self.region}"
-        self.glc = f"{lcd}-{config.esayear}-{vers}"
+        self.glc = f"{lcd}-{config.eyear}-{vers}"
         self.glc_lsm = f"{lcd}-2015-{vers}"
         self.namelist = self.generate_namelist()
         self.nr_crops = nr_crops
@@ -682,9 +682,6 @@ class LUT:
         else:
             ofile = f"{oname}_{self.scenario}_{self.syear}_{self.eyear}_{self.grid}"
 
-        if self.mcgback and self.scenario in ["historical", "historical_high", "historical_low"]:
-            ofile = f"{ofile}_mcg2"
-
         if self.addtree and self.scenario not in ["historical", "historical_high", "historical_low"]:
             ofile = f"{ofile}_addtr"
         # Creating directories if they do not exist
@@ -791,7 +788,7 @@ class LUT:
         # prepare states
         print_section_heading(f"Selecting variables for transitions")
         ofile=f"{tfile}_{self.syear}_{self.eyear}_{self.region}.nc"
-        input_file = f"{path_region}/{sfile}.nc" if not self.path_file_trans else self.path_file_trans
+        input_file = f"{datadir}/{tfile}.nc" if not self.path_file_trans else self.path_file_trans
         cdo.selyear(f"{self.syear}/{self.eyear}", input=f"{input_file}", output=f"{path_sdir}/{self.region}/tmp_{ofile}")
         cdo.sellonlatbox(self.reg, input=f"-selvar,{vars_trans} {path_sdir}/{self.region}/tmp_{ofile}", output=f"{path_sdir}/{self.region}/{ofile}")
         os.remove(f"{path_sdir}/{self.region}/tmp_{ofile}")
