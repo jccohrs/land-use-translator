@@ -17,23 +17,12 @@ The following datasets are required to run the program:
 
 By default, all required and optional datasets should be located in a designated data/ directory. If different storage locations are prefered, alternative paths for each dataset can be specified in a configuration file. This will be further detailed in the Usage section bellow.
 
-## Regional and Temporal Scope
-
-The program is pre-configured to calculate LULC for the following regions:
-
-- **Africa**
-- **West Africa**
-- **Europe**
-- **Germany**
-
-To add other regions, include the appropriate grid files in the configuration.
-
 ## Usage Instructions
 
 1. **Configuration File**: The main configuration file is located at `config/main.yaml`. Modify the options in this file to customize the program:
 
    ### LUT configuration
-   - (`region`): Choose from pre-configured regions, or add a new region by providing the necessary grid files.
+   - (`region`): Choose from pre-configured regions ("Germany", "Europe", "WestAfrica"), or add a new region by providing the necessary grid files.
    - (`forward`): **True** for future simulation or **False** for historical simulation.
    - (`backgrd`): True/False. Optionally include background data if available.
    - (`mcgrath`): True/False for using mcgrath data in the LUT. 
