@@ -51,9 +51,12 @@ By default, all required and optional datasets should be located in a designated
 
 2. **Execution**: To run it just go to the project directory and
 
-
    ```bash
    $ python3 main.py
+
+## Output File
+
+The generated output file will be located in the  `data/LUCAS_LUC/` directory. This output file will contain information about the Plant Functional Type (PFT) fraction for the 16 NPFTs across the selected region, scenario, and timeline.
 
 ## Installation Guide
 
