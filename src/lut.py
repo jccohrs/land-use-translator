@@ -893,6 +893,7 @@ class LUT:
                 help_pfts_file[:, :, i] = pfts_file[f"var80{num}"].data.T
         lsm_mask = np.all(help_pfts_file == 0, axis=2) 
         lsm_mask = (~lsm_mask).astype(int)
+        pfts_file.close()
         return lsm_mask
 
     def func_prepare_mcgrath(self):
