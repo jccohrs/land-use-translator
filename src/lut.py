@@ -434,10 +434,11 @@ class LUT:
         if self.mcgrath:
             for i in range(1, 4):
                 mcgrath_frac_help[:, :, i-1, :] = mcgrath_frac[f"var80{i+2}"][:, :, :].data.T
-        
         # RCM LSM
-        rcm_lsm = xr.open_dataset(self.namelist["F_RCM_LSM_IN"])[self.rcm_lsm_var].values.T if "time" not in xr.open_dataset(self.namelist["F_RCM_LSM_IN"])[self.rcm_lsm_var].dims else xr.open_dataset(self.namelist["F_RCM_LSM_IN"])[self.rcm_lsm_var].values[0, :, :].T
-
+        if not self.path_file_lsm:
+            rcm_lsm = self.func_prepare_lsm()
+        else:
+            rcm_lsm = xr.open_dataset(self.namelist["F_RCM_LSM_IN"])[self.rcm_lsm_var].values.T if "time" not in xr.open_dataset(self.namelist["F_RCM_LSM_IN"])[self.rcm_lsm_var].dims else xr.open_dataset(self.namelist["F_RCM_LSM_IN"])[self.rcm_lsm_var].values[0, :, :].T
         # Transformation datasets
         nfv2cro = xr.open_dataset(self.namelist["F_NFV2CRO"], decode_times=False)["nfv2cro"]
         cro2nfv = xr.open_dataset(self.namelist["F_CRO2NFV"], decode_times=False)["cro2nfv"]
@@ -825,7 +826,6 @@ class LUT:
         ]
         for data in fromto_array:
             self.fromto(data["varn"], data["for_1"], data["for_2"], tfile, ext, cutting, path_region, remap_com, data["outvar_condition"])
-
         # compute states
         print_section_heading(f"Selecting variables for states")
         input_file = f"{datadir}/{sfile}.nc" if not self.path_file_states else self.path_file_states
@@ -849,13 +849,11 @@ class LUT:
                 cdo.remapbil(f"{scriptsdir}/grid_{self.grid}", input=f"{path_region}/addtree_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/{self.grid}/addtree_{self.syear}_{self.eyear}_{self.grid}.nc")
             elif remap_com == "remapcon2":
                 cdo.remapcon2(f"{scriptsdir}/grid_{self.grid}", input=f"{path_region}/addtree_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/{self.grid}/addtree_{self.syear}_{self.eyear}_{self.grid}.nc")
-    
         # compute irragtion fraction 
         if self.irri:
             print_section_heading(f"Selecting variables for irrigation")
             input_file = f"{datadir}/{mfile}.nc" if not self.path_file_manag else self.path_file_manag
             cdo.sellonlatbox(self.reg, input=f"-selyear,{self.syear}/{self.eyear} -selvar,{vars_irrig} {input_file}", output=f"{path_region}/irri_vars_{self.syear}_{self.eyear}_{self.region}.nc")
-
             if self.scenario in ["historical", "historical_low", "historical_high"]:
                 if remap_com == "invertlat":
                     cdo.invertlat(input=f"-chname,{IRR[0]},irrig_frac -selvar,{IRR[0]} {path_region}/irri_vars_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_{self.grid}.nc")
@@ -869,7 +867,6 @@ class LUT:
                     cdo.setmisstoc(-999, input=f"-{remap_com},{scriptsdir}/grid_{self.grid} -varssum -selvar,{vars_crops} {path_region}/states_{self.syear}_{self.eyear}_{self.grid}.nc", output=f"{path_region}/sum_crop_frac.nc")
                 else:
                     cdo.setmisstoc(-999, input=f"-{remap_com} -varssum -selvar,{vars_crops} {path_region}/states_{self.syear}_{self.eyear}_{self.grid}.nc", output=f"{path_region}/sum_crop_frac.nc")
-
                 # Change variables names
                 for n in range(5):
                     if remap_com in ["remapbil", "remapcon2"]:
@@ -884,6 +881,19 @@ class LUT:
                     os.remove(f"{path_region}/dummy.nc")
                 cdo.div(input=f"{path_region}/sum_irri_frac_{self.syear}_{self.eyear}_{self.grid}.nc {path_region}/sum_crop_frac.nc", output=f"{path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_{self.grid}_2.nc")
                 cdo.setmisstoc("-999", input=f"{path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_{self.grid}_2.nc", output=f"{path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_{self.grid}.nc")
+
+    def func_prepare_lsm(self):
+        pfts_file = xr.open_dataset(self.namelist["F_LC_IN"]).isel(time=0)
+        help_pfts_file = np.zeros((self.xsize, self.ysize, self.npfts), dtype="float32")
+        for i in range(self.npfts):
+            num = i + 1
+            if len(str(num)) > 1:
+                help_pfts_file[:, :, i] = pfts_file[f"var8{num}"].data.T
+            else:
+                help_pfts_file[:, :, i] = pfts_file[f"var80{num}"].data.T
+        lsm_mask = np.all(help_pfts_file == 0, axis=2) 
+        lsm_mask = (~lsm_mask).astype(int)
+        return lsm_mask
 
     def func_prepare_mcgrath(self):
         """

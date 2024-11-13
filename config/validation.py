@@ -40,6 +40,7 @@ schema = {
     "path_file_backfor" : {"type": "string", "nullable": True},
     "path_file_backurb" : {"type": "string", "nullable": True},
     "path_file_backcro" : {"type": "string", "nullable": True},
+    "path_file_lsm" : {"type": "string", "nullable": True},
 }
 
 
@@ -80,7 +81,10 @@ def validate_main_files(namelist, config):
         # checking if files exist
         if key == "F_GRID":
             validate_path(value)
-        if key in ("F_RCM_LSM_IN", "F_LC_IN") or (config.backgrd and key.startswith("F_BACK")):
+        if key in ("F_LC_IN") or (config.backgrd and key.startswith("F_BACK")):
+            validate_path(value)
+            validate_dimensions(value, config)
+        if key in ("F_RCM_LSM_IN") and config.path_file_lsm:
             validate_path(value)
             validate_dimensions(value, config)
             if key == "F_RCM_LSM_IN":

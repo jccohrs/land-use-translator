@@ -16,7 +16,7 @@ ysize : 271 # ysize of the region
 rcm_lsm_var : "BLA" # variable name in the RCM LSM file
 
 # LUH2 prepare data configuration
-prepare_luh2_data: True # prepare LUH2 data
+prepare_luh2_data: False # prepare LUH2 data
 prepare_mcgrath: False # prepare mcgrath data
 remap : "bilinear" # remapping method
 scenario : "historical" # scenario name
@@ -39,3 +39,4 @@ path_file_backshr : null # file path to background shrub file
 path_file_backfor : null # file path to background forest file
 path_file_backcro : null # file path to background cropland file
 path_file_backurb : null # file path to background urban file
+path_file_lsm : null # file path to LSM file
