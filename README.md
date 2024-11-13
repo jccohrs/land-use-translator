@@ -8,40 +8,54 @@ This Python program generates high-resolution land use and land cover (LULC) dat
 
 The following datasets are required to run the program:
 
-- **Land Use (LU) Transitions**: LU changes for the selected time period, with an option to filter larger datasets to match the specified configuration.
-- **Landmate PFTs Maps**: Contains data for 16 Plant Functional Types (PFTs), providing detailed vegetation characterization.
+- **Land Use (LU) Transitions**: LU changes for the selected time period, with an option to filter larger datasets to match the specified configuration. These files can be downloaded from the [LUH Data Portal](https://luh.umd.edu/data.shtml) for various scenarios. for various scenarios.
+   - transitions.nc: Main land use transitions data.
+   - states.nc: States of land use, for each grid cell and year.
+   - management.nc: Contains irrigation data; this file is only required if irrigation is enabled (i.e., if irri is set to True).
+   - add_tree_cover.nc: Tree cover data, used if AddTree Data is active (i.e., if addtree is set to True).
+- **Landmate PFTs Maps**: Contains data for 16 Plant Functional Types (PFTs), providing detailed vegetation characterization. The data can be downloaded from [WDC Climate](https://www.wdc-climate.de/ui/entry?acronym=LM_PFT_EUR_v1.1).
 - **Sea-Land Mask (ESA-CCI)**: A sea-land mask file specific to the intended region.
-- **McGrath Forest Types** *(Optional)*: Optional forest cover data for the specified period.
-- **Irrigation Data** *(Optional)*: Required if irrigation data is included in the calculations.
 - **Background Data** *(Optional)*: Additional background data for enhanced simulation detail.
 
-## Regional and Temporal Scope
-
-The program is pre-configured to calculate LULC for the following regions:
-
-- **Africa**
-- **West Africa**
-- **Europe**
-- **Germany**
-
-To add other regions, include the appropriate grid files in the configuration.
+By default, all required and optional datasets should be located in a designated data/ directory. If different storage locations are prefered, alternative paths for each dataset can be specified in a configuration file. This will be further detailed in the Usage section bellow.
 
 ## Usage Instructions
 
 1. **Configuration File**: The main configuration file is located at `config/main.yaml`. Modify the options in this file to customize the program:
 
-   - **Select Region**: Choose from pre-configured regions, or add a new region by providing the necessary grid files.
-   - **Define Time Period**: Specify the time period for LU calculations by setting the starting year (`syear`) and ending year (`eyear`).
-   - **Optional Dataset Inclusion**:
-     - **McGrath Forest Types**: Choose to include or exclude this dataset.
-     - **Irrigation Data**: Enable or disable irrigation data, if the irrigation dataset is available.
-     - **Background Data**: Optionally include background data if available.
+   ### LUT configuration
+   - (`region`): Choose from pre-configured regions ("Germany", "Europe", "WestAfrica"), or add a new region by providing the necessary grid files.
+   - (`forward`): **True** for future simulation or **False** for historical simulation.
+   - (`backgrd`): True/False. Optionally include background data if available.
+   - (`mcgrath`): True/False for using mcgrath data in the LUT. 
+   - (`addtree`): True/False for using addtree data in the LUT. 
+   - (`irri`): True/False. Enable or disable irrigation data, if the irrigation dataset is available.
+   - (`syear`)/(`eyear`): Specify the time period for LU calculations by setting the starting year (`syear`) and ending year (`eyear`).
+   - (`mcgrath_eyear`): end year of mcgrath file (in case that its different from eyear).
+   - (`npfts`): number of npfts used in the LUT.
+   - (`xsize`): xsize of the region.
+   - (`ysize`): ysize of the region. 
+   - (`rcm_lsm_var`): variable name in the RCM LSM file.
 
-2. **Execution**: Once configured, the program will process the data, filtering and aligning datasets according to the selected options. To run it just go to the project directory and
 
+   ### LUH2 prepare data configuration
+   - (`prepare_luh2_data`): True/False. Files preparation for the LUT by extracting required data from the given transitions and landmate-pft-maps files (required if first time using this program).
+   - (`prepare_mcgrath`): True/False. Preparation of Mcgrath data (Optional) for the LUT by extracting required data from given mcgrath file.
+   - (`remap`): remapping method used for extracting data in the preparation data section (**bilinear** or **con2**).
+   - (`scenario`): choose scenario name ("historical", "historical_high", "historical_low", "rcp19", "rcp26", "rcp34", "rcp45", "rcp60", "rcp70", "rcp85").
+   - (`grid`): choose the resolution in degrees.
+
+   ### Optional file paths
+   - (`path_file_*`): Specify file path for the used files. In case of not specifying default locations will be checked by the programm. 
+
+2. **Execution**: To run it just go to the project directory and
 
    ```bash
    $ python3 main.py
+
+## Output File
+
+The generated output file will be located in the  `data/LUCAS_LUC/` directory. This output file will contain information about the Plant Functional Type (PFT) fraction for the 16 NPFTs across the selected region, scenario, and timeline.
 
 ## Installation Guide
 
