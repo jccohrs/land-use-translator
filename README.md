@@ -11,11 +11,10 @@ The following datasets are required to run the program:
 - **Land Use (LU) Transitions**: LU changes for the selected time period, with an option to filter larger datasets to match the specified configuration. These files can be downloaded from the [LUH Data Portal](https://luh.umd.edu/data.shtml) for various scenarios. for various scenarios.
    - transitions.nc: Main land use transitions data.
    - states.nc: States of land use, for each grid cell and year.
-   - management.nc: Contains forest management data; this   file is only required if McGrath Forest Types is enabled (i.e., if mcgrath is set to True).
+   - management.nc: Contains irrigation data; this file is only required if irrigation is enabled (i.e., if irri is set to True).
    - add_tree_cover.nc: Tree cover data, used if AddTree Data is active (i.e., if addtree is set to True).
 - **Landmate PFTs Maps**: Contains data for 16 Plant Functional Types (PFTs), providing detailed vegetation characterization. The data can be downloaded from [WDC Climate](https://www.wdc-climate.de/ui/entry?acronym=LM_PFT_EUR_v1.1).
 - **Sea-Land Mask (ESA-CCI)**: A sea-land mask file specific to the intended region.
-- **Irrigation Data** *(Optional)*: Required if irrigation data is included in the calculations.
 - **Background Data** *(Optional)*: Additional background data for enhanced simulation detail.
 
 By default, all required and optional datasets should be located in a designated data/ directory. If different storage locations are prefered, alternative paths for each dataset can be specified in a configuration file. This will be further detailed in the Usage section bellow.
