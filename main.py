@@ -34,6 +34,9 @@ def main():
     if config.prepare_mcgrath and not config.forward:
         print_section_heading("Preparing MCGRATH data")
         lut.func_prepare_mcgrath()
+    if config.prepare_backgrd:
+        print_section_heading("Preparing BACKGRD data")
+        lut.func_prepare_backgr_files()
     
     # validating the prepared files
     validate_prepared_files(namelist, config)

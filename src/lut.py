@@ -7,20 +7,18 @@ import xarray as xr
 import numpy as np
 from src.utils import print_section_heading
 
-import matplotlib.pyplot as plt
-from scipy.stats import linregress
-from matplotlib.patches import Patch
-import cartopy.crs as ccrs
-import cartopy.feature as cfeature
-from matplotlib.colors import ListedColormap, BoundaryNorm, LinearSegmentedColormap 
-
+# Initialize CDO
 cdo = Cdo()
 
 class LUT:
 
     def __init__(self, config):
+        """
+        This class initializes the LUCAS LUT
+        """
         for key, value in config.items():
             setattr(self, key, value)
+        self.grid_number = str(self.grid).replace('.', '')
         self.grid = f"reg{str(self.grid).replace('.', '')}_{self.region}"
         self.glc = f"{lcd}-{config.eyear}-{vers}"
         self.glc_lsm = f"{lcd}-2015-{vers}"
@@ -33,17 +31,19 @@ class LUT:
         self.years = abs(config.eyear - config.syear)
         self.rcm_lsm_var = config.rcm_lsm_var
 
-        # select period and self.region
-        if self.region == 'Europe':
-            self.reg = "-56,84,16,79"
-        elif self.region == 'Australasia':
-            self.reg = "102,218,-53,4"
-        elif self.region == 'NorthAmerica':
-            self.reg = "170,360,0,85"
-        elif self.region == 'Germany':
-            self.reg = "6,15.5,46.4,55.5"
-        elif self.region == 'WestAfrica':
-            self.reg = "-26.64,20.88,-1.52,28.18"
+        if self.coords:
+            self.reg = self.coords
+        else:
+            if self.region == 'Europe':
+                self.reg = "-56,84,16,79"
+            elif self.region == 'Australasia':
+                self.reg = "102,218,-53,4"
+            elif self.region == 'NorthAmerica':
+                self.reg = "170,360,0,85"
+            elif self.region == 'Germany':
+                self.reg = "6,15.5,46.4,55.45"
+            elif self.region == 'WestAfrica':
+                self.reg = "-26.64,20.88,-1.52,28.18"
 
         self.pfts_grass = GRAPFTS[0:self.nr_grass]
         self.pfts_crops = CROPFTS[0:self.nr_crops]
@@ -117,9 +117,6 @@ class LUT:
             self.lucas_lut_mcgrath(rcm_lsm, mcgrath_frac_help)
             self.recalc_null_pft_frac_ts(rcm_lsm)
             self.recalc_pft_frac_ts(rcm_lsm)
-        if self.plot:
-            print_section_heading('PLOTTING')
-            self.plot_pft_frac_ts()
 
     def lucas_lut_backward(self):
         """
@@ -167,9 +164,6 @@ class LUT:
             self.lucas_lut_mcgrath(rcm_lsm, mcgrath_frac_help)
             self.recalc_null_pft_frac_ts(rcm_lsm)
             self.recalc_pft_frac_ts(rcm_lsm)
-        if self.plot:
-            print_section_heading('PLOTTING')
-            self.plot_pft_frac_ts()
 
     def lucas_lut_transrules(self, trans, rcm_lsm, inpfts, pfts_1, pfts_2, pfts_3, pfts_4,
                              nr_pfts_1, nr_pfts_2, nr_pfts_3, nr_pfts_4, defaultpft,
@@ -350,7 +344,7 @@ class LUT:
     # WILL BE OUT
     def lucas_lut_help(self):
         data_help = np.zeros((self.xsize, self.ysize, self.npfts, self.years+1))
-        data = xr.open_dataset("data/LUCAS_LUC7_ESACCI_LUH2_rcp26_2015_2100_reg01_Germany_irri.nc")
+        data = xr.open_dataset("data/LUCAS_LUC7_ESACCI_LUH2_historical_1950_2015_reg01_Germany_mcgrath.nc")
         for i in range(self.npfts):
             num = i + 1
             if len(str(num)) > 1:
@@ -438,7 +432,7 @@ class LUT:
         if not self.path_file_lsm:
             rcm_lsm = self.func_prepare_lsm()
         else:
-            rcm_lsm = xr.open_dataset(self.namelist["F_RCM_LSM_IN"])[self.rcm_lsm_var].values.T if "time" not in xr.open_dataset(self.namelist["F_RCM_LSM_IN"])[self.rcm_lsm_var].dims else xr.open_dataset(self.namelist["F_RCM_LSM_IN"])[self.rcm_lsm_var].values[0, :, :].T
+            rcm_lsm = xr.open_dataset(self.path_file_lsm)[self.rcm_lsm_var].values.T if "time" not in xr.open_dataset(self.path_file_lsm)[self.rcm_lsm_var].dims else xr.open_dataset(self.path_file_lsm)[self.rcm_lsm_var].values[0, :, :].T
         # Transformation datasets
         nfv2cro = xr.open_dataset(self.namelist["F_NFV2CRO"], decode_times=False)["nfv2cro"]
         cro2nfv = xr.open_dataset(self.namelist["F_CRO2NFV"], decode_times=False)["cro2nfv"]
@@ -692,13 +686,17 @@ class LUT:
         Path(odir).mkdir(parents=True, exist_ok=True)
         namelist_dict = {
             # FILES
-            "F_RCM_LSM_IN": f"{pftdir}/{self.glc_lsm}_{self.grid}.nc" if not self.path_file_rcm_lsm_in else self.path_file_rcm_lsm_in, # lsmfile
-            "F_LC_IN": f"{pftdir}/PFTS_{self.glc}_{self.grid}_v11.nc" if not self.path_file_lc_in else self.path_file_lc_in, # pftfile
-            "F_BACKGRA": f"{pftdir}/GRAB_{self.glc_lsm}_{self.grid}_v11.nc" if not self.path_file_backgra else self.path_file_backgra, # grabfile
-            "F_BACKSHR": f"{pftdir}/SHRB_{self.glc_lsm}_{self.grid}_v11.nc" if not self.path_file_backshr else self.path_file_backshr, # shrbfile
-            "F_BACKFOR": f"{pftdir}/FORB_{self.glc_lsm}_{self.grid}_v11.nc" if not self.path_file_backfor else self.path_file_backfor, # forbfile
-            "F_BACKCRO": f"{pftdir}/CROB_{self.glc_lsm}_{self.grid}_v11.nc" if not self.path_file_backcro else self.path_file_backcro, # crobfile
-            "F_BACKURB": f"{pftdir}/URBB_{self.glc_lsm}_{self.grid}_v11.nc" if not self.path_file_backurb else self.path_file_backurb, # urbbfile
+            "F_LC_IN": f"{pftdir}/PFTS_{self.glc}_{self.grid}_v{self.vers}.nc" if not self.path_file_lc_in else self.path_file_lc_in, # pftfile
+            "F_GLOBAL_BACKGRA": f"{pftdir}/GRAB_reg{self.grid_number}_Global_v{self.vers}.nc" if not self.path_file_backgra_global else self.path_file_backgra_global, # grabfile
+            "F_GLOBAL_BACKSHR": f"{pftdir}/SHRB_reg{self.grid_number}_Global_v{self.vers}.nc" if not self.path_file_backshr_global else self.path_file_backshr_global, # shrbfile
+            "F_GLOBAL_BACKFOR": f"{pftdir}/FORB_reg{self.grid_number}_Global_v{self.vers}.nc" if not self.path_file_backfor_global else self.path_file_backfor_global, # forbfile
+            "F_GLOBAL_BACKCRO": f"{pftdir}/CROB_reg{self.grid_number}_Global_v{self.vers}.nc" if not self.path_file_backcro_global else self.path_file_backcro_global, # crobfile
+            "F_GLOBAL_BACKURB": f"{pftdir}/URBB_reg{self.grid_number}_Global_v{self.vers}.nc" if not self.path_file_backurb_global else self.path_file_backurb_global, # urbbfile
+            "F_BACKGRA": f"{pftdir}/GRAB_{self.grid}_v{self.vers}.nc" if not self.path_file_backgra else self.path_file_backgra, # grabfile
+            "F_BACKSHR": f"{pftdir}/SHRB_{self.grid}_v{self.vers}.nc" if not self.path_file_backshr else self.path_file_backshr, # shrbfile
+            "F_BACKFOR": f"{pftdir}/FORB_{self.grid}_v{self.vers}.nc" if not self.path_file_backfor else self.path_file_backfor, # forbfile
+            "F_BACKCRO": f"{pftdir}/CROB_{self.grid}_v{self.vers}.nc" if not self.path_file_backcro else self.path_file_backcro, # crobfile
+            "F_BACKURB": f"{pftdir}/URBB_{self.grid}_v{self.vers}.nc" if not self.path_file_backurb else self.path_file_backurb, # urbbfile
             "F_MCGRATH": f"{datadir}/{mcg}_{self.syear}_{self.eyear}_ForestBckgrdMcGrath_{self.grid}.nc", # mcgfile
             "F_IRRI_IN": f"{sdir}/irrigation_{self.syear}_{self.eyear}_{self.grid}.nc", # irrfile
             "F_LC_OUT": f"{odir}/{ofile}.nc", # outfile
@@ -735,6 +733,32 @@ class LUT:
             "F_GRID": f"{scriptsdir}/grid_{self.grid}", # grid
         }
         return namelist_dict
+    
+    def func_prepare_backgr_files(self):
+        if self.grid == "reg025_Europe":
+            ext="NINT"
+            remap_com="invertlat"
+            cutting=''
+        else:
+            if self.remap == "bilinear":
+                ext="BIL"
+                remap_com=f"remapbil"
+                if self.grid == "EUR-011":
+                    cutting = "-selindexbox,2,434,2,434"
+                else:
+                    cutting = ""
+            elif self.remap == "con2":
+                ext = "CON2"
+                remap_com = f"remapcon2"
+                if self.grid == 'EUR-011':
+                    cutting = "-selindexbox,2,434,2,434"
+                else:
+                    cutting = ''
+        backgrd_files_names = [("F_GLOBAL_BACKGRA", vars_gra), ("F_GLOBAL_BACKSHR", vars_shr), ("F_GLOBAL_BACKFOR", vars_for), ("F_GLOBAL_BACKCRO", vars_cro), ("F_GLOBAL_BACKURB", vars_urb)]
+        for filename in backgrd_files_names:
+            file_to = self.namelist[filename[0].replace("_GLOBAL", "")]
+            file = self.namelist[filename[0]]
+            cdo.sellonlatbox(self.reg, input=f"-setgrid,{scriptsdir}/grid_reg{self.grid_number}_Global -selvar,{filename[1]} {file}", output=f"{file_to}")
 
     def func_prepare_luh2_data(self):
         """
@@ -957,148 +981,3 @@ class LUT:
         os.remove(f"{path}/{self.grid}/{ofile}_{ext}_{self.grid}_2.nc")
         os.remove(f"{path}/dummy.nc")
         os.remove(f"{path}/{ofile}.nc")
-
-    def plot_pft_frac_ts(self):
-        """
-        Plot the PFT fraction time series
-        """
-        year = self.plot_year if self.plot_year else 0
-        Path(os.path.join(plotdir, "scenarios", self.scenario, self.region, self.grid, str(self.syear+year))).mkdir(parents=True, exist_ok=True)
-        path = os.path.join(plotdir, "scenarios", self.scenario, self.region, self.grid)
-        #data = self.lucas_lut_help()
-        if self.plot_npft:
-            #self.main_plot(self.plot_npft, year, path)
-            self.diff_plot(self.plot_npft, year, path)
-            #self.diff_plot(self.plot_npft, year, path, data=data, directory=f"lucas_diff")
-            #self.diff_2_plot(self.plot_npft, year, self.pft_frac_ts, data, path, directory=f"lucas_python_fortran_diff")
-        else:
-            for inpft in range(self.npfts):
-                #self.main_plot(inpft+1, year, path)
-                self.diff_plot(inpft+1, year, path)
-                #self.diff_plot(inpft+1, year, path, data=data, directory=f"lucas_diff")
-                #self.diff_2_plot(inpft+1, year, self.pft_frac_ts, data, path, directory=f"lucas_python_fortran_diff")
-
-    # WILL BE OUT
-    def diff_2_plot(self, npft, year, data_1, data_2, path, directory):
-        Path(os.path.join(path, directory)).mkdir(parents=True, exist_ok=True)
-        coords = self.reg.split(",")
-        lon = self.pft_frac.lon.values if self.pft_frac.dims.get("lon") else self.pft_frac.rlon.values if self.pft_frac.dims.get("rlon") else self.pft_frac.x.values
-        lat = self.pft_frac.lat.values if self.pft_frac.dims.get("lat") else self.pft_frac.rlat.values if self.pft_frac.dims.get("rlat") else self.pft_frac.y.values
-        # Create a meshgrid for longitude and latitude
-        lon_grid, lat_grid = np.meshgrid(lon, lat)
-        # Plotting
-        fig = plt.figure(figsize=(12, 10))
-        ax = plt.axes(projection=ccrs.PlateCarree())
-
-        # Add natural earth features for better visualization
-        ax.add_feature(cfeature.BORDERS, linestyle='-', linewidth=1, edgecolor='black')
-        ax.coastlines(resolution='10m')
-        ax.add_feature(cfeature.LAND, facecolor="white")
-        ax.add_feature(cfeature.LAKES, facecolor='blue')
-        ax.add_feature(cfeature.RIVERS, edgecolor='blue')
-        # Plot the data
-        levels = np.linspace(-0.4, 0.4, 100)  # 30 intervals
-        #values = (data_1[:, :, npft-1, year].T-data_1[:, :, npft-1, 0].T) - (data_2[:, :, npft-1, year].T-data_2[:, :, npft-1, 0].T)
-        values = (data_1[:, :, npft-1, year].T) - (data_2[:, :, npft-1, year].T)
-        # Create a custom colormap with white at the center
-        colors = [(0, 0, 1), (1, 1, 1), (1, 0, 0)]  # Blue -> White -> Red
-        n_bins = 100  # Discretize the color range into 100 bins
-        cmap_name = 'blue_white_red'
-        cm = LinearSegmentedColormap.from_list(cmap_name, colors, N=n_bins)
-
-        # Create the filled contour plot
-        contour = ax.contourf(lon_grid, lat_grid, values, levels=levels, cmap=cm, transform=ccrs.PlateCarree(), alpha=1)
-
-        # Add colorbar with label
-        cbar = plt.colorbar(contour, orientation='vertical', pad=0.22, aspect=50)
-        cbar.set_label('PFT Fraction')
-
-        # Set the extent to focus on Germany (coordinates provided by self.reg)
-        ax.set_extent([float(coords[0]), float(coords[1]), float(coords[2]), float(coords[3])], crs=ccrs.PlateCarree())
-
-        # Add gridlines with labels
-        gl = ax.gridlines(draw_labels=True)
-        gl.top_labels = False
-        gl.right_labels = False
-
-        # Set the title of the plot
-        plt.title(f'Average {npft} PFT Fraction Diff (PYTHON-FORTRAN) over {self.region} for {self.syear + year}')
-
-        # Save the plot to the specified directory
-        plt.savefig(f'{os.path.join(path, directory)}/pft_frac_{self.region}_npft_{npft}_diff_{self.syear + year}.png')
-
-        # Close the plot to free memory
-        plt.close()
-
-    def diff_plot(self, npft, year, path, data=None, directory=None):
-        directory = f"diff_{self.syear+year}" if directory is None else directory
-        data = self.pft_frac_ts if data is None else data
-        Path(os.path.join(path, directory)).mkdir(parents=True, exist_ok=True)
-
-        coords = self.reg.split(",")
-        lon = self.pft_frac.lon.values if self.pft_frac.dims.get("lon") else self.pft_frac.rlon.values if self.pft_frac.dims.get("rlon") else self.pft_frac.x.values
-        lat = self.pft_frac.lat.values if self.pft_frac.dims.get("lat") else self.pft_frac.rlat.values if self.pft_frac.dims.get("rlat") else self.pft_frac.y.values
-        # Create a meshgrid for longitude and latitude
-        lon_grid, lat_grid = np.meshgrid(lon, lat)
-        # Plotting
-        fig = plt.figure(figsize=(12, 10))
-        ax = plt.axes(projection=ccrs.PlateCarree())
-
-        # Add natural earth features for better visualization
-        ax.add_feature(cfeature.BORDERS, linestyle='-', linewidth=1, edgecolor='black')
-        ax.coastlines(resolution='10m')
-        ax.add_feature(cfeature.LAND, facecolor="white")
-        ax.add_feature(cfeature.LAKES, facecolor='blue')
-        ax.add_feature(cfeature.RIVERS, edgecolor='blue')
-        # Plot the data
-        levels = np.linspace(-0.3, 0.3, 40)  # 30 intervals
-        contour = ax.contourf(lon_grid, lat_grid, data[:, :, npft-1, self.years].T-data[:, :, npft-1, 0].T, levels=levels, transform=ccrs.PlateCarree(), alpha=1)
-        # Add colorbar
-        cbar = plt.colorbar(contour, orientation='vertical', pad=0.22, aspect=50)
-        cbar.set_label('PFT Fraction')
-        # Set the extent
-        ax.set_extent([float(coords[0]), float(coords[1]), float(coords[2]), float(coords[3])], crs=ccrs.PlateCarree())
-        # Add gridlines
-        gl = ax.gridlines(draw_labels=True)
-        gl.top_labels = False
-        gl.right_labels = False
-        # Title
-        plt.title(f'Average {npft} PFT Fraction Diff over {self.region} for {self.syear}-{self.eyear}')
-        # Save the plot
-        plt.savefig(f'{os.path.join(path, directory)}/pft_frac_{self.region}_npft_{npft}_diff_{self.syear}_{self.eyear}.png')
-        plt.close()
-
-    # WILL BE OUT
-    def main_plot(self, npft, year, path):
-        coords = self.reg.split(",")
-        lon = self.pft_frac.lon.values if self.pft_frac.dims.get("lon") else self.pft_frac.rlon.values if self.pft_frac.dims.get("rlon") else self.pft_frac.x.values
-        lat = self.pft_frac.lat.values if self.pft_frac.dims.get("lat") else self.pft_frac.rlat.values if self.pft_frac.dims.get("rlat") else self.pft_frac.y.values
-        # Create a meshgrid for longitude and latitude
-        lon_grid, lat_grid = np.meshgrid(lon, lat)
-        # Plotting
-        fig = plt.figure(figsize=(12, 10))
-        ax = plt.axes(projection=ccrs.PlateCarree())
-
-        # Add natural earth features for better visualization
-        ax.add_feature(cfeature.BORDERS, linestyle='-', linewidth=1, edgecolor='black')
-        ax.coastlines(resolution='10m')
-        #ax.add_feature(cfeature.LAND, facecolor="white")
-        ax.add_feature(cfeature.LAKES, facecolor='blue')
-        ax.add_feature(cfeature.RIVERS, edgecolor='blue')
-        # Plot the data
-        levels = np.linspace(0.0, 1.0, 30)  # 30 intervals
-        contour = ax.contourf(lon_grid, lat_grid, self.pft_frac_ts[:, :, npft-1, year].T, levels=levels, transform=ccrs.PlateCarree(), alpha=1)
-        # Add colorbar
-        cbar = plt.colorbar(contour, orientation='vertical', pad=0.22, aspect=50)
-        cbar.set_label('PFT Fraction')
-        # Set the extent
-        ax.set_extent([float(coords[0]), float(coords[1]), float(coords[2]), float(coords[3])], crs=ccrs.PlateCarree())
-        # Add gridlines
-        gl = ax.gridlines(draw_labels=True)
-        gl.top_labels = False
-        gl.right_labels = False
-        # Title
-        plt.title(f'Average {npft} PFT Fraction over {self.region} for {self.syear+year}')
-        # Save the plot
-        plt.savefig(f'{os.path.join(path, str(self.syear+year))}/pft_frac_{self.region}_npft_{npft}_{self.syear+year}.png')
-        plt.close()

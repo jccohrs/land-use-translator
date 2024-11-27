@@ -1,3 +1,5 @@
+from src.utils import create_backgr_vars
+
 pftdir = "data/ESA-CCI/PFT_FILES" # directory of ESA-CCI LC file
 odir = "data/LUCAS_LUC" # directory that stores orginal GLOBCOVER files
 scriptsdir = "scripts"
@@ -63,7 +65,7 @@ nr_grass = 0
 nr_crops = 0
 nr_shrubs = 0
 nr_forest = 0
-nr_urban = 1
+nr_urban = 0
 
 for i in range(10):
     if CROPFTS[i] > 0:
@@ -74,12 +76,19 @@ for i in range(10):
         nr_grass += 1
     if SHRPFTS[i] > 0:
         nr_shrubs += 1
+    if URBPFTS[i] > 0:
+        nr_urban += 1
 
 # prepare LUH2 configuration
 vars_state="primf,primn,secdf,secdn,urban,c3ann,c4ann,c3per,c4per,c3nfx,pastr,range,secmb,secma"
 vars_irrig="irrig_c3ann,irrig_c4ann,irrig_c3per,irrig_c4per,irrig_c3nfx"
 vars_crops="c3ann,c4ann,c3per,c4per,c3nfx"
 vars_trans="primf_to_secdn,primf_to_urban,primf_to_c3ann,primf_to_c4ann,primf_to_c3per,primf_to_c4per,primf_to_c3nfx,primf_to_pastr,primf_to_range,primn_to_secdf,primn_to_urban,primn_to_c3ann,primn_to_c4ann,primn_to_c3per,primn_to_c4per,primn_to_c3nfx,primn_to_pastr,primn_to_range,secdf_to_secdn,secdf_to_urban,secdf_to_c3ann,secdf_to_c4ann,secdf_to_c3per,secdf_to_c4per,secdf_to_c3nfx,secdf_to_pastr,secdf_to_range,secdn_to_secdf,secdn_to_urban,secdn_to_c3ann,secdn_to_c4ann,secdn_to_c3per,secdn_to_c4per,secdn_to_c3nfx,secdn_to_pastr,secdn_to_range,urban_to_secdf,urban_to_secdn,urban_to_c3ann,urban_to_c4ann,urban_to_c3per,urban_to_c4per,urban_to_c3nfx,urban_to_pastr,urban_to_range,c3ann_to_secdf,c3ann_to_secdn,c3ann_to_urban,c3ann_to_c4ann,c3ann_to_c3per,c3ann_to_c4per,c3ann_to_c3nfx,c3ann_to_pastr,c3ann_to_range,c4ann_to_secdf,c4ann_to_secdn,c4ann_to_urban,c4ann_to_c3ann,c4ann_to_c3per,c4ann_to_c4per,c4ann_to_c3nfx,c4ann_to_pastr,c4ann_to_range,c3per_to_secdf,c3per_to_secdn,c3per_to_urban,c3per_to_c3ann,c3per_to_c4ann,c3per_to_c4per,c3per_to_c3nfx,c3per_to_pastr,c3per_to_range,c4per_to_secdf,c4per_to_secdn,c4per_to_urban,c4per_to_c3ann,c4per_to_c4ann,c4per_to_c3per,c4per_to_c3nfx,c4per_to_pastr,c4per_to_range,c3nfx_to_secdf,c3nfx_to_secdn,c3nfx_to_urban,c3nfx_to_c3ann,c3nfx_to_c4ann,c3nfx_to_c3per,c3nfx_to_c4per,c3nfx_to_pastr,c3nfx_to_range,pastr_to_secdf,pastr_to_secdn,pastr_to_urban,pastr_to_c3ann,pastr_to_c4ann,pastr_to_c3per,pastr_to_c4per,pastr_to_c3nfx,pastr_to_range,range_to_secdf,range_to_secdn,range_to_urban,range_to_c3ann,range_to_c4ann,range_to_c3per,range_to_c4per,range_to_c3nfx,range_to_pastr,primf_harv,primn_harv,secmf_harv,secyf_harv,secnf_harv,primf_bioh,primn_bioh,secmf_bioh,secyf_bioh,secnf_bioh"
+vars_cro = create_backgr_vars(nr_crops, CROPFTS[0])
+vars_for = create_backgr_vars(nr_forest, FORPFTS[0])
+vars_shr = create_backgr_vars(nr_shrubs, SHRPFTS[0])
+vars_gra = create_backgr_vars(nr_grass, GRAPFTS[0])
+vars_urb = create_backgr_vars(nr_urban, URBPFTS[0])
 
 scenario_dict = {
     "rcp19": "IMAGE-ssp119",

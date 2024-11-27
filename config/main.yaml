@@ -1,31 +1,28 @@
 # Input Parameters
 
 # LUT configuration
-region : "WestAfrica"
+region : "Germany"
 forward : False # forward or backward simulation
-backgrd : False # background  
-mcgrath : False # mcgrath
+backgrd : True # background  
+mcgrath : True # mcgrath
 addtree : False # addtree
 irri : False # irrigation
 syear : 1950 # start year
 eyear : 2015 # end year
 mcgrath_eyear : 2010 # end year of mcgrath file (in case that its different from eyear)
 npfts : 16 # number of PFTs
-xsize : 433 # xsize of the region
-ysize : 271 # ysize of the region
-rcm_lsm_var : "BLA" # variable name in the RCM LSM file
+xsize : 95 # xsize of the region
+ysize : 91 # ysize of the region
 
 # LUH2 prepare data configuration
 prepare_luh2_data: False # prepare LUH2 data
 prepare_mcgrath: False # prepare mcgrath data
+prepare_backgrd: False # prepare background data
 remap : "bilinear" # remapping method
 scenario : "historical" # scenario name
 grid : 0.1 # resolution in degrees
-
-# Plot configuration
-plot : False
-plot_npft : null # if not plot_npft is given, all npfts are plotted 
-plot_year : 0 # if not plot_year is given, first year is plotted
+vers : 11 # version number
+coords : null # region coordinates like "6,15.5,46.4,55.45" (lonmin,lonmax,latmin,latmax)
 
 # Optional file paths
 path_file_trans: null # file path to transitions file
@@ -34,9 +31,15 @@ path_file_manag: null # file path to management file
 path_file_addtree: null # file path to addtree file
 path_file_rcm_lsm_in : null # file path to RCM LSM file
 path_file_lc_in : null # file path to PFT file
+path_file_backgra_global : null # file path to global background file
+path_file_backshr_global : null # file path to global background shrub file
+path_file_backfor_global : null # file path to global background forest file
+path_file_backcro_global : null # file path to global background cropland file
+path_file_backurb_global : null # file path to global background urban file
 path_file_backgra : null # file path to background file
 path_file_backshr : null # file path to background shrub file
 path_file_backfor : null # file path to background forest file
 path_file_backcro : null # file path to background cropland file
 path_file_backurb : null # file path to background urban file
 path_file_lsm : null # file path to LSM file
+rcm_lsm_var : "BLA" # variable name in the LSM file

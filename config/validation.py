@@ -26,21 +26,26 @@ schema = {
     "scenario" : {"type": "string", "allowed": ["historical", "historical_high", "historical_low", "rcp19", "rcp26", "rcp34", "rcp45", "rcp60", "rcp70", "rcp85"]},
     "grid": {"type": "float"},
     "rcm_lsm_var": {"type": "string"},
-    "plot" : {"type": "boolean"},
-    "plot_npft" : {"type": "integer", "nullable": True},
-    "plot_year" : {"type": "integer", "nullable": True},
     "path_file_states" : {"type": "string", "nullable": True},
     "path_file_trans" : {"type": "string", "nullable": True},
     "path_file_manag" : {"type": "string", "nullable": True},
     "path_file_addtree" : {"type": "string", "nullable": True},
     "path_file_rcm_lsm_in" : {"type": "string", "nullable": True},
     "path_file_lc_in" : {"type": "string", "nullable": True},
+    "path_file_backgra_global" : {"type": "string", "nullable": True},
+    "path_file_backshr_global" : {"type": "string", "nullable": True},
+    "path_file_backfor_global" : {"type": "string", "nullable": True},
+    "path_file_backurb_global" : {"type": "string", "nullable": True},
+    "path_file_backcro_global" : {"type": "string", "nullable": True},
     "path_file_backgra" : {"type": "string", "nullable": True},
     "path_file_backshr" : {"type": "string", "nullable": True},
     "path_file_backfor" : {"type": "string", "nullable": True},
     "path_file_backurb" : {"type": "string", "nullable": True},
     "path_file_backcro" : {"type": "string", "nullable": True},
     "path_file_lsm" : {"type": "string", "nullable": True},
+    "vers": {"type": "integer"},
+    "prepare_backgrd": {"type": "boolean"},
+    "coords": {"type": "string", "nullable": True},
 }
 
 
@@ -62,9 +67,13 @@ def validate_config(config):
             raise ValueError("Mcgrath year (mcgrath_eyear) must be equal or smaller than ending year (eyear)")
         if config.mcgrath_eyear < config.syear:
             raise ValueError("Mcgrath year (mcgrath_eyear) must be equal or bigger than starting year (syear)")
-    if config.plot_year:
-        if config.plot_year > (config.eyear-config.syear):
-            raise ValueError("Plot year (plot_year) must be smaller than the number of years in the simulation")
+    if config.coords:
+        if len(config.coords.split(",")) != 4:
+            raise ValueError("Coordinates must given as 4 values (lonmin,lonmax,latmin,latmax) separated by commas")
+        try:
+            [float(config.coords.split(",")[i]) for i in range(4)]
+        except ValueError:
+            raise ValueError("Coordinates must be given as float values")
 
 def validate_path(file, datadir=None):
     if datadir:
@@ -81,18 +90,20 @@ def validate_main_files(namelist, config):
         # checking if files exist
         if key == "F_GRID":
             validate_path(value)
-        if key in ("F_LC_IN") or (config.backgrd and key.startswith("F_BACK")):
+        if key in ("F_LC_IN"):
             validate_path(value)
             validate_dimensions(value, config)
-        if key in ("F_RCM_LSM_IN") and config.path_file_lsm:
+        if key.startswith("F_GLOBAL_BACK") and config.prepare_backgrd:
             validate_path(value)
-            validate_dimensions(value, config)
-            if key == "F_RCM_LSM_IN":
-                ds = xr.open_dataset(value, decode_times=False)
-                try:
-                    ds[config.rcm_lsm_var]
-                except KeyError:
-                    raise ValueError(f"Variable {config.rcm_lsm_var} not found in file {value}")
+            validate_dimensions(value, config, type=2)
+        if config.path_file_lsm:
+            validate_path(config.path_file_lsm)
+            validate_dimensions(config.path_file_lsm, config)
+            ds = xr.open_dataset(config.path_file_lsm, decode_times=False)
+            try:
+                ds[config.rcm_lsm_var]
+            except KeyError:
+                raise ValueError(f"Variable {config.rcm_lsm_var} not found in file {config.path_file_lsm}")
     if config.scenario in ["historical", "historical_high", "historical_low"]:
         sfile="states.nc" if not config.path_file_states else config.path_file_states
         tfile="transitions.nc" if not config.path_file_trans else config.path_file_trans
@@ -124,7 +135,7 @@ def validate_prepared_files(namelist, config):
             validate_path(value)
         # checking file sizes
         
-        if key not in ["F_IRRI_IN", "F_ADDTREE", "F_MCGRATH", "F_GRID", "F_LC_OUT"] and not key.startswith("F_BACK"):
+        if key not in ["F_IRRI_IN", "F_ADDTREE", "F_MCGRATH", "F_GRID", "F_LC_OUT"] and not key.startswith("F_BACK") and not key.startswith("F_GLOBAL"):
             validate_dimensions(value, config)
 
         if config.backgrd and key.startswith("F_BACK"):
@@ -135,12 +146,16 @@ def validate_prepared_files(namelist, config):
             validate_path(value)
             validate_dimensions(value, config)
 
-def validate_dimensions(value, config):
+def validate_dimensions(value, config, type=1):
     ds = xr.open_dataset(value, decode_times=False)
     if not (ds.dims.get("x") or ds.dims.get("lon") or ds.dims.get("rlon")) and not (ds.dims.get("y") or ds.dims.get("lat") or ds.dims.get("rlat")):
         raise ValueError(f"File {value} has wrong dimensions. Expected 2D but got {ds.dims}")
     else:
         x_dim = "x" if ds.dims.get("x") else "lon" if ds.dims.get("lon") else "rlon"
         y_dim = "y" if ds.dims.get("y") else "lat" if ds.dims.get("lat") else "rlat"
-    if ds.dims.get(x_dim) != config.xsize or ds.dims.get(y_dim) != config.ysize:
-        raise ValueError(f"File {value} has wrong dimensions. Expected {config.xsize}x{config.ysize} but got {ds.dims.get(x_dim)}x{ds.dims.get(y_dim)}")
+    if type == 2:
+        if ds.dims.get(x_dim) < config.xsize or ds.dims.get(y_dim) < config.ysize:
+            raise ValueError(f"File {value} has wrong dimensions. Expected {config.xsize}x{config.ysize} but got {ds.dims.get(x_dim)}x{ds.dims.get(y_dim)}")
+    else:
+        if ds.dims.get(x_dim) != config.xsize or ds.dims.get(y_dim) != config.ysize:
+            raise ValueError(f"File {value} has wrong dimensions. Expected {config.xsize}x{config.ysize} but got {ds.dims.get(x_dim)}x{ds.dims.get(y_dim)}")
