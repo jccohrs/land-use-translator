@@ -20,6 +20,8 @@ class LUT:
             setattr(self, key, value)
         self.grid_number = str(self.grid).replace('.', '')
         self.grid = f"reg{str(self.grid).replace('.', '')}_{self.region}"
+        self.lcd = lcd
+        self.mcg = mcg
         self.glc = f"{lcd}-{config.eyear}-{vers}"
         self.glc_lsm = f"{lcd}-2015-{vers}"
         self.namelist = self.generate_namelist()
@@ -340,18 +342,6 @@ class LUT:
         inpfts = np.where(inpfts_trans_static_values == -999, inpfts, inpfts_trans_static_values)
         inpfts = np.where(inpfts_static_values == -998, inpfts, inpfts_static_values)
         return inpfts
-
-    # WILL BE OUT
-    def lucas_lut_help(self):
-        data_help = np.zeros((self.xsize, self.ysize, self.npfts, self.years+1))
-        data = xr.open_dataset("data/LUCAS_LUC7_ESACCI_LUH2_historical_1950_2015_reg01_Germany_mcgrath.nc")
-        for i in range(self.npfts):
-            num = i + 1
-            if len(str(num)) > 1:
-                data_help[:, :, i, :] = data[f"var8{num}"].data.T
-            else:
-                data_help[:, :, i, :] = data[f"var80{num}"].data.T
-        return data_help
 
     def lucas_lut_input(self):
         """
@@ -681,7 +671,7 @@ class LUT:
             ofile = f"{ofile}_addtr"
         # Creating directories if they do not exist
         Path(os.path.join(sdir)).mkdir(parents=True, exist_ok=True)
-        Path(glcdir).mkdir(parents=True, exist_ok=True)
+        Path(mcgdir).mkdir(parents=True, exist_ok=True)
         Path(pftdir).mkdir(parents=True, exist_ok=True)
         Path(odir).mkdir(parents=True, exist_ok=True)
         namelist_dict = {
@@ -697,7 +687,7 @@ class LUT:
             "F_BACKFOR": f"{pftdir}/FORB_{self.grid}_v{self.vers}.nc" if not self.path_file_backfor else self.path_file_backfor, # forbfile
             "F_BACKCRO": f"{pftdir}/CROB_{self.grid}_v{self.vers}.nc" if not self.path_file_backcro else self.path_file_backcro, # crobfile
             "F_BACKURB": f"{pftdir}/URBB_{self.grid}_v{self.vers}.nc" if not self.path_file_backurb else self.path_file_backurb, # urbbfile
-            "F_MCGRATH": f"{datadir}/{mcg}_{self.syear}_{self.eyear}_ForestBckgrdMcGrath_{self.grid}.nc", # mcgfile
+            "F_MCGRATH": f"{mcgdir}/{self.mcg}_{self.syear}_{self.eyear}_ForestBckgrdMcGrath_{self.grid}.nc", # mcgfile
             "F_IRRI_IN": f"{sdir}/irrigation_{self.syear}_{self.eyear}_{self.grid}.nc", # irrfile
             "F_LC_OUT": f"{odir}/{ofile}.nc", # outfile
             "F_FOR2CRO": f"{sdir}/transitions_{self.syear}_{self.eyear}_{self.region}_for2cro_{ext}_{self.grid}.nc", # for2cro
@@ -934,25 +924,24 @@ class LUT:
                 cutting = ""
         else:
             remap_com = ""
-
+        
         ifile = f"{datadir}/{self.mcg}_{self.syear}_{self.mcgrath_eyear}.nc"
-
         # compute background for LUT classes using zonal mean
-        cdo.chname(f"maxvegetfrac,{PFT_TeBrEv}", input=f"-vertsum -sellevel,{TeBrEv} {ifile}", output=f"{glcdir}/{self.lcd}_{self.syear}_{self.eyear}_TeBrEv.nc")
-        cdo.chname(f"maxvegetfrac,{PFT_TeBrDec}", input=f"-vertsum -sellevel,{TeBrDec} {ifile}", output=f"{glcdir}/{self.lcd}_{self.syear}_{self.eyear}_TeBrDec.nc")
-        cdo.chname(f"maxvegetfrac,{PFT_ConEv}", input=f"-vertsum -sellevel,{EvCon} {ifile}", output=f"{glcdir}/{self.lcd}_{self.syear}_{self.eyear}_ConEv.nc")
-        cdo.chname(f"maxvegetfrac,forest", input=f"-vertsum -sellevel,{TeBrEv},{TeBrDec},{EvCon} {ifile}", output=f"{glcdir}/{self.lcd}_{self.syear}_{self.eyear}_FOR.nc")
-        cdo.merge(input=f"{glcdir}/{self.lcd}_{self.syear}_{self.eyear}_TeBrEv.nc {glcdir}/{self.lcd}_{self.syear}_{self.eyear}_TeBrDec.nc {glcdir}/{self.lcd}_{self.syear}_{self.eyear}_ConEv.nc", output=f"{glcdir}/{self.lcd}_{self.syear}_{self.eyear}_dummy.nc")
+        cdo.chname(f"maxvegetfrac,{PFT_TeBrEv}", input=f"-vertsum -sellevel,{TeBrEv} {ifile}", output=f"{mcgdir}/{self.lcd}_{self.syear}_{self.eyear}_TeBrEv.nc")
+        cdo.chname(f"maxvegetfrac,{PFT_TeBrDec}", input=f"-vertsum -sellevel,{TeBrDec} {ifile}", output=f"{mcgdir}/{self.lcd}_{self.syear}_{self.eyear}_TeBrDec.nc")
+        cdo.chname(f"maxvegetfrac,{PFT_ConEv}", input=f"-vertsum -sellevel,{EvCon} {ifile}", output=f"{mcgdir}/{self.lcd}_{self.syear}_{self.eyear}_ConEv.nc")
+        cdo.chname(f"maxvegetfrac,forest", input=f"-vertsum -sellevel,{TeBrEv},{TeBrDec},{EvCon} {ifile}", output=f"{mcgdir}/{self.lcd}_{self.syear}_{self.eyear}_FOR.nc")
+        cdo.merge(input=f"{mcgdir}/{self.lcd}_{self.syear}_{self.eyear}_TeBrEv.nc {mcgdir}/{self.lcd}_{self.syear}_{self.eyear}_TeBrDec.nc {mcgdir}/{self.lcd}_{self.syear}_{self.eyear}_ConEv.nc", output=f"{mcgdir}/{self.lcd}_{self.syear}_{self.eyear}_dummy.nc")
         if self.reg:
-            cdo.setmisstoc(-999, input=f"-remapbil,{scriptsdir}/grid_{self.grid} -sellonlatbox,{self.reg} -div {glcdir}/{self.lcd}_{self.syear}_{self.eyear}_dummy.nc -varssum {glcdir}/{self.lcd}_{self.syear}_{self.eyear}_dummy.nc", output=f"{glcdir}/{self.lcd}_{self.syear}_{self.eyear}_ForestBckgrdMcGrath_{self.grid}.nc")
+            cdo.setmisstoc(-999, input=f"-remapbil,{scriptsdir}/grid_{self.grid} -sellonlatbox,{self.reg} -div {mcgdir}/{self.lcd}_{self.syear}_{self.eyear}_dummy.nc -varssum {mcgdir}/{self.lcd}_{self.syear}_{self.eyear}_dummy.nc", output=f"{mcgdir}/{self.lcd}_{self.syear}_{self.eyear}_ForestBckgrdMcGrath_{self.grid}.nc")
         else:
-            cdo.setmisstoc(-999, input=f"-remapbil,{scriptsdir}/grid_{self.grid} -div {glcdir}/{self.lcd}_{self.syear}_{self.eyear}_dummy.nc -varssum {glcdir}/{self.lcd}_{self.syear}_{self.eyear}_dummy.nc", output=f"{glcdir}/{self.lcd}_{self.syear}_{self.eyear}_ForestBckgrdMcGrath_{self.grid}.nc")
+            cdo.setmisstoc(-999, input=f"-remapbil,{scriptsdir}/grid_{self.grid} -div {mcgdir}/{self.lcd}_{self.syear}_{self.eyear}_dummy.nc -varssum {mcgdir}/{self.lcd}_{self.syear}_{self.eyear}_dummy.nc", output=f"{mcgdir}/{self.lcd}_{self.syear}_{self.eyear}_ForestBckgrdMcGrath_{self.grid}.nc")
         if self.mcgrath_eyear:
             if self.mcgrath_eyear < self.eyear:
                 for year in range(self.mcgrath_eyear, self.eyear+1):
-                    cdo.setdate(f"{year}-06-15", input=f"-selyear,2010 {glcdir}/{self.lcd}_{self.syear}_{self.eyear}_ForestBckgrdMcGrath_{self.grid}.nc", output=f"{glcdir}/dummy_{year}.nc")
-        cdo.mergetime(input=f"{glcdir}/dummy_????.nc", output=f"{glcdir}/{self.lcd}_{self.mcgrath_eyear}_{self.eyear}_ForestBckgrdMcGrath_{self.grid}.nc")
-        cdo.mergetime(input=f"{glcdir}/{self.lcd}_{self.syear}_{self.eyear}_ForestBckgrdMcGrath_{self.grid}.nc {glcdir}/{self.lcd}_{self.mcgrath_eyear}_{self.eyear}_ForestBckgrdMcGrath_{self.grid}.nc", output=f"{glcdir}/{self.lcd}_{self.syear}_2015_ForestBckgrdMcGrath_{self.grid}.nc")
+                    cdo.setdate(f"{year}-06-15", input=f"-selyear,2010 {mcgdir}/{self.lcd}_{self.syear}_{self.eyear}_ForestBckgrdMcGrath_{self.grid}.nc", output=f"{mcgdir}/dummy_{year}.nc")
+        cdo.mergetime(input=f"{mcgdir}/dummy_????.nc", output=f"{mcgdir}/{self.lcd}_{self.mcgrath_eyear}_{self.eyear}_ForestBckgrdMcGrath_{self.grid}.nc")
+        cdo.mergetime(input=f"{mcgdir}/{self.lcd}_{self.syear}_{self.eyear}_ForestBckgrdMcGrath_{self.grid}.nc {mcgdir}/{self.lcd}_{self.mcgrath_eyear}_{self.eyear}_ForestBckgrdMcGrath_{self.grid}.nc", output=f"{mcgdir}/{self.lcd}_{self.syear}_2015_ForestBckgrdMcGrath_{self.grid}.nc")
 
     def fromto(self, varn, for_1, for_2, tfile, ext, cutting, path, remap_com, outvar_condition=None):
         """

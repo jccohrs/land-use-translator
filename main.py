@@ -1,7 +1,7 @@
 import yaml
 from src.lut import LUT
 from src.utils import dotdict, print_section_heading
-from config.validation import validate_config, validate_prepared_files, validate_main_files
+from config.validation import validate_config, validate_prepared_files, validate_main_files, validate_mcgrath_prepared_files
 
 def load_configuration():
     with open("config/main.yaml") as stream:
@@ -28,15 +28,17 @@ def main():
     validate_main_files(namelist, config)
 
     # Preparing the data for the lut calculation
-    if config.prepare_luh2_data:
-        print_section_heading("Preparing LUH2 data")
-        lut.func_prepare_luh2_data()
+    if config.backgrd:
+        print_section_heading("Preparing BACKGRD data")
+        lut.func_prepare_backgr_files()
     if config.prepare_mcgrath and not config.forward:
         print_section_heading("Preparing MCGRATH data")
         lut.func_prepare_mcgrath()
-    if config.prepare_backgrd:
-        print_section_heading("Preparing BACKGRD data")
-        lut.func_prepare_backgr_files()
+    if config.mcgrath:
+        validate_mcgrath_prepared_files(namelist, config)
+    if config.prepare_luh2_data:
+        print_section_heading("Preparing LUH2 data")
+        lut.func_prepare_luh2_data()
     
     # validating the prepared files
     validate_prepared_files(namelist, config)

@@ -4,7 +4,7 @@
 region : "Germany"
 forward : False # forward or backward simulation
 backgrd : True # background  
-mcgrath : True # mcgrath
+mcgrath : False # mcgrath
 addtree : False # addtree
 irri : False # irrigation
 syear : 1950 # start year
@@ -15,9 +15,8 @@ xsize : 95 # xsize of the region
 ysize : 91 # ysize of the region
 
 # LUH2 prepare data configuration
-prepare_luh2_data: False # prepare LUH2 data
-prepare_mcgrath: False # prepare mcgrath data
-prepare_backgrd: False # prepare background data
+prepare_luh2_data: True # prepare LUH2 data
+prepare_mcgrath: True # prepare mcgrath data
 remap : "bilinear" # remapping method
 scenario : "historical" # scenario name
 grid : 0.1 # resolution in degrees

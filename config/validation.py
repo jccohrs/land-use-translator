@@ -5,7 +5,7 @@ import xarray as xr
 from src.config import datadir, scenario_dict, mcg
 
 schema = {
-    "region": {"type": "string", "allowed": ["Germany", "Europe", "WestAfrica"]},
+    "region": {"type": "string", "allowed": ["Germany", "Europe", "WestAfrica", "NorthAmerica", "Australasia"]},
     "forward" : {"type": "boolean"},
     "addtree": {"type": "boolean"},
     "backgrd" : {"type": "boolean"},
@@ -44,7 +44,6 @@ schema = {
     "path_file_backcro" : {"type": "string", "nullable": True},
     "path_file_lsm" : {"type": "string", "nullable": True},
     "vers": {"type": "integer"},
-    "prepare_backgrd": {"type": "boolean"},
     "coords": {"type": "string", "nullable": True},
 }
 
@@ -75,14 +74,14 @@ def validate_config(config):
         except ValueError:
             raise ValueError("Coordinates must be given as float values")
 
-def validate_path(file, datadir=None):
+def validate_path(file, datadir=None, add_message=""):
     if datadir:
         if not os.path.isfile(os.path.join(datadir, file)):
             path = os.path.join(datadir, file)
-            raise ValueError(f"File {path} does not exist")
+            raise ValueError(f"File {path} does not exist. "+add_message)
     else:
         if not os.path.isfile(file):
-            raise ValueError(f"File {file} does not exist")
+            raise ValueError(f"File {file} does not exist. "+add_message)
 
 def validate_main_files(namelist, config):
     # IT MIGHT BE SIMPLIFIED AND INCLUDED JUST IN THE INIT FUNCTION OF LUT
@@ -93,7 +92,7 @@ def validate_main_files(namelist, config):
         if key in ("F_LC_IN"):
             validate_path(value)
             validate_dimensions(value, config)
-        if key.startswith("F_GLOBAL_BACK") and config.prepare_backgrd:
+        if key.startswith("F_GLOBAL_BACK") and config.backgrd:
             validate_path(value)
             validate_dimensions(value, config, type=2)
         if config.path_file_lsm:
@@ -113,9 +112,9 @@ def validate_main_files(namelist, config):
         sfile=f"multiple-states_input4MIPs_landState_ScenarioMIP_UofMD-{scenario_dict[config.scenario]}-2-1-f_gn_2015-2100.nc" if not config.path_file_states else config.path_file_states
         tfile=f"multiple-transitions_input4MIPs_landState_ScenarioMIP_UofMD-{scenario_dict[config.scenario]}-2-1-f_gn_2015-2100.nc" if not config.path_file_trans else config.path_file_trans
         mfile=f"multiple-management_input4MIPs_landState_ScenarioMIP_UofMD-{scenario_dict[config.scenario]}-2-1-f_gn_2015-2100.nc" if not config.path_file_manag else config.path_file_manag
-    if (config.mcgrath or config.prepare_mcgrath) and not config.forward:
+    if (config.prepare_mcgrath):
         ifile=f"{mcg}_{config.syear}_{config.mcgrath_eyear}.nc"
-        validate_path(ifile, datadir)
+        validate_path(ifile, datadir, add_message="Consider adding the missing file or unable option 'prepare_mcgrath'.")
     if config.prepare_luh2_data:
         validate_path(tfile, datadir)
         validate_path(sfile, datadir)
@@ -126,13 +125,19 @@ def validate_main_files(namelist, config):
     if config.addtree:
         validate_path(afile, datadir)
 
+def validate_mcgrath_prepared_files(namelist, config):
+    for key, value in namelist.items():
+        if (key=="F_MCGRATH"):
+            validate_path(value, add_message="Consider enabling the option 'prepare_mcgrath' to prepare the missing file or unable 'mcgrath'.")
+            validate_dimensions(value, config)
+
 def validate_prepared_files(namelist, config):
     for key, value in namelist.items():
         # checking if files exist
         if key == "F_GRID":
             validate_path(value)
-        elif key not in ["F_IRRI_IN", "F_ADDTREE", "F_MCGRATH", "F_LC_OUT"] and not key.startswith("F_BACK"):
-            validate_path(value)
+        elif key not in ["F_IRRI_IN", "F_ADDTREE", "F_MCGRATH", "F_LC_OUT"] and not key.startswith("F_BACK") and not key.startswith("F_GLOBAL"):
+            validate_path(value, add_message="Consider enabling the option 'prepare_luh2_data' to prepare the missing file.")
         # checking file sizes
         
         if key not in ["F_IRRI_IN", "F_ADDTREE", "F_MCGRATH", "F_GRID", "F_LC_OUT"] and not key.startswith("F_BACK") and not key.startswith("F_GLOBAL"):
@@ -141,9 +146,12 @@ def validate_prepared_files(namelist, config):
         if config.backgrd and key.startswith("F_BACK"):
             validate_dimensions(value, config)
 
-        # checking irrigation file
-        if (config.irri and key=="F_IRRI_IN") or (config.addtree and key=="F_ADDTREE") or (config.mcgrath and key=="F_MCGRATH"):
+        if (config.addtree and key=="F_ADDTREE"):
             validate_path(value)
+            validate_dimensions(value, config)
+
+        if (config.irri and key=="F_IRRI_IN"):
+            validate_path(value, add_message="Consider enabling the option 'prepare_luh2_data' to prepare the missing file.")
             validate_dimensions(value, config)
 
 def validate_dimensions(value, config, type=1):
