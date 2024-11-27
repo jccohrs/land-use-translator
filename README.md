@@ -8,19 +8,17 @@ This Python program generates high-resolution land use and land cover (LULC) dat
 
 The following datasets are required to run the program:
 
-- **Land Use (LU) Transitions**: LU changes for the selected time period, with an option to filter larger datasets to match the specified configuration. These files can be downloaded from the [LUH Data Portal](https://luh.umd.edu/data.shtml) for various scenarios. for various scenarios.
+- **Land Use (LU) Transitions**: LU changes for the selected time period (will be filtered in case of providing larger datasets). The following files can be downloaded from the [LUH Data Portal](https://luh.umd.edu/data.shtml) for different scenarios (historical, historical_high, etc):
    - transitions.nc: Main land use transitions data.
    - states.nc: States of land use, for each grid cell and year.
    - management.nc: Contains irrigation data; this file is only required if irrigation is enabled (i.e., if `irri` is set to True).
-   - add_tree_cover.nc: Tree cover data, used if AddTree Data is active (i.e., if `addtree` is set to True).
+   - add_tree_cover.nc: Tree cover data, used if addtree is active (i.e., if `addtree` is set to True).
 - **Landmate PFTs Maps**: Contains data for 16 Plant Functional Types (PFTs), providing detailed vegetation characterization. The data can be downloaded from [WDC Climate](https://www.wdc-climate.de/ui/entry?acronym=LM_PFT_EUR_v1.1).
 - **Sea-Land Mask (Optional)**: 
    - By default, the sea-land mask will be calculated from the Landmate PFT maps based on land classification.
-   - If you want to use a custom sea-land mask, you can provide the path to the file via the path_file_lsm parameter in the configuration file.
+   - If you want to use a custom sea-land mask, you can provide the path to the file via the `path_file_lsm` parameter in the configuration file.
 - **Background Data (Optional)**: 
-   - The project includes global background data by default. This data will be used to enhance the simulation, but it is optional.
-   Additional background data for enhanced simulation detail.
-   - If you prefer to use your own background data, you can specify the path to the new data files via the `path_file_back*` parameter.
+   - The project already provides global background data. This data will be used to enhance the simulation. If you prefer to use your own regional or global background data, you can specify the path to the new data files via `path_file_back*` and `path_file_back*_global` parameters.
    - Additionally, there is a new parameter `prepare_backgrd` that, if set to `True`, will prepare the global background data to a regional scale to match the LUT's grid.
 
 By default, all required and optional datasets should be located in a designated data/ directory. If different storage locations are prefered, alternative paths for each dataset can be specified in a configuration file. This will be further detailed in the Usage section bellow.
@@ -47,7 +45,7 @@ By default, all required and optional datasets should be located in a designated
    $ pipenv shell 
 
 ## Configuration
-The main configuration file is located at `config/main.yaml`. Modify the options in this file to customize the program:
+The main configuration file is located at `config/main.yaml`. Modify the parameters in this file to customize the program:
 
 #### LUT configuration
    - (`region`): Choose from pre-configured regions ("Germany", "Europe", "WestAfrica"), or add a new region by providing the necessary grid files.
@@ -64,11 +62,12 @@ The main configuration file is located at `config/main.yaml`. Modify the options
 
 
    ### LUH2 prepare data configuration
-   - (`prepare_luh2_data`): True/False. Files preparation for the LUT by extracting required data from the given transitions and landmate-pft-maps files (required if first time using this program).
-   - (`prepare_mcgrath`): True/False. Preparation of Mcgrath data (Optional) for the LUT by extracting required data from given mcgrath file.
-   - (`remap`): remapping method used for extracting data in the preparation data section (**bilinear** or **con2**).
-   - (`scenario`): choose scenario name ("historical", "historical_high", "historical_low", "rcp19", "rcp26", "rcp34", "rcp45", "rcp60", "rcp70", "rcp85").
-   - (`grid`): choose the resolution in degrees.
+   - `prepare_luh2_data`: True/False. Files preparation for the LUT by extracting required data from the given transitions and landmate-pft-maps files.
+   - `prepare_mcgrath`: True/False. Preparation of Mcgrath data (Optional) for the LUT by extracting required data from given mcgrath file.
+   - `remap`: remapping method used for extracting data in the preparation data section (**bilinear** or **con2**).
+   - `scenario`: choose scenario name ("historical", "historical_high", "historical_low", "rcp19", "rcp26", "rcp34", "rcp45", "rcp60", "rcp70", "rcp85").
+   - `grid`: choose the resolution in degrees.
+   - `coords`(Optional): add custom coordinates for the selected region.
    ### Sea-Land Mask configuration
    By default, the sea-land mask will be calculated from the Landmate PFT maps based on land classification. However, if you want to use a custom sea-land mask, you can specify its file path:
    - (`path_file_lsm`): Specify the path to the sea-land mask file if you prefer to use a custom one.
