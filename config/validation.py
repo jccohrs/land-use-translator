@@ -43,7 +43,6 @@ schema = {
     "path_file_backurb" : {"type": "string", "nullable": True},
     "path_file_backcro" : {"type": "string", "nullable": True},
     "path_file_lsm" : {"type": "string", "nullable": True},
-    "vers": {"type": "integer"},
     "coords": {"type": "string", "nullable": True},
 }
 
@@ -156,14 +155,14 @@ def validate_prepared_files(namelist, config):
 
 def validate_dimensions(value, config, type=1):
     ds = xr.open_dataset(value, decode_times=False)
-    if not (ds.dims.get("x") or ds.dims.get("lon") or ds.dims.get("rlon")) and not (ds.dims.get("y") or ds.dims.get("lat") or ds.dims.get("rlat")):
-        raise ValueError(f"File {value} has wrong dimensions. Expected 2D but got {ds.dims}")
+    if not (ds.sizes.get("x") or ds.sizes.get("lon") or ds.sizes.get("rlon")) and not (ds.sizes.get("y") or ds.sizes.get("lat") or ds.sizes.get("rlat")):
+        raise ValueError(f"File {value} has wrong dimensions. Expected 2D but got {ds.sizes}")
     else:
-        x_dim = "x" if ds.dims.get("x") else "lon" if ds.dims.get("lon") else "rlon"
-        y_dim = "y" if ds.dims.get("y") else "lat" if ds.dims.get("lat") else "rlat"
+        x_dim = "x" if ds.sizes.get("x") else "lon" if ds.sizes.get("lon") else "rlon"
+        y_dim = "y" if ds.sizes.get("y") else "lat" if ds.sizes.get("lat") else "rlat"
     if type == 2:
-        if ds.dims.get(x_dim) < config.xsize or ds.dims.get(y_dim) < config.ysize:
-            raise ValueError(f"File {value} has wrong dimensions. Expected {config.xsize}x{config.ysize} but got {ds.dims.get(x_dim)}x{ds.dims.get(y_dim)}")
+        if ds.sizes.get(x_dim) < config.xsize or ds.sizes.get(y_dim) < config.ysize:
+            raise ValueError(f"File {value} has wrong dimensions. Expected {config.xsize}x{config.ysize} but got {ds.sizes.get(x_dim)}x{ds.sizes.get(y_dim)}")
     else:
-        if ds.dims.get(x_dim) != config.xsize or ds.dims.get(y_dim) != config.ysize:
-            raise ValueError(f"File {value} has wrong dimensions. Expected {config.xsize}x{config.ysize} but got {ds.dims.get(x_dim)}x{ds.dims.get(y_dim)}")
+        if ds.sizes.get(x_dim) != config.xsize or ds.sizes.get(y_dim) != config.ysize:
+            raise ValueError(f"File {value} has wrong dimensions. Expected {config.xsize}x{config.ysize} but got {ds.sizes.get(x_dim)}x{ds.sizes.get(y_dim)}")
