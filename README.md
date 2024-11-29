@@ -14,14 +14,14 @@ The following datasets are required to run the program:
    - management.nc: Contains irrigation data; this file is only required if irrigation is enabled (i.e., if `irri` is set to True).
    - add_tree_cover.nc: Tree cover data, used if addtree is active (i.e., if `addtree` is set to True).
 - **Landmate PFTs Maps**: Contains data for 16 Plant Functional Types (PFTs), providing detailed vegetation characterization. The data can be downloaded from [WDC Climate](https://www.wdc-climate.de/ui/entry?acronym=LM_PFT_EUR_v1.1).
+- **Mcgrath Data (Optional)**: For the backward extension of historical forest type distribution, additional information on the relative distribution of broadleaf and needleleaf forests, derived from the McGrath dataset, can be utilized. For more information about obtaining this dataset, please contact the maintainers of this project.
 - **Sea-Land Mask (Optional)**: 
    - By default, the sea-land mask will be calculated from the Landmate PFT maps based on land classification.
    - If you want to use a custom sea-land mask, you can provide the path to the file via the `path_file_lsm` parameter in the configuration file.
-- **Background Data (Optional)**: 
-   - The project already provides global background data. This data will be used to enhance the simulation. If you prefer to use your own regional or global background data, you can specify the path to the new data files via `path_file_back*` and `path_file_back*_global` parameters.
-   - Additionally, there is a new parameter `prepare_backgrd` that, if set to `True`, will prepare the global background data to a regional scale to match the LUT's grid.
+- **Background Data (Optional)**: In certain cases, where a certain vegetation type is not present within a grid cell but should be increased according to the LUH2 and the rules provided by the LUT, a background map of potential vegetation is needed.
+   - The project already provides global background data. This data can be used to enhance the simulation (i.e. set `backgrd` to True). If you prefer to use your own regional or global background data, you can specify the path to the new data files via `path_file_back*` and `path_file_back*_global` parameters.
 
-By default, all required and optional datasets should be located in a designated data/ directory. If different storage locations are prefered, alternative paths for each dataset can be specified in a configuration file. This will be further detailed in the Usage section bellow.
+By default, the datasets should be located in a designated `data/` directory. If different storage locations are prefered, alternative paths for each dataset can be specified in a configuration file. This will be further detailed in the Usage section bellow.
 
 ## Installation Guide
 
@@ -48,9 +48,9 @@ By default, all required and optional datasets should be located in a designated
 The main configuration file is located at `config/main.yaml`. Modify the parameters in this file to customize the program:
 
 #### LUT configuration
-   - (`region`): Choose from pre-configured regions ("Germany", "Europe", "WestAfrica"), or add a new region by providing the necessary grid files.
+   - (`region`): Choose from pre-configured regions ("Germany", "Europe", "WestAfrica", "NorthAmerica", "Australasia"), or add a new region by providing the necessary grid files (located into `scripts/`) and coordinates (`coords`parameter).
    - (`forward`): **True** for future simulation or **False** for historical simulation.
-   - (`backgrd`): True/False. Optionally include background data if available.
+   - (`backgrd`): True/False. Optionally include background data.
    - (`mcgrath`): True/False for using mcgrath data in the LUT. 
    - (`addtree`): True/False for using addtree data in the LUT. 
    - (`irri`): True/False. Enable or disable irrigation data, if the irrigation dataset is available.
@@ -71,11 +71,10 @@ The main configuration file is located at `config/main.yaml`. Modify the paramet
    ### Sea-Land Mask configuration
    By default, the sea-land mask will be calculated from the Landmate PFT maps based on land classification. However, if you want to use a custom sea-land mask, you can specify its file path:
    - (`path_file_lsm`): Specify the path to the sea-land mask file if you prefer to use a custom one.
-   - (`rcm_lsm_var`): variable name in the RCM LSM file in case of having specified anothe file in `path_file_lsm`.
+   - (`rcm_lsm_var`): variable name in the RCM LSM file in case of having specified another file in `path_file_lsm`.
    ### Background Data configuration
    The project already includes global background data by default, which will be used unless you specify an alternative:
-   - (`path_file_back*`): Specify the path to a custom background dataset if you want to override the default global data.
-   - (`prepare_backgrd`): Set to True to prepare the global background data to a regional scale (i.e., adjust it to match the LUT's grid).
+   - (`path_file_back*`): path to a custom background dataset.
    ### Optional file paths
    - (`path_file_*`): Specify file path for the used files. In case of not specifying default locations will be checked by the programm. 
 
@@ -88,10 +87,5 @@ The main configuration file is located at `config/main.yaml`. Modify the paramet
 ## Output File
 
 The generated output file will be located in the  `data/LUCAS_LUC/` directory. This output file will contain information about the Plant Functional Type (PFT) fraction for the 16 NPFTs across the selected region, scenario, and timeline.
-
-## References
-
- * https://essd.copernicus.org/articles/14/1735/2022/
- * https://essd.copernicus.org/articles/15/3819/2023/
 
  
