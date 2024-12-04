@@ -348,7 +348,8 @@ class LUT:
         This function reads the input data
         """
         pft_help = np.zeros((self.xsize, self.ysize, self.npfts), dtype='float32')
-        self.pft_frac = xr.open_dataset(self.namelist["F_LC_IN"]).isel(time=0)
+        year = self.syear if self.forward else self.eyear
+        self.pft_frac = xr.open_dataset(self.namelist["F_LC_IN_REG"])
         for i in range(self.npfts):
             num = i + 1
             if len(str(num)) > 1:
@@ -674,9 +675,11 @@ class LUT:
         Path(mcgdir).mkdir(parents=True, exist_ok=True)
         Path(pftdir).mkdir(parents=True, exist_ok=True)
         Path(odir).mkdir(parents=True, exist_ok=True)
+        year = self.syear if self.forward else self.eyear
         namelist_dict = {
             # FILES
-            "F_LC_IN": f"{pftdir}/PFTS_{self.glc}_{self.grid}.nc" if not self.path_file_lc_in else self.path_file_lc_in, # pftfile
+            "F_LC_IN": f"{pftdir}/PFTS_{year}_{self.grid}.nc" if not self.path_file_lc_in else self.path_file_lc_in, # pftfile
+            "F_LC_IN_REG": f"{pftdir}/PFTS_{self.glc}_{self.grid}.nc", # pftfile regional
             "F_GLOBAL_BACKGRA": f"{pftdir}/GRAB_reg{self.grid_number}_Global.nc" if not self.path_file_backgra_global else self.path_file_backgra_global, # grabfile
             "F_GLOBAL_BACKSHR": f"{pftdir}/SHRB_reg{self.grid_number}_Global.nc" if not self.path_file_backshr_global else self.path_file_backshr_global, # shrbfile
             "F_GLOBAL_BACKFOR": f"{pftdir}/FORB_reg{self.grid_number}_Global.nc" if not self.path_file_backfor_global else self.path_file_backfor_global, # forbfile
@@ -897,7 +900,7 @@ class LUT:
                 cdo.setmisstoc("-999", input=f"{path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_{self.grid}_2.nc", output=f"{path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_{self.grid}.nc")
 
     def func_prepare_lsm(self):
-        pfts_file = xr.open_dataset(self.namelist["F_LC_IN"]).isel(time=0)
+        pfts_file = xr.open_dataset(self.namelist["F_LC_IN_REG"])
         help_pfts_file = np.zeros((self.xsize, self.ysize, self.npfts), dtype="float32")
         for i in range(self.npfts):
             num = i + 1
@@ -909,6 +912,70 @@ class LUT:
         lsm_mask = (~lsm_mask).astype(int)
         pfts_file.close()
         return lsm_mask
+
+    def func_prepare_pfts(self):
+        """
+        Prepare the PFTS data for the LUCAS-LUT model for the given grid
+        """
+        if self.grid == "reg025_Europe":
+            ext="NINT"
+            remap_com="invertlat"
+            cutting=''
+        else:
+            if self.remap == "bilinear":
+                ext="BIL"
+                remap_com=f"remapbil"
+                if self.grid == "EUR-011":
+                    cutting = "-selindexbox,2,434,2,434"
+                else:
+                    cutting = ""
+            elif self.remap == "con2":
+                ext = "CON2"
+                remap_com = f"remapcon2"
+                if self.grid == 'EUR-011':
+                    cutting = "-selindexbox,2,434,2,434"
+                else:
+                    cutting = ''
+        # prepare PFTS
+        print_section_heading(f"Selecting variables for PFTS")
+        input_file = self.namelist["F_LC_IN"]
+        ds = xr.open_dataset(input_file)
+        var8 = True if "var801" in ds.variables else False
+        if var8:
+            cdo.sellonlatbox(self.reg, input=f"-selvar,{vars_pfts} {input_file}", output=f"{self.namelist['F_LC_IN_REG'].replace('.nc','_tmp.nc')}")
+        else:
+            cdo.sellonlatbox(self.reg, input=f"-selvar,{self.pfts_file_var} {input_file}", output=f"{self.namelist['F_LC_IN_REG'].replace('.nc','_tmp.nc')}")
+        ds = xr.open_dataset(f"{self.namelist['F_LC_IN_REG'].replace('.nc','_tmp.nc')}")
+        x_dim = "x" if ds.sizes.get("x") else "lon" if ds.sizes.get("lon") else "rlon"
+        y_dim = "y" if ds.sizes.get("y") else "lat" if ds.sizes.get("lat") else "rlat"
+        coords = self.reg.split(",")
+        lon = np.linspace(float(coords[0]), float(coords[1]), self.xsize)
+        lat = np.linspace(float(coords[2]), float(coords[3]), self.ysize)
+        year = self.syear if self.forward else self.eyear
+        all_pfts_dataset = xr.Dataset()
+        for i in range(self.npfts):
+            if var8:
+                data_array = xr.DataArray(
+                    ds[f"var8{1+i}"].sel(time=str(year)).data[0, :, :],
+                    dims=(y_dim, x_dim),
+                    coords={ x_dim: lon, y_dim: lat}
+                )
+            else:
+                data_array = xr.DataArray(
+                    ds[self.pfts_file_var].sel(time=str(year)).data[0, i, :, :],
+                    dims=(y_dim, x_dim),
+                    coords={ x_dim: lon, y_dim: lat}
+                )
+            # Assign units to the coordinates
+            data_array.coords[x_dim].attrs["units"] = "degrees"
+            data_array.coords[y_dim].attrs["units"] = "degrees"
+            # Convert to Dataset and specify the variable name
+            var_name = "var" + str(800+i+1)
+            pft_dataset = data_array.to_dataset(name=var_name)
+            # Merge into the all_pfts_dataset
+            all_pfts_dataset = xr.merge([all_pfts_dataset, pft_dataset])
+        # Save the DataArray to a NetCDF file
+        all_pfts_dataset.to_netcdf(self.namelist['F_LC_IN_REG'])
 
     def func_prepare_mcgrath(self):
         """

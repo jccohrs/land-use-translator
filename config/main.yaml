@@ -1,9 +1,9 @@
 # Input Parameters
 
 # LUT configuration
-region : "Germany"
+region : "Germany" # region name
 forward : False # forward or backward simulation
-backgrd : True # background  
+backgrd : False # background  
 mcgrath : False # mcgrath
 addtree : False # addtree
 irri : False # irrigation
@@ -16,11 +16,10 @@ ysize : 91 # ysize of the region
 
 # LUH2 prepare data configuration
 prepare_luh2_data: True # prepare LUH2 data
-prepare_mcgrath: True # prepare mcgrath data
+prepare_mcgrath: False # prepare mcgrath data
 remap : "bilinear" # remapping method
 scenario : "historical" # scenario name
 grid : 0.1 # resolution in degrees
-vers : 11 # version number
 coords : null # region coordinates like "6,15.5,46.4,55.45" (lonmin,lonmax,latmin,latmax)
 
 # Optional file paths
@@ -28,7 +27,6 @@ path_file_trans: null # file path to transitions file
 path_file_states: null # file path to state file
 path_file_manag: null # file path to management file
 path_file_addtree: null # file path to addtree file
-path_file_rcm_lsm_in : null # file path to RCM LSM file
 path_file_lc_in : null # file path to PFT file
 path_file_backgra_global : null # file path to global background file
 path_file_backshr_global : null # file path to global background shrub file
@@ -42,3 +40,4 @@ path_file_backcro : null # file path to background cropland file
 path_file_backurb : null # file path to background urban file
 path_file_lsm : null # file path to LSM file
 rcm_lsm_var : "BLA" # variable name in the LSM file
+pfts_file_var : "landCoverFrac" # variable name in the PFT file

@@ -28,6 +28,8 @@ def main():
     validate_main_files(namelist, config)
 
     # Preparing the data for the lut calculation
+    print_section_heading("Preparing PFTS data")
+    lut.func_prepare_pfts()
     if config.backgrd:
         print_section_heading("Preparing BACKGRD data")
         lut.func_prepare_backgr_files()

@@ -89,6 +89,9 @@ vars_for = create_backgr_vars(nr_forest, FORPFTS[0])
 vars_shr = create_backgr_vars(nr_shrubs, SHRPFTS[0])
 vars_gra = create_backgr_vars(nr_grass, GRAPFTS[0])
 vars_urb = create_backgr_vars(nr_urban, URBPFTS[0])
+vars_pfts = ""
+for i in range(1, 17):
+    vars_pfts += "var"+str(800+i)+"," if i < 16 else "var"+str(800+i)
 
 scenario_dict = {
     "rcp19": "IMAGE-ssp119",

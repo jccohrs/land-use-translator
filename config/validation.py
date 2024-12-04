@@ -3,6 +3,9 @@ import yaml
 import os
 import xarray as xr
 from src.config import datadir, scenario_dict, mcg
+from cdo import Cdo
+
+cdo = Cdo()
 
 schema = {
     "region": {"type": "string", "allowed": ["Germany", "Europe", "WestAfrica", "NorthAmerica", "Australasia"]},
@@ -26,11 +29,11 @@ schema = {
     "scenario" : {"type": "string", "allowed": ["historical", "historical_high", "historical_low", "rcp19", "rcp26", "rcp34", "rcp45", "rcp60", "rcp70", "rcp85"]},
     "grid": {"type": "float"},
     "rcm_lsm_var": {"type": "string"},
+    "pfts_file_var": {"type": "string"},
     "path_file_states" : {"type": "string", "nullable": True},
     "path_file_trans" : {"type": "string", "nullable": True},
     "path_file_manag" : {"type": "string", "nullable": True},
     "path_file_addtree" : {"type": "string", "nullable": True},
-    "path_file_rcm_lsm_in" : {"type": "string", "nullable": True},
     "path_file_lc_in" : {"type": "string", "nullable": True},
     "path_file_backgra_global" : {"type": "string", "nullable": True},
     "path_file_backshr_global" : {"type": "string", "nullable": True},
@@ -90,7 +93,8 @@ def validate_main_files(namelist, config):
             validate_path(value)
         if key in ("F_LC_IN"):
             validate_path(value)
-            validate_dimensions(value, config)
+            validate_variable(value, config.pfts_file_var)
+            validate_dimensions(value, config, type=2)
         if key.startswith("F_GLOBAL_BACK") and config.backgrd:
             validate_path(value)
             validate_dimensions(value, config, type=2)
@@ -116,6 +120,11 @@ def validate_main_files(namelist, config):
         validate_path(ifile, datadir, add_message="Consider adding the missing file or unable option 'prepare_mcgrath'.")
     if config.prepare_luh2_data:
         validate_path(tfile, datadir)
+        #try:
+        #    input_file = f"{datadir}/{tfile}" if not config.path_file_trans else config.path_file_trans
+        #    cdo.selyear(f"{config.syear}/{config.eyear}", input=f"{input_file}", output=f"{datadir}/tmp_{tfile}")
+        #except:
+        #    raise ValueError(f"File {datadir}/{tfile} has wrong time dimensions. Did not found time range {config.syear}/{config.eyear}")
         validate_path(sfile, datadir)
     if config.irri:
         if config.scenario not in ["historical", "historical_low", "historical_high"]:
@@ -135,11 +144,11 @@ def validate_prepared_files(namelist, config):
         # checking if files exist
         if key == "F_GRID":
             validate_path(value)
-        elif key not in ["F_IRRI_IN", "F_ADDTREE", "F_MCGRATH", "F_LC_OUT"] and not key.startswith("F_BACK") and not key.startswith("F_GLOBAL"):
+        elif key not in ["F_IRRI_IN", "F_ADDTREE", "F_MCGRATH", "F_LC_OUT", "F_LC_IN"] and not key.startswith("F_BACK") and not key.startswith("F_GLOBAL"):
             validate_path(value, add_message="Consider enabling the option 'prepare_luh2_data' to prepare the missing file.")
         # checking file sizes
         
-        if key not in ["F_IRRI_IN", "F_ADDTREE", "F_MCGRATH", "F_GRID", "F_LC_OUT"] and not key.startswith("F_BACK") and not key.startswith("F_GLOBAL"):
+        if key not in ["F_IRRI_IN", "F_ADDTREE", "F_MCGRATH", "F_GRID", "F_LC_OUT", "F_LC_IN"] and not key.startswith("F_BACK") and not key.startswith("F_GLOBAL"):
             validate_dimensions(value, config)
 
         if config.backgrd and key.startswith("F_BACK"):
@@ -166,3 +175,8 @@ def validate_dimensions(value, config, type=1):
     else:
         if ds.sizes.get(x_dim) != config.xsize or ds.sizes.get(y_dim) != config.ysize:
             raise ValueError(f"File {value} has wrong dimensions. Expected {config.xsize}x{config.ysize} but got {ds.sizes.get(x_dim)}x{ds.sizes.get(y_dim)}")
+
+def validate_variable(value, var):
+    ds = xr.open_dataset(value, decode_times=False)
+    if "var801" not in ds.variables and var not in ds.variables:
+        raise ValueError(f"Neither Variable {var} or var8* found in file {value}")
