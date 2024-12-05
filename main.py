@@ -1,7 +1,7 @@
 import yaml
 from src.lut import LUT
 from src.utils import dotdict, print_section_heading
-from config.validation import validate_config, validate_prepared_files, validate_main_files, validate_mcgrath_prepared_files
+from config.validation import validate_config, validate_prepared_files, validate_main_files, validate_mcgrath_prepared_files, validate_pfts_file
 
 def load_configuration():
     with open("config/main.yaml") as stream:
@@ -29,7 +29,9 @@ def main():
 
     # Preparing the data for the lut calculation
     print_section_heading("Preparing PFTS data")
-    lut.func_prepare_pfts()
+    lut.func_prepare_pfts_tmp_file()
+    validate_pfts_file(namelist, config)
+    lut.func_prepare_pfts_file()
     if config.backgrd:
         print_section_heading("Preparing BACKGRD data")
         lut.func_prepare_backgr_files()

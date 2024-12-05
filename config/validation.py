@@ -2,7 +2,7 @@ from cerberus import Validator, errors
 import yaml
 import os
 import xarray as xr
-from src.config import datadir, scenario_dict, mcg
+from src.config import datadir, scriptsdir, scenario_dict, mcg
 from cdo import Cdo
 
 cdo = Cdo()
@@ -75,6 +75,19 @@ def validate_config(config):
             [float(config.coords.split(",")[i]) for i in range(4)]
         except ValueError:
             raise ValueError("Coordinates must be given as float values")
+
+def validate_pfts_file(namelist, config):
+    ds = xr.open_dataset(f"{namelist['F_LC_IN_REG'].replace('.nc','_tmp.nc')}")
+    x_dim = "x" if ds.sizes.get("x") else "lon" if ds.sizes.get("lon") else "rlon"
+    y_dim = "y" if ds.sizes.get("y") else "lat" if ds.sizes.get("lat") else "rlat"
+    try: 
+        year = config.syear if config.forward else config.eyear
+        ds.sel(time=str(year))
+    except KeyError:
+        raise KeyError(f"Year {year} not found in file. Check if the file has the correct time dimensions or if syear/eyear are correctly set.")
+    if config.xsize != ds.sizes.get(x_dim) or config.ysize != ds.sizes.get(y_dim):
+        raise ValueError(f"Wrong sizes given. Expected {config.xsize}x{config.ysize} but got {ds.sizes.get(x_dim)}x{ds.sizes.get(y_dim)}. Check if the sizes coincide with the correspondig grid_reg file located in {scriptsdir}/.")
+
 
 def validate_path(file, datadir=None, add_message=""):
     if datadir:

@@ -913,7 +913,7 @@ class LUT:
         pfts_file.close()
         return lsm_mask
 
-    def func_prepare_pfts(self):
+    def func_prepare_pfts_tmp_file(self):
         """
         Prepare the PFTS data for the LUCAS-LUT model for the given grid
         """
@@ -945,7 +945,14 @@ class LUT:
             cdo.sellonlatbox(self.reg, input=f"-selvar,{vars_pfts} {input_file}", output=f"{self.namelist['F_LC_IN_REG'].replace('.nc','_tmp.nc')}")
         else:
             cdo.sellonlatbox(self.reg, input=f"-selvar,{self.pfts_file_var} {input_file}", output=f"{self.namelist['F_LC_IN_REG'].replace('.nc','_tmp.nc')}")
+    
+    def func_prepare_pfts_file(self):
+        """
+        Prepare the PFTS data for the LUCAS-LUT model for
+        the given region
+        """
         ds = xr.open_dataset(f"{self.namelist['F_LC_IN_REG'].replace('.nc','_tmp.nc')}")
+        var8 = True if "var801" in ds.variables else False
         x_dim = "x" if ds.sizes.get("x") else "lon" if ds.sizes.get("lon") else "rlon"
         y_dim = "y" if ds.sizes.get("y") else "lat" if ds.sizes.get("lat") else "rlat"
         coords = self.reg.split(",")
