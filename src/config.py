@@ -103,3 +103,11 @@ scenario_dict = {
     "rcp70": "AIM-ssp370",
     "rcp85": "MAGPIE-ssp585"
 }
+
+coords = {
+    "Germany": "6,15.5,46.5,55.4",
+    "Europe": "-56,84,16,79",
+    "WestAfrica": "-26.64,20.88,-1.52,28.18",
+    "NorthAmerica": "170,360,0,85",
+    "AUstralAsia":  "102,218,-53,4"
+}

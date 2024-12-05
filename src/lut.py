@@ -37,15 +37,15 @@ class LUT:
             self.reg = self.coords
         else:
             if self.region == 'Europe':
-                self.reg = "-56,84,16,79"
+                self.reg = coords["Europe"]
             elif self.region == 'Australasia':
-                self.reg = "102,218,-53,4"
+                self.reg = coords["Australasia"]
             elif self.region == 'NorthAmerica':
-                self.reg = "170,360,0,85"
+                self.reg = coords["NorthAmerica"]
             elif self.region == 'Germany':
-                self.reg = "6,15.5,46.4,55.45"
+                self.reg = coords["Germany"]
             elif self.region == 'WestAfrica':
-                self.reg = "-26.64,20.88,-1.52,28.18"
+                self.reg = coords["WestAfrica"]
 
         self.pfts_grass = GRAPFTS[0:self.nr_grass]
         self.pfts_crops = CROPFTS[0:self.nr_crops]
