@@ -1,6 +1,6 @@
 import yaml
-from src.lut import LUT
-from src.utils import dotdict, print_section_heading
+from lut import LUT
+from utils import dotdict, print_section_heading
 from config.validation import validate_config, validate_prepared_files, validate_main_files, validate_mcgrath_prepared_files, validate_pfts_file
 
 def load_configuration():

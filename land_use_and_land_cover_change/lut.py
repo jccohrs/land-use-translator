@@ -1,11 +1,11 @@
 from pathlib import Path
 import shutil
 from cdo import *
-from src.config import *
 import os
 import xarray as xr
 import numpy as np
-from src.utils import print_section_heading
+from lut_config import *
+from utils import print_section_heading
 
 # Initialize CDO
 cdo = Cdo()

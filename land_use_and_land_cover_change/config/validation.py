@@ -2,8 +2,8 @@ from cerberus import Validator, errors
 import yaml
 import os
 import xarray as xr
-from src.config import datadir, scriptsdir, scenario_dict, mcg
 from cdo import Cdo
+from lut_config import datadir, scriptsdir, scenario_dict, mcg
 
 cdo = Cdo()
 
