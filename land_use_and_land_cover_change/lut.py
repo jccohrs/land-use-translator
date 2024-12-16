@@ -678,7 +678,7 @@ class LUT:
         year = self.syear if self.forward else self.eyear
         namelist_dict = {
             # FILES
-            "F_LC_IN": f"{pftdir}/PFTS_{year}_{self.grid}.nc" if not self.path_file_lc_in else self.path_file_lc_in, # pftfile
+            "F_LC_IN": f"{pftdir}/PFTS_{year}_reg{self.grid_number}.nc" if not self.path_file_lc_in else self.path_file_lc_in, # pftfile
             "F_LC_IN_REG": f"{pftdir}/PFTS_{self.glc}_{self.grid}.nc", # pftfile regional
             "F_GLOBAL_BACKGRA": f"{pftdir}/GRAB_reg{self.grid_number}_Global.nc" if not self.path_file_backgra_global else self.path_file_backgra_global, # grabfile
             "F_GLOBAL_BACKSHR": f"{pftdir}/SHRB_reg{self.grid_number}_Global.nc" if not self.path_file_backshr_global else self.path_file_backshr_global, # shrbfile
@@ -945,7 +945,7 @@ class LUT:
             cdo.sellonlatbox(self.reg, input=f"-selvar,{vars_pfts} {input_file}", output=f"{self.namelist['F_LC_IN_REG'].replace('.nc','_tmp.nc')}")
         else:
             cdo.sellonlatbox(self.reg, input=f"-selvar,{self.pfts_file_var} {input_file}", output=f"{self.namelist['F_LC_IN_REG'].replace('.nc','_tmp.nc')}")
-    
+
     def func_prepare_pfts_file(self):
         """
         Prepare the PFTS data for the LUCAS-LUT model for
