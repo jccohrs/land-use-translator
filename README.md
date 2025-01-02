@@ -2,18 +2,17 @@
 # High-Resolution Land Use and Land Cover (LULC) Dataset Calculator for Regional Climate Modeling 
 
 
-This Python program generates high-resolution land use and land cover (LULC) datasets for regional climate modeling across historical and future periods. By integrating this LULC data, climate models can more accurately simulate the impacts of land use changes on regional climate dynamics.
-
+This Python program generates high-resolution land use and land cover (LULC) datasets for regional climate modeling across both historical and future periods. The original project was developed in Fortran by Peter Hoffmann (see: [ESSD, 2023](https://essd.copernicus.org/articles/15/3819/2023/)). By integrating this LULC data, climate models can more accurately simulate the impacts of land use changes on regional climate dynamics.
 ## Dataset Requirements
 
 The following datasets are required to run the program:
 
 - **Land Use (LU) Transitions**: LU changes for the selected time period (will be filtered in case of providing larger datasets). The following files can be downloaded from the [LUH Data Portal](https://luh.umd.edu/data.shtml) for different scenarios (historical, historical_high, etc):
-   - transitions.nc: Main land use transitions data.
-   - states.nc: States of land use, for each grid cell and year.
+   - transitions.nc: The land-use transitions are the annual changes between land-use states. 
+   - states.nc: The land-use states are the fractions of each grid-cell occupied by various land-uses in a given year.
    - management.nc: Contains irrigation data; this file is only required if irrigation is enabled (i.e., if `irri` is set to True).
-   - add_tree_cover.nc: Tree cover data, used if addtree is active (i.e., if `addtree` is set to True).
-- **Landmate PFTs Maps**: Contains data for 16 Plant Functional Types (PFTs), providing detailed vegetation characterization. The data can be downloaded from [WDC Climate](https://www.wdc-climate.de/ui/entry?acronym=LM_PFT_EUR_v1.1).
+   - add_tree_cover.nc: Tree cover data; this file is only required if if addtree is enabled (i.e., if `addtree` is set to True).
+- **Landmate PFTs Maps**: Contains data for 16 Plant Functional Types (PFTs), providing detailed vegetation characterization. The data for Europe can be downloaded from [WDC Climate](https://www.wdc-climate.de/ui/entry?acronym=LM_PFT_EUR_v1.1_afts).
 - **Mcgrath Data (Optional)**: For the backward extension of historical forest type distribution, additional information on the relative distribution of broadleaf and needleleaf forests, derived from the McGrath dataset, can be utilized. For more information about obtaining this dataset, please contact the maintainers of this project.
 - **Sea-Land Mask (Optional)**: 
    - By default, the sea-land mask will be calculated from the Landmate PFT maps based on land classification.
