@@ -103,9 +103,11 @@ scenario_dict = {
 }
 
 coords = {
-    "Germany": "6,15.5,46.5,55.4",
-    "Europe": "-55.95,84,16.1,79",
+    "Germany": "6.,15.5,46.5,55.4",
+    "Europe": "-55.95,84.,16.1,79.",
     "WestAfrica": "-26.64,20.88,-1.52,28.18",
-    "NorthAmerica": "170,360,0,85",
-    "AUstralAsia":  "102,218,-53,4"
+    "NorthAmerica": "170.,360.,0.,85",
+    "AustralAsia":  "102.,218.,-53.,4."
 }
+
+t_file_syear = 850

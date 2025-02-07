@@ -678,7 +678,7 @@ class LUT:
         year = self.syear if self.forward else self.eyear
         namelist_dict = {
             # FILES
-            "F_LC_IN": f"{pftdir}/PFTS_{year}_reg{self.grid_number}.nc" if not self.path_file_lc_in else self.path_file_lc_in, # pftfile
+            "F_LC_IN": f"{datadir}/PFTS_reg{self.grid_number}.nc" if not self.path_file_lc_in else self.path_file_lc_in, # pftfile
             "F_LC_IN_REG": f"{pftdir}/PFTS_{self.glc}_{self.grid}.nc", # pftfile regional
             "F_GLOBAL_BACKGRA": f"{pftdir}/GRAB_reg{self.grid_number}_Global.nc" if not self.path_file_backgra_global else self.path_file_backgra_global, # grabfile
             "F_GLOBAL_BACKSHR": f"{pftdir}/SHRB_reg{self.grid_number}_Global.nc" if not self.path_file_backshr_global else self.path_file_backshr_global, # shrbfile
@@ -803,13 +803,12 @@ class LUT:
         path_region = os.path.join(luhdir, sdir, self.region)
         path_sdir = os.path.join(luhdir, sdir)
 
-        # prepare states
         print_section_heading(f"Selecting variables for transitions")
         ofile=f"{tfile}_{self.syear}_{self.eyear}_{self.region}.nc"
         input_file = f"{datadir}/{tfile}.nc" if not self.path_file_trans else self.path_file_trans
-        cdo.selyear(f"{self.syear}/{self.eyear}", input=f"{input_file}", output=f"{path_sdir}/{self.region}/tmp_{ofile}")
-        cdo.sellonlatbox(self.reg, input=f"-selvar,{vars_trans} {path_sdir}/{self.region}/tmp_{ofile}", output=f"{path_sdir}/{self.region}/{ofile}")
-        os.remove(f"{path_sdir}/{self.region}/tmp_{ofile}")
+        
+        self.filter_time_space(input_file, f"{path_sdir}/{self.region}/{ofile}", t_file_syear)
+
         fromto_array = [
             {"varn": "for2urb", "for_1": FOR, "for_2": URB, "outvar_condition": None},
             {"varn": "urb2for", "for_1": URB, "for_2": FOR, "outvar_condition": "primf"},
@@ -854,7 +853,7 @@ class LUT:
             cdo.remapbil(f"{scriptsdir}/grid_{self.grid}", input=f"{path_region}/states_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/states_{self.syear}_{self.eyear}_{self.grid}.nc")
         elif remap_com == "remapcon2":
             cdo.remapcon2(f"{scriptsdir}/grid_{self.grid}", input=f"{path_region}/states_{self.syear}_{self.eyear}_{self.region}.nc", output=f"{path_region}/states_{self.syear}_{self.eyear}_{self.grid}.nc")
-        
+        os.remove(f"{path_sdir}/{self.region}/tmp_{sfile}_{self.syear}_{self.eyear}.nc")
         # compute management
         if self.addtree:
             print_section_heading(f"Selecting variables for added tree cover")
@@ -898,6 +897,21 @@ class LUT:
                     os.remove(f"{path_region}/dummy.nc")
                 cdo.div(input=f"{path_region}/sum_irri_frac_{self.syear}_{self.eyear}_{self.grid}.nc {path_region}/sum_crop_frac.nc", output=f"{path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_{self.grid}_2.nc")
                 cdo.setmisstoc("-999", input=f"{path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_{self.grid}_2.nc", output=f"{path_region}/{self.grid}/irrigation_{self.syear}_{self.eyear}_{self.grid}.nc")
+
+    def filter_time_space(self, input_file, output_file, file_syear):
+        """
+        function to filter file
+        """
+        # Open transitons file
+        ds = xr.open_dataset(input_file, decode_times=False)
+        # Select the time range
+        ds_selected = ds.sel(time=slice(self.syear-file_syear, self.eyear-file_syear))
+
+        # Select the region using longitude and latitude bounds
+        lon_min, lon_max, lat_min, lat_max = self.reg.split(",")
+        ds_selected = ds_selected.sel(lon=slice(float(lon_min), float(lon_max)), lat=slice(float(lat_max), float(lat_min)))
+        # Save the result to a new NetCDF file
+        ds_selected.to_netcdf(output_file)
 
     def func_prepare_lsm(self):
         pfts_file = xr.open_dataset(self.namelist["F_LC_IN_REG"])
