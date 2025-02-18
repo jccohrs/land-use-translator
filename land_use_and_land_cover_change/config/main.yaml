@@ -1,7 +1,7 @@
 # Input Parameters
 
 # LUT configuration
-region : "Germany" # region name
+region : "Germany" # region name ("Germany", "Europe", "WestAfrica", "NorthAmerica", "Australasia")
 forward : False # forward or backward simulation
 backgrd : False # background  
 mcgrath : False # mcgrath
@@ -17,8 +17,8 @@ ysize : 89 # ysize of the region
 # LUH2 prepare data configuration
 prepare_luh2_data: True # prepare LUH2 data
 prepare_mcgrath: False # prepare mcgrath data
-remap : "bilinear" # remapping method
-scenario : "historical" # scenario name
+remap : "bilinear" # remapping method ("bilinear", "con2")
+scenario : "historical" # scenario name ("historical", "historical_high", "historical_low", "rcp19", "rcp26", "rcp34", "rcp45","rcp60", "rcp70", "rcp85")
 grid : 0.1 # resolution in degrees
 coords : null # region coordinates like "6,15.5,46.4,55.45" (lonmin,lonmax,latmin,latmax)
 
