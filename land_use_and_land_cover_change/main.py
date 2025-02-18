@@ -12,6 +12,9 @@ def load_configuration():
             print(exc)
 
 def main():
+    """
+    Main function to run the LUT
+    """
     # Load configuration
     config = load_configuration()
 

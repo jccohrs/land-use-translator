@@ -14,7 +14,7 @@ class LUT:
 
     def __init__(self, config):
         """
-        This class initializes the LUCAS LUT
+        Initialization function for class LUT
         """
         for key, value in config.items():
             setattr(self, key, value)
@@ -345,7 +345,7 @@ class LUT:
 
     def lucas_lut_input(self):
         """
-        This function reads the input data
+        This function reads the neccesary input data to run the LUT
         """
         pft_help = np.zeros((self.xsize, self.ysize, self.npfts), dtype='float32')
         year = self.syear if self.forward else self.eyear
@@ -487,7 +487,7 @@ class LUT:
 
     def recalc_pft_frac_ts(self, rcm_lsm):
         """
-        This function recalculates the PFT fractions
+        This function recalculates the PFT fractions to be between 0-1
         """
         print("normalize to get a sum of 1 and set sea points to missing value")
         for z in range(self.years+1):
@@ -499,9 +499,9 @@ class LUT:
 
     def recalc_null_pft_frac_ts(self, rcm_lsm):
         """
-        This function recalculates the PFT fractions
+        This function recalculates the PFT fractions to remove negative values and set them to 0
         """
-        print('remove zeros (they still occur due to rounding issues)')
+        print('remove negative values (they still occur due to rounding issues)')
         for z in range(self.years+1):
             mask = rcm_lsm > 0.0
             mask_pft_frac_ts = self.pft_frac_ts[:, :, :, z] < 0.0
@@ -613,7 +613,7 @@ class LUT:
 
     def lucas_lut_output(self):
         """
-        Save the pft_frac_ts array to a NetCDF file
+        Save the LUT output (pft_frac_ts) to a NetCDF file
         """
         coords = self.reg.split(",")
         lon = np.linspace(float(coords[0]), float(coords[1]), self.xsize)
@@ -644,7 +644,7 @@ class LUT:
 
     def generate_namelist(self):
         """
-        Generate the namelist for the LUCAS-LUT model
+        Generate the namelist for the LUCAS-LUT model, this is used in the validation part
         """
         if self.grid == 0.25:
             ext = "NINT"
@@ -755,7 +755,7 @@ class LUT:
 
     def func_prepare_luh2_data(self):
         """
-        Prepare the LUH2 data for the LUCAS-LUT model
+        Prepare the LUH2 data for the selected configuration
         """
         if self.scenario == "historical":
             sdir="historic"
@@ -903,7 +903,7 @@ class LUT:
 
     def filter_time_space(self, input_file, output_file, file_syear):
         """
-        function to filter file
+        Function to filter files based on spatial and temporal criteria
         """
         # Open transitons file
         ds = xr.open_dataset(input_file, decode_times=False)
@@ -917,6 +917,9 @@ class LUT:
         ds_selected.to_netcdf(output_file)
 
     def func_prepare_lsm(self):
+        """
+        Function to create land sea mask file
+        """
         pfts_file = xr.open_dataset(self.namelist["F_LC_IN_REG"])
         help_pfts_file = np.zeros((self.xsize, self.ysize, self.npfts), dtype="float32")
         for i in range(self.npfts):
@@ -932,7 +935,7 @@ class LUT:
 
     def func_prepare_pfts_tmp_file(self):
         """
-        Prepare the PFTS data for the LUCAS-LUT model for the given grid
+        Prepare the PFTS data for the given grid
         """
         if self.grid == "reg025_Europe":
             ext="NINT"
@@ -1004,7 +1007,7 @@ class LUT:
 
     def func_prepare_mcgrath(self):
         """
-        Prepare the McGrath data for the LUCAS-LUT model
+        Prepare the McGrath data for the LUT
         """
         # commands for interpolation to given grid
         if self.remap == "bilinear":
