@@ -25,7 +25,7 @@ This Python program generates high-resolution land use and land cover (LULC) dat
    ```bash
    $ pipenv shell
 
-## Quick start (Example for historical scenario)
+## Quick start (Example historical scenario 1950-2015 for Germany)
 
 To get started with this project, follow these steps:
 
@@ -44,15 +44,13 @@ To get started with this project, follow these steps:
    ```
 These files will be downloaded and save in `data` directory.
 
-3. **Go to [WDC Climate](https://www.wdc-climate.de/ui/entry?acronym=LM_PFT_EUR_v1.1_afts).** Download the .nc file from the site (you will have to log in first). Move this file to `land_use_and_land_cover_change/data/` and rename it as `PFTS_reg01.nc`
-
-4. Run the program from the project directory:
+3. **Run the program from the project directory:**
 
 ```bash
 $ python3 main.py
 ```
 
-5. The generated output file will be located in the  `data/LUCAS_LUC/` directory. This output file will contain information about the Plant Functional Type (PFT) fraction for the 16 NPFTs across the selected region, scenario, and timeline.
+5. **Output file:** The generated output file will be located in the  `data/LUCAS_LUC/` directory. This output file contains the Plant Functional Type (PFT) fraction for the 16 NPFTs across the selected region, scenario, and timeline.
 
 ## Dataset Requirements
 
@@ -63,7 +61,10 @@ The following datasets are required to run the program:
    - states.nc: The land-use states are the fractions of each grid-cell occupied by various land-uses in a given year.
    - management.nc: Contains irrigation data; this file is only required if irrigation is enabled (i.e., if `irri` is set to True).
    - add_tree_cover.nc: Tree cover data; this file is only required if if addtree is enabled (i.e., if `addtree` is set to True).
-- **Landmate PFTs Maps**: Contains data for 16 Plant Functional Types (PFTs), providing detailed vegetation characterization. The data for Europe can be downloaded from [WDC Climate](https://www.wdc-climate.de/ui/entry?acronym=LM_PFT_EUR_v1.1_afts).
+
+These files should be then moved to `land_use_and_land_cover_change/data/`.
+- **Landmate PFTs Maps**: Contains data for 16 Plant Functional Types (PFTs), providing detailed vegetation characterization. The data for Europe can be downloaded from [WDC Climate](https://www.wdc-climate.de/ui/entry?acronym=LM_PFT_EUR_v1.1_afts). **From [WDC Climate](https://www.wdc-climate.de/ui/entry?acronym=LM_PFT_EUR_v1.1_afts).** you can download the .nc file for Europe (you will have to log in first). This file should be then moved to `land_use_and_land_cover_change/data/` and rename it as `PFTS_reg01.nc`. 
+
 - **Mcgrath Data (Optional)**: For the backward extension of historical forest type distribution, additional information on the relative distribution of broadleaf and needleleaf forests, derived from the McGrath dataset, can be utilized. For more information about obtaining this dataset, please contact the maintainers of this project.
 - **Sea-Land Mask (Optional)**: 
    - By default, the sea-land mask will be calculated from the Landmate PFT maps based on land classification.
