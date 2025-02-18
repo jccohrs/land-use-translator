@@ -3,7 +3,7 @@ import yaml
 import os
 import xarray as xr
 from cdo import Cdo
-from lut_config import datadir, scriptsdir, scenario_dict, mcg
+from lut_config import datadir, scriptsdir, scenario_dict, mcg, tf_file_syear, th_file_syear
 
 cdo = Cdo()
 
@@ -88,7 +88,6 @@ def validate_pfts_file(namelist, config):
     if config.xsize != ds.sizes.get(x_dim) or config.ysize != ds.sizes.get(y_dim):
         raise ValueError(f"Wrong sizes given. Expected {config.xsize}x{config.ysize} but got {ds.sizes.get(x_dim)}x{ds.sizes.get(y_dim)}. Check if the sizes coincide with the correspondig grid_reg file located in {scriptsdir}/.")
 
-
 def validate_path(file, datadir=None, add_message=""):
     if datadir:
         if not os.path.isfile(os.path.join(datadir, file)):
@@ -133,11 +132,8 @@ def validate_main_files(namelist, config):
         validate_path(ifile, datadir, add_message="Consider adding the missing file or unable option 'prepare_mcgrath'.")
     if config.prepare_luh2_data:
         validate_path(tfile, datadir)
-        #try:
-        #    input_file = f"{datadir}/{tfile}" if not config.path_file_trans else config.path_file_trans
-        #    cdo.selyear(f"{config.syear}/{config.eyear}", input=f"{input_file}", output=f"{datadir}/tmp_{tfile}")
-        #except:
-        #    raise ValueError(f"File {datadir}/{tfile} has wrong time dimensions. Did not found time range {config.syear}/{config.eyear}")
+        input_file = f"{datadir}/{tfile}" if not config.path_file_trans else config.path_file_trans
+        validate_timerange(input_file, config)
         validate_path(sfile, datadir)
     if config.irri:
         if config.scenario not in ["historical", "historical_low", "historical_high"]:
@@ -193,3 +189,10 @@ def validate_variable(value, var):
     ds = xr.open_dataset(value, decode_times=False)
     if "var801" not in ds.variables and var not in ds.variables:
         raise ValueError(f"Neither Variable {var} or var8* found in file {value}")
+
+def validate_timerange(input_file, config):
+    init_year = tf_file_syear if config.forward else th_file_syear
+    ds = xr.open_dataset(input_file, decode_times=False).sel(time=slice(config.syear-init_year, config.eyear-init_year))
+    if not ds.time.units.split()[2].split("-")[0] == str(init_year):
+        raise ValueError(f"File {input_file} has wrong time dimensions. Did not found time range {config.syear}/{config.eyear}.Check if the transitions file belong to another scenario.")
+        

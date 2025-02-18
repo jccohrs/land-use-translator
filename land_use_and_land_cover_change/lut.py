@@ -807,7 +807,10 @@ class LUT:
         ofile=f"{tfile}_{self.syear}_{self.eyear}_{self.region}.nc"
         input_file = f"{datadir}/{tfile}.nc" if not self.path_file_trans else self.path_file_trans
         
-        self.filter_time_space(input_file, f"{path_sdir}/{self.region}/{ofile}", t_file_syear)
+        if self.forward:
+            self.filter_time_space(input_file, f"{path_sdir}/{self.region}/{ofile}", tf_file_syear)
+        else:
+            self.filter_time_space(input_file, f"{path_sdir}/{self.region}/{ofile}", th_file_syear)
 
         fromto_array = [
             {"varn": "for2urb", "for_1": FOR, "for_2": URB, "outvar_condition": None},
@@ -997,6 +1000,7 @@ class LUT:
             all_pfts_dataset = xr.merge([all_pfts_dataset, pft_dataset])
         # Save the DataArray to a NetCDF file
         all_pfts_dataset.to_netcdf(self.namelist['F_LC_IN_REG'])
+        os.remove(f"{self.namelist['F_LC_IN_REG'].replace('.nc','_tmp.nc')}")
 
     def func_prepare_mcgrath(self):
         """

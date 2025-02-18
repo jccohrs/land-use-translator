@@ -110,4 +110,5 @@ coords = {
     "AustralAsia":  "102.,218.,-53.,4."
 }
 
-t_file_syear = 850
+th_file_syear = 850 # transitions historic file starts from 850
+tf_file_syear = 2015 # transitions future file starts from 2015
