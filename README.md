@@ -9,21 +9,21 @@ This Python program generates high-resolution land use and land cover (LULC) dat
 1. **Install pipenv**:
 
    ```bash
-   $ pip install pipenv
+   pip install pipenv
 
 2. **Change to the project directory**:
 
    ```bash
-   $ cd project_name
+   cd project_name
 
 3. **Install the required libraries**:
 
    ```bash
-   $ pipenv install 
+   pipenv install 
 
 4. **Activate your pipenv environment**:
    ```bash
-   $ pipenv shell
+   pipenv shell
 
 ## Quick start (Example historical scenario 1950-2015 for Germany)
 
@@ -32,7 +32,7 @@ To get started with this project, follow these steps:
 1. **Change to the projects data directory**:
 
    ```bash
-   $ cd land_use_and_land_cover_change/data/
+   cd land_use_and_land_cover_change/data/
    ```
 2. **Download required data files using `wget`:**
 
@@ -47,7 +47,7 @@ These files will be downloaded and save in `data` directory.
 3. **Run the program from the project directory:**
 
 ```bash
-$ python3 main.py
+python3 main.py
 ```
 
 5. **Output file:** The generated output file will be located in the  `data/LUCAS_LUC/` directory. This output file contains the Plant Functional Type (PFT) fraction for the 16 NPFTs across the selected region, scenario, and timeline.
