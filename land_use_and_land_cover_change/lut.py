@@ -665,6 +665,8 @@ class LUT:
 
         if self.irri:
             ofile = f"{oname}_{self.scenario}_{self.syear}_{self.eyear}_{self.grid}_irri"
+        elif self.backgrd:
+            ofile = f"{oname}_{self.scenario}_{self.syear}_{self.eyear}_{self.grid}_backgrd"
         else:
             ofile = f"{oname}_{self.scenario}_{self.syear}_{self.eyear}_{self.grid}"
 
