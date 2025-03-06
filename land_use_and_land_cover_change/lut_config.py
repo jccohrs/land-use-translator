@@ -112,3 +112,32 @@ coords = {
 
 th_file_syear = 850 # transitions historic file starts from 850
 tf_file_syear = 2015 # transitions future file starts from 2015
+
+def get_output_file_title(forward, syear, eyear):
+    """
+    Returns the title of the LUCAS LUC dataset, dynamically adjusting for historical or future datasets.
+    """
+    dataset_type = "historical" if not forward else "future"
+    return f"Land Use and Land Cover (LULC) {dataset_type} ({syear}-{eyear}) dataset"
+
+output_file_comment = """
+Land Use and Land Cover (LULC) Dataset. 
+Plant functional types and non-vegetated classes: 
+1  - Tropical broadleaf evergreen trees 
+2  - Tropical deciduous trees 
+3  - Temperate broadleaf evergreen trees 
+4  - Temperate deciduous trees 
+5  - Evergreen coniferous trees 
+6  - Deciduous coniferous trees 
+7  - Coniferous shrubs 
+8  - Deciduous shrubs 
+9  - C3 grass 
+10 - C4 grass 
+11 - Tundra 
+12 - Swamp 
+13 - Non-irrigated crops 
+14 - Irrigated crops 
+15 - Urban 
+16 - Bare
+""".strip()  # Replace newlines with a space
+

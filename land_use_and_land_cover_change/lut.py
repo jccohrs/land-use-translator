@@ -621,6 +621,9 @@ class LUT:
         time = np.linspace(self.syear, self.eyear, self.years+1)
         all_pfts_dataset = xr.Dataset()
 
+        # Get metadata comment from external module
+        title = get_output_file_title(self.forward, self.syear, self.eyear)
+
         for i in range(self.npfts):
             data_array = xr.DataArray(
                 self.pft_frac_ts[:, :, i, :].T,
@@ -629,16 +632,32 @@ class LUT:
             )
 
             # Assign units to the coordinates
-            data_array.coords["time"].attrs["units"] = "years"
+            data_array.coords["time"].attrs = {
+                "units": "years",
+                "description": f"Time range from {self.syear} to {self.eyear}"
+            }
             data_array.coords["x"].attrs["units"] = "degrees"
             data_array.coords["y"].attrs["units"] = "degrees"
-
+            # Add descriptions to 'x' and 'y' coordinates
+            data_array.coords["x"].attrs["description"] = (
+                f"Longitude ranging from {float(coords[0])} to {float(coords[1])} degrees"
+            )
+            data_array.coords["y"].attrs["description"] = (
+                f"Latitude ranging from {float(coords[2])} to {float(coords[3])} degrees"
+            )
             # Convert to Dataset and specify the variable name
             var_name = f"var80{i+1}" if i < 9 else f"var8{i+1}"
             pft_dataset = data_array.to_dataset(name=var_name)
 
             # Merge into the all_pfts_dataset
             all_pfts_dataset = xr.merge([all_pfts_dataset, pft_dataset])
+        
+        # Add full metadata as a global attribute
+        all_pfts_dataset.attrs["title"] = title
+        all_pfts_dataset.attrs["region"] = self.region
+        all_pfts_dataset.attrs["version"] = vers
+        all_pfts_dataset.attrs["description"] = output_file_comment
+
         # Save the DataArray to a NetCDF file
         all_pfts_dataset.to_netcdf(self.namelist["F_LC_OUT"])
 
