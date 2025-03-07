@@ -38,9 +38,15 @@ To get started with this project, follow these steps:
 
    ```bash
    wget --continue --progress=bar --no-check-certificate \
-       "https://luh.umd.edu/LUH2/LUH2_v2h/transitions.nc" \
-       "https://luh.umd.edu/LUH2/LUH2_v2h/states.nc" \
-       "https://luh.umd.edu/LUH2/LUH2_v2h/management.nc"
+    "https://luh.umd.edu/LUH2/LUH2_v2h/transitions.nc" \
+    "https://luh.umd.edu/LUH2/LUH2_v2h/states.nc" \
+    "https://luh.umd.edu/LUH2/LUH2_v2h/management.nc" \
+    "https://zenodo.org/records/14981619/files/CROB_reg01_Global.nc?download=1&preview=1" \
+    "https://zenodo.org/records/14981619/files/FORB_reg01_Global.nc?download=1&preview=1" \
+    "https://zenodo.org/records/14981619/files/GRAB_reg01_Global.nc?download=1&preview=1" \
+    "https://zenodo.org/records/14981619/files/SHRB_reg01_Global.nc?download=1&preview=1" \
+    "https://zenodo.org/records/14981619/files/URBB_reg01_Global.nc?download=1&preview=1" \
+    "https://zenodo.org/records/14981619/files/PFTS_reg01.nc?download=1&preview=1"
    ```
 These files will be downloaded and save in `data` directory.
 
