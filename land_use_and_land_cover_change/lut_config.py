@@ -1,6 +1,6 @@
 from utils import create_backgr_vars
 
-pftdir = "data/ESA-CCI/PFT_FILES" # directory of ESA-CCI LC file
+pftdir = "data/ESA_CCI/PFT_FILES" # directory of ESA_CCI LC file
 odir = "data/LUCAS_LUC" # directory that stores orginal GLOBCOVER files
 scriptsdir = "scripts"
 luhdir = "data/LUH_V2" # directory that stores output files from SAGA

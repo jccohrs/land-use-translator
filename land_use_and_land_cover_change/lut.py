@@ -701,11 +701,11 @@ class LUT:
             # FILES
             "F_LC_IN": f"{datadir}/PFTS_reg{self.grid_number}.nc" if not self.path_file_lc_in else self.path_file_lc_in, # pftfile
             "F_LC_IN_REG": f"{pftdir}/PFTS_{self.glc}_{self.grid}.nc", # pftfile regional
-            "F_GLOBAL_BACKGRA": f"{pftdir}/GRAB_reg{self.grid_number}_Global.nc" if not self.path_file_backgra_global else self.path_file_backgra_global, # grabfile
-            "F_GLOBAL_BACKSHR": f"{pftdir}/SHRB_reg{self.grid_number}_Global.nc" if not self.path_file_backshr_global else self.path_file_backshr_global, # shrbfile
-            "F_GLOBAL_BACKFOR": f"{pftdir}/FORB_reg{self.grid_number}_Global.nc" if not self.path_file_backfor_global else self.path_file_backfor_global, # forbfile
-            "F_GLOBAL_BACKCRO": f"{pftdir}/CROB_reg{self.grid_number}_Global.nc" if not self.path_file_backcro_global else self.path_file_backcro_global, # crobfile
-            "F_GLOBAL_BACKURB": f"{pftdir}/URBB_reg{self.grid_number}_Global.nc" if not self.path_file_backurb_global else self.path_file_backurb_global, # urbbfile
+            "F_GLOBAL_BACKGRA": f"{datadir}/GRAB_reg{self.grid_number}_Global.nc" if not self.path_file_backgra_global else self.path_file_backgra_global, # grabfile
+            "F_GLOBAL_BACKSHR": f"{datadir}/SHRB_reg{self.grid_number}_Global.nc" if not self.path_file_backshr_global else self.path_file_backshr_global, # shrbfile
+            "F_GLOBAL_BACKFOR": f"{datadir}/FORB_reg{self.grid_number}_Global.nc" if not self.path_file_backfor_global else self.path_file_backfor_global, # forbfile
+            "F_GLOBAL_BACKCRO": f"{datadir}/CROB_reg{self.grid_number}_Global.nc" if not self.path_file_backcro_global else self.path_file_backcro_global, # crobfile
+            "F_GLOBAL_BACKURB": f"{datadir}/URBB_reg{self.grid_number}_Global.nc" if not self.path_file_backurb_global else self.path_file_backurb_global, # urbbfile
             "F_BACKGRA": f"{pftdir}/GRAB_{self.grid}.nc" if not self.path_file_backgra else self.path_file_backgra, # grabfile
             "F_BACKSHR": f"{pftdir}/SHRB_{self.grid}.nc" if not self.path_file_backshr else self.path_file_backshr, # shrbfile
             "F_BACKFOR": f"{pftdir}/FORB_{self.grid}.nc" if not self.path_file_backfor else self.path_file_backfor, # forbfile
