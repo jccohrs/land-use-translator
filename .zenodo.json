@@ -19,9 +19,8 @@
     }
   ],
   "keywords": [
-    "xclim",
-    "xarray",
-    "climate indicator"
+    "CORDEX",
+    "LUCAS"
   ],
   "license": "MIT",
   "upload_type": "software",
