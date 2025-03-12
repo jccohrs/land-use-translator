@@ -1,0 +1,29 @@
+{
+  "creators": [
+    {
+      "affiliation": "Helmholtz-Zentrum Hereon",
+      "name": "Aitor Pérez Godoy",
+      "orcid": ""
+    }
+  ],
+  "contributors": [
+    {
+      "affiliation": "Helmholtz-Zentrum Hereon",
+      "name": "Peter Hoffmann",
+      "orcid": ""
+    }
+    {
+      "affiliation": "Helmholtz-Zentrum Hereon",
+      "name": "Lars Buntemeyer",
+      "orcid": "0000-0002-0849-2404"
+    }
+  ],
+  "keywords": [
+    "xclim",
+    "xarray",
+    "climate indicator"
+  ],
+  "license": "MIT",
+  "upload_type": "software",
+  "access_right": "open"
+}
