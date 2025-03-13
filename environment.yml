@@ -1,0 +1,12 @@
+name: land_use_translator_env  # Change to your preferred environment name
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - pyyaml=6.0.2
+  - python-cdo=1.6.0
+  - cerberus=1.3.5
+  - netcdf4=1.7.2
+  - xarray=2025.1.2
+  - pytest=8.3.5
+  - numpy=2.2.3

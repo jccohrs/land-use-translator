@@ -1,0 +1,33 @@
+{
+  "creators": [
+    {
+      "affiliation": "Helmholtz-Zentrum Hereon",
+      "name": "Aitor Pérez Godoy",
+      "orcid": "0009-0001-7280-891X"
+    },
+    {
+      "affiliation": "Helmholtz-Zentrum Hereon",
+      "name": "Peter Hoffmann",
+      "orcid": "0000-0002-5192-4858"
+    }
+  ],
+  "contributors": [
+    {
+      "affiliation": "Helmholtz-Zentrum Hereon",
+      "name": "Diana Rechid",
+      "orcid": "0000-0002-6035-2935"
+    },
+    {
+      "affiliation": "Helmholtz-Zentrum Hereon",
+      "name": "Lars Buntemeyer",
+      "orcid": "0000-0002-0849-2404"
+    }
+  ],
+  "keywords": [
+    "CORDEX",
+    "LUCAS"
+  ],
+  "license": "MIT",
+  "upload_type": "software",
+  "access_right": "open"
+}
