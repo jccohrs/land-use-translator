@@ -15,11 +15,13 @@
     {
       "affiliation": "Helmholtz-Zentrum Hereon",
       "name": "Diana Rechid",
+      "role": "Researcher",
       "orcid": "0000-0002-6035-2935"
     },
     {
       "affiliation": "Helmholtz-Zentrum Hereon",
       "name": "Lars Buntemeyer",
+      "role": "Reviewer",
       "orcid": "0000-0002-0849-2404"
     }
   ],
