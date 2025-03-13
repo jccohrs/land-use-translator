@@ -6,24 +6,19 @@ This Python program generates high-resolution land use and land cover (LULC) dat
 
 ## Installation Guide
 
-1. **Install pipenv**:
-
-   ```bash
-   pip install pipenv
-
-2. **Change to the project directory**:
+1. **Change to the project directory**:
 
    ```bash
    cd project_name
 
-3. **Install the required libraries**:
+2. **Install the required libraries**:
 
    ```bash
-   pipenv install 
+   conda env create -f environment.yml 
 
-4. **Activate your pipenv environment**:
+3. **Activate your environment**:
    ```bash
-   pipenv shell
+   conda activate land_use_translator_env
 
 ## Quick start (Example historical scenario 1950-2015 for Germany)
 
