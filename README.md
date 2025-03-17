@@ -2,7 +2,9 @@
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15039127.svg)](https://doi.org/10.5281/zenodo.15039127)
 
-This Python program generates high-resolution land use and land cover (LULC) datasets for regional climate modeling across both historical and future periods. The original project was developed in Fortran by Peter Hoffmann (see: [ESSD, 2023](https://essd.copernicus.org/articles/15/3819/2023/)). By integrating this LULC data, climate models can more accurately simulate the impacts of land use changes on regional climate dynamics.
+This Python program generates high-resolution land use and land cover (LULC) datasets for regional climate modeling across both historical and future periods. The original project was developed in Fortran by Peter Hoffmann[^1]. By integrating this LULC data, climate models can more accurately simulate the impacts of land use changes on regional climate dynamics.
+
+[^1]: Hoffmann, P., Reinhart, V., Rechid, D., de Noblet-Ducoudré, N., Davin, E. L., Asmus, C., Bechtel, B., Böhner, J., Katragkou, E., and Luyssaert, S.: High-resolution land use and land cover dataset for regional climate modelling: historical and future changes in Europe, Earth Syst. Sci. Data, 15, 3819–3852, https://doi.org/10.5194/essd-15-3819-2023, 2023. 
 
 ## Installation Guide
 
@@ -110,6 +112,3 @@ The main configuration file is located at `config/main.yaml`. Modify the paramet
    - (`path_file_back*`): path to a custom background dataset.
    ### Optional file paths
    - (`path_file_*`): Specify file path for the used files. In case of not specifying default locations will be checked by the programm. 
-
-
- 
