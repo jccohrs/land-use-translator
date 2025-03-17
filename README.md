@@ -1,6 +1,6 @@
- 
-# High-Resolution Land Use and Land Cover (LULC) Dataset Calculator for Regional Climate Modeling 
+ # High-Resolution Land Use and Land Cover (LULC) Dataset Calculator for Regional Climate Modeling 
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15039127.svg)](https://doi.org/10.5281/zenodo.15039127)
 
 This Python program generates high-resolution land use and land cover (LULC) datasets for regional climate modeling across both historical and future periods. The original project was developed in Fortran by Peter Hoffmann (see: [ESSD, 2023](https://essd.copernicus.org/articles/15/3819/2023/)). By integrating this LULC data, climate models can more accurately simulate the impacts of land use changes on regional climate dynamics.
 
