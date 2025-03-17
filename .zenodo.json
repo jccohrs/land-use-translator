@@ -11,20 +11,6 @@
       "orcid": "0000-0002-5192-4858"
     }
   ],
-  "contributors": [
-    {
-      "affiliation": "Helmholtz-Zentrum Hereon",
-      "name": "Diana Rechid",
-      "role": "Researcher",
-      "orcid": "0000-0002-6035-2935"
-    },
-    {
-      "affiliation": "Helmholtz-Zentrum Hereon",
-      "name": "Lars Buntemeyer",
-      "role": "Other",
-      "orcid": "0000-0002-0849-2404"
-    }
-  ],
   "keywords": [
     "CORDEX",
     "LUCAS"
