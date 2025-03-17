@@ -2,7 +2,7 @@
 # LUCAS Land Use Translator 
 
 
-This Python program generates high-resolution land use and land cover (LULC) datasets for regional climate modeling across both historical and future periods using land use change information from the LUH2. The original project was developed in Fortran by Peter Hoffmann (see: [ESSD, 2023](https://essd.copernicus.org/articles/15/3819/2023/)) as part of HICSS project LANDMATE () and the CORDEX Flagship Pilot Study LUCAS. By integrating this LULC data, climate models can more accurately simulate the impacts of land use changes on regional climate dynamics.
+This Python program generates high-resolution land use and land cover (LULC) datasets for regional climate modeling across both historical and future periods using land use change information from the LUH2. The original project was developed in Fortran by Peter Hoffmann (see: [ESSD, 2023](https://essd.copernicus.org/articles/15/3819/2023/)) as part of HICSS project LANDMATE (https://hicss-hamburg.de/projects/landmate/index.php.en) and the CORDEX Flagship Pilot Study LUCAS (https://ms.hereon.de/cordex_fps_lucas/). By integrating this LULC data, climate models can more accurately simulate the impacts of land use changes on regional climate dynamics.
 
 ## Installation Guide
 
