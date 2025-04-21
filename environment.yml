@@ -1,7 +1,7 @@
-name: land_use_translator_env  # Change to your preferred environment name
+name: lut  # Change to your preferred environment name
 channels:
   - conda-forge
-  - defaults
+  # - defaults
 dependencies:
   - pyyaml=6.0.2
   - python-cdo=1.6.0
