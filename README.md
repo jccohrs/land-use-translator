@@ -96,7 +96,7 @@ The main configuration file is located at `config/main.yaml`. Modify the paramet
 - (`addtree`): True/False for using addtree data in the LUT.
 - (`irri`): True/False. Enable or disable irrigation data, if the irrigation dataset is available.
 - (`syear`)/(`eyear`): Specify the time period for LU calculations by setting the starting year (`syear`) and ending year (`eyear`).
-- (`mcgrath_eyear`): end year of mcgrath file (in case that its different from eyear).
+- (`mcgrath_eyear`): end year of mcgrath file (in case that it's different from eyear).
 - (`npfts`): number of npfts used in the LUT. Currently, 16 is required but might be changed if different land cover dataset is used.
 - (`xsize`): xsize of the region.
 - (`ysize`): ysize of the region.
@@ -125,4 +125,4 @@ The project already includes global background data by default, which will be us
 
 ### Optional file paths
 
-- (`path_file_*`): Specify file path for the used files. In case of not specifying default locations will be checked by the programm.
+- (`path_file_*`): Specify file path for the used files. In case of not specifying, default locations will be checked by the program.
