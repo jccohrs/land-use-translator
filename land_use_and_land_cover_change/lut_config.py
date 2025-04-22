@@ -102,6 +102,8 @@ scenario_dict = {
     "rcp85": "MAGPIE-ssp585"
 }
 
+# Define the regions and their corresponding coordinates.
+# The coordinates are in the format (lon_min, lon_max, lat_min, lat_max).
 coords = {
     "Germany": "6.,15.5,46.5,55.4",
     "Europe": "-55.95,84.,16.1,79.",
