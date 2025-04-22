@@ -76,7 +76,7 @@ These files should be then moved to `land_use_and_land_cover_change/data/`.
 - **Mcgrath Data (Optional)**: For the backward extension of historical forest type distribution, additional information on the relative distribution of broadleaf and needleleaf forests, derived from the McGrath dataset, can be utilized. For more information about obtaining this dataset, please contact the maintainers of this project.
 
 - **Land-sea Mask (Optional)**:
-  - By default, the land-sea mask will be calculated from the Landmate PFT maps based on land classification.
+  - By default, the land-sea mask will be calculated from the LANDMATE PFT maps based on land classification.
   - If you want to use a custom land-sea mask, you can provide the path to the file via the `path_file_lsm` parameter in the configuration file.
 - **Background Data (Optional)**: In certain cases, where a certain vegetation type is not present within a grid cell but should be increased according to the LUH2 and the rules provided by the LUT, a background map of potential vegetation is needed.
   - The project already provides global background data. This data can be used to enhance the simulation (i.e. set `backgrd` to True). If you prefer to use your own regional or global background data, you can specify the path to the new data files via `path_file_back*` and `path_file_back*_global` parameters.
@@ -92,14 +92,14 @@ The main configuration file is located at `config/main.yaml`. Modify the paramet
 - (`region`): Choose from pre-configured regions ("Germany", "Europe", "WestAfrica", "NorthAmerica", "Australasia"), or add a new region by providing the necessary grid files (located into `scripts/`) and coordinates (`coords`parameter).
 - (`forward`): **True** for computation of future scenarios or **False** for historical reconstruction.
 - (`backgrd`): True/False. Optionally include background data.
-- (`mcgrath`): True/False for using mcgrath data in the LUT. 
-- (`addtree`): True/False for using addtree data in the LUT. 
+- (`mcgrath`): True/False for using mcgrath data in the LUT.
+- (`addtree`): True/False for using addtree data in the LUT.
 - (`irri`): True/False. Enable or disable irrigation data, if the irrigation dataset is available.
 - (`syear`)/(`eyear`): Specify the time period for LU calculations by setting the starting year (`syear`) and ending year (`eyear`).
 - (`mcgrath_eyear`): end year of mcgrath file (in case that its different from eyear).
 - (`npfts`): number of npfts used in the LUT. Currently, 16 is required but might be changed if different land cover dataset is used.
 - (`xsize`): xsize of the region.
-- (`ysize`): ysize of the region. 
+- (`ysize`): ysize of the region.
 
 ### LUH2 prepare data configuration
 
@@ -112,7 +112,7 @@ The main configuration file is located at `config/main.yaml`. Modify the paramet
 
 ### Land-seas Mask configuration
 
-By default, the land-sea mask will be calculated from the Landmate PFT maps based on land classification. However, if you want to use a custom land-sea mask, you can specify its file path:
+By default, the land-sea mask will be calculated from the LANDMATE PFT maps based on land classification. However, if you want to use a custom land-sea mask, you can specify its file path:
 
 - (`path_file_lsm`): Specify the path to the land-sea mask file if you prefer to use a custom one.
 - (`rcm_lsm_var`): variable name in the RCM land-sea mask file in case of having specified another file in `path_file_lsm`.
@@ -125,4 +125,4 @@ The project already includes global background data by default, which will be us
 
 ### Optional file paths
 
-- (`path_file_*`): Specify file path for the used files. In case of not specifying default locations will be checked by the programm. 
+- (`path_file_*`): Specify file path for the used files. In case of not specifying default locations will be checked by the programm.
