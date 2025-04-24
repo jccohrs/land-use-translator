@@ -1,7 +1,7 @@
 from utils import create_backgr_vars
 
 pftdir = "data/ESA_CCI/PFT_FILES" # directory of ESA_CCI LC file
-odir = "data/LUCAS_LUC" # directory that stores orginal GLOBCOVER files
+odir = "data/LUCAS_LUC" # directory that stores original GLOBCOVER files
 scriptsdir = "scripts"
 luhdir = "data/LUH_V2" # directory that stores output files from SAGA
 mcgdir = "data/MCGRATH" # directory of McGrath forest fraction file
@@ -12,19 +12,18 @@ URB = ["urban"] # urban
 GRA = ["range", "pastr"] # grass
 C3C = ["c3ann", "c3per", "c3nfx"] # crops C3
 C4C = ["c4ann", "c4per"] # crops C4
-CRO = ["c3ann", "c3per", "c3nfx", "c4ann", "c4per"] #crops
+CRO = ["c3ann", "c3per", "c3nfx", "c4ann", "c4per"] # crops = C3 + C4, could be formulated as the union of both sets
 PRI = ["primf", "primn"] # primary vegetation
 FOR = ["primf", "secdf"] # forest
 NFV = ["primn", "secdn"] # non-forest natural vegetation
-NAT = ["primn", "secdn", "primf", "secdf"] # natural vegetation
+NAT = ["primn", "secdn", "primf", "secdf"] # natural vegetation = FOR + NFV
 PAS = ["pastr"] # pasture
 RAN = ["range"] # rangeland
 IRR = ['irrig_c3ann', 'irrig_c4ann', 'irrig_c3per', 'irrig_c4per', 'irrig_c3nfx'] # irrigation fractions
-ICR = ['c3ann', 'c4ann', 'c3per', 'c4per', 'c3nfx'] # corrisponding states for irrigation
-
+ICR = ['c3ann', 'c4ann', 'c3per', 'c4per', 'c3nfx'] # corresponding states for irrigation
 
 glcdir = "data/MCGRATH" # directory of GLOBCOVER file
-orgdir_mcgrath=f"{glcdir}/ORG_FILES" # directory that stores orginal GLOBCOVER files
+orgdir_mcgrath=f"{glcdir}/ORG_FILES" # directory that stores original GLOBCOVER files - this was already set above to another directory
 sagadir_mcgrath=f"{glcdir}/SAGA_FILES" # directory that stores output files from SAGA
 ncdir_mcgrath=f"{glcdir}/NC_FILES" # directory that stores netcdf output files
 srvdir_mcgrath=f"{glcdir}/SRV_FILES" # directory that stores service binary files
@@ -65,6 +64,8 @@ nr_shrubs = 0
 nr_forest = 0
 nr_urban = 0
 
+# TODO: make this loop more pythonic.
+# TODO: add unit tests to make sure this does not change the behavior of the LUT
 for i in range(10):
     if CROPFTS[i] > 0:
         nr_crops += 1
@@ -112,8 +113,8 @@ coords = {
     "AustralAsia":  "102.,218.,-53.,4."
 }
 
-th_file_syear = 850 # transitions historic file starts from 850
-tf_file_syear = 2015 # transitions future file starts from 2015
+th_file_syear = 850 # transitions historic LUH2 file starts from 850
+tf_file_syear = 2015 # transitions future LUH2 file starts from 2015
 
 def get_output_file_title(forward, syear, eyear):
     """
