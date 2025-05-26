@@ -3,7 +3,8 @@ from lut import LUT
 from utils import dotdict, print_section_heading
 from config.validation import validate_config, validate_prepared_files, validate_main_files, validate_mcgrath_prepared_files, validate_pfts_file
 
-def load_configuration():
+def load_configuration() -> dotdict:
+    ''' load configuration from yaml file '''
     with open("config/main.yaml") as stream:
         try:
             config = yaml.safe_load(stream)
