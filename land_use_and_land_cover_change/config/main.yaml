@@ -1,9 +1,9 @@
 # Input Parameters
 
 # LUT configuration
-region : "Germany" # region name ("Germany", "Europe", "WestAfrica", "NorthAmerica", "Australasia")
+region : "Germany" # region name ("Germany", "Europe", "WestAfrica", "NorthAmerica", "Australasia") # TODO: Do we need it in case of ESA-CCI PFT?
 forward : False # forward or backward simulation
-backgrd : False # background  
+backgrd : False # background
 mcgrath : False # mcgrath
 addtree : False # addtree
 irri : False # irrigation

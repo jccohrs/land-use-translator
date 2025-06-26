@@ -17,7 +17,7 @@ def main():
     Main function to run the LUT
     """
     # Load configuration
-    config = load_configuration()
+    config: dotdict = load_configuration()
 
     # Validate configuration
     validate_config(config)
