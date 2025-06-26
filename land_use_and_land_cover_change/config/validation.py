@@ -1,5 +1,4 @@
-from cerberus import Validator, errors
-import yaml
+from cerberus import Validator
 import os
 import xarray as xr
 from cdo import Cdo
