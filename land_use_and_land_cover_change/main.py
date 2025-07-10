@@ -1,13 +1,16 @@
+# cspell:ignore dotdict, mcgrath, pfts
+
 import yaml
+from typing import Any
 from lut import LUT
 from utils import dotdict, print_section_heading
 from config.validation import validate_config, validate_prepared_files, validate_main_files, validate_mcgrath_prepared_files, validate_pfts_file
 
-def load_configuration() -> dotdict:
+def load_configuration() -> dotdict | None:
     ''' load configuration from yaml file '''
     with open("config/main.yaml") as stream:
         try:
-            config = yaml.safe_load(stream)
+            config: dict = yaml.safe_load(stream)
             return dotdict(config)
         except yaml.YAMLError as exc:
             print(exc)
@@ -17,7 +20,7 @@ def main():
     Main function to run the LUT
     """
     # Load configuration from /config/main.yaml
-    config: dotdict = load_configuration()
+    config: Any = load_configuration()
 
     # Validate configuration
     validate_config(config)

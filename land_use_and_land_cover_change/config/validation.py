@@ -55,7 +55,7 @@ class CustomValidator(Validator):
         if value not in allowed:
             self._error(field, f"unallowed value {value} --> Select one of the following values: {allowed}")
 
-def validate_config(config):
+def validate_config(config) -> None:
     v = CustomValidator(schema)
     v.validate(config)
     if v.errors:
