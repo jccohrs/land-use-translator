@@ -16,7 +16,7 @@ def main():
     """
     Main function to run the LUT
     """
-    # Load configuration
+    # Load configuration from /config/main.yaml
     config: dotdict = load_configuration()
 
     # Validate configuration
