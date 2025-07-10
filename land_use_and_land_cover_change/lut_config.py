@@ -1,11 +1,12 @@
+import os
 from utils import create_backgr_vars
 
-pftdir = "data/ESA_CCI/PFT_FILES" # directory of ESA_CCI LC file
-odir = "data/LUCAS_LUC" # directory that stores original GLOBCOVER files
+datadir = "/work/ch0636/g300137/lutdata"
+pftdir = f"{datadir}/ESA_CCI/PFT_FILES" # directory of ESA_CCI LC file
+odir = f"{datadir}/LUCAS_LUC" # directory that stores original GLOBCOVER files
 scriptsdir = "scripts"
-luhdir = "data/LUH_V2" # directory that stores output files from SAGA
-mcgdir = "data/MCGRATH" # directory of McGrath forest fraction file
-datadir = "data"
+luhdir = f"{datadir}/LUH_V2" # directory that stores output files from SAGA
+mcgdir = f"{datadir}/MCGRATH" # directory of McGrath forest fraction file
 plotdir = "plots"
 
 URB = ["urban"] # urban
@@ -22,7 +23,7 @@ RAN = ["range"] # rangeland
 IRR = ['irrig_c3ann', 'irrig_c4ann', 'irrig_c3per', 'irrig_c4per', 'irrig_c3nfx'] # irrigation fractions
 ICR = ['c3ann', 'c4ann', 'c3per', 'c4per', 'c3nfx'] # corresponding states for irrigation
 
-glcdir = "data/MCGRATH" # directory of GLOBCOVER file
+glcdir = f"{datadir}/MCGRATH" # directory of GLOBCOVER file
 orgdir_mcgrath=f"{glcdir}/ORG_FILES" # directory that stores original GLOBCOVER files - this was already set above to another directory
 sagadir_mcgrath=f"{glcdir}/SAGA_FILES" # directory that stores output files from SAGA
 ncdir_mcgrath=f"{glcdir}/NC_FILES" # directory that stores netcdf output files
