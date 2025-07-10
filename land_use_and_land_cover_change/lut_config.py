@@ -1,4 +1,5 @@
 import os
+import numpy as np
 from utils import create_backgr_vars
 
 datadir = "/work/ch0636/g300137/lutdata"
@@ -59,25 +60,11 @@ SHRDEF = 8
 FORDEF = 1
 URBDEF = 15
 
-nr_grass = 0
-nr_crops = 0
-nr_shrubs = 0
-nr_forest = 0
-nr_urban = 0
-
-# TODO: make this loop more pythonic.
-# TODO: add unit tests to make sure this does not change the behavior of the LUT
-for i in range(10):
-    if CROPFTS[i] > 0:
-        nr_crops += 1
-    if FORPFTS[i] > 0:
-        nr_forest += 1
-    if GRAPFTS[i] > 0:
-        nr_grass += 1
-    if SHRPFTS[i] > 0:
-        nr_shrubs += 1
-    if URBPFTS[i] > 0:
-        nr_urban += 1
+nr_grass = np.count_nonzero(GRAPFTS).item()
+nr_crops = np.count_nonzero(CROPFTS).item()
+nr_shrubs = np.count_nonzero(SHRPFTS).item()
+nr_forest = np.count_nonzero(FORPFTS).item()
+nr_urban = np.count_nonzero(URBPFTS).item()
 
 # prepare LUH2 configuration
 vars_state="primf,primn,secdf,secdn,urban,c3ann,c4ann,c3per,c4per,c3nfx,pastr,range,secmb,secma"

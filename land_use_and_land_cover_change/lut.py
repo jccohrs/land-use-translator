@@ -2,7 +2,7 @@
 
 from pathlib import Path
 import shutil
-from cdo import *
+from cdo import Cdo
 import os
 import xarray as xr
 import numpy as np
@@ -21,7 +21,7 @@ class LUT:
         for key, value in config.items():
             setattr(self, key, value)
         self.grid_number = str(self.grid).replace('.', '')
-        self.grid = f"reg{str(self.grid).replace('.', '')}_{self.region}"
+        self.grid = f"reg{self.grid_number}_{self.region}"
         self.lcd = lcd
         self.mcg = mcg
         self.glc = f"{lcd}-{config.eyear}-{vers}"
