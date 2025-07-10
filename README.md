@@ -64,10 +64,10 @@ To get started with this project, follow these steps:
 The following datasets are required to run the program:
 
 - **Land Use (LU) Transitions provided by LUH2**: LU changes for the selected time period (will be filtered in case of providing larger datasets). The following files can be downloaded from the [LUH Data Portal](https://luh.umd.edu/data.shtml) for different scenarios (historical, historical_high, rcp19 etc.):
-  - transitions.nc: The land-use transitions are the annual changes between land-use states.
-  - states.nc: The land-use states are the fractions of each grid-cell occupied by various land-uses in a given year.
-  - management.nc: Contains irrigation data; this file is only required if irrigation is enabled (i.e., if `irri` is set to True).
-  - add_tree_cover.nc: Tree cover data; this file is only required if if addtree is enabled (i.e., if `addtree` is set to True).
+  - **transitions.nc**: The land-use transitions are the annual changes between land-use states.
+  - **states.nc**: The land-use states are the fractions of each grid-cell occupied by various land-uses in a given year.
+  - **management.nc**: Contains irrigation data; this file is only required if irrigation is enabled (i.e., if `irri` is set to True).
+  - **add_tree_cover.nc**: Tree cover data; this file is only required if if addtree is enabled (i.e., if `addtree` is set to True).
 
 These files should be then moved to `land_use_and_land_cover_change/data/`.
 
