@@ -7,4 +7,4 @@
 - Can we derive the number of PFTs from the data?
 - What are `xsize` and `ysize` of the region? For LANDMATE given as integers. Is it the number of grid-cells in x- and y-direction?
 - Can `prepare_mcgrath` be derived from the fact if mcgrath is available?
-- Grid resolution has to be given. Can it be derived from the data?
+- Grid resolution has to be given. Can it be derived from the data? Is it the PFT data resolution or from any other of the used datasets? It is listed in the context of LUH2
